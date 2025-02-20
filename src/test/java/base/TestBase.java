@@ -134,7 +134,8 @@ public abstract class TestBase {
 		}
 		else if (config.getProperty("browser").equals("GoogleChrome")||config.getProperty("browser").equalsIgnoreCase("CHROME")){
 
-			System.setProperty("webdriver.chrome.driver",System.getProperty("user.dir")+ File.separator +"drivers"+ File.separator +"chromedriver");
+			System.setProperty("webdriver.chrome.driver",
+					System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
 			// To remove message "You are using an unsupported command-line flag: --ignore-certificate-errors.
 			// Stability and security will suffer."
 			// Add an argument 'test-type'
