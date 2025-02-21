@@ -132,21 +132,15 @@ public abstract class TestBase {
 			driver = new InternetExplorerDriver();
 			log.info(config.getProperty("browser")+" driver is initialized..");
 		}
-		else if (config.getProperty("browser").equals("GoogleChrome")||config.getProperty("browser").equalsIgnoreCase("CHROME")){
+		else   if (config.getProperty("browser").equalsIgnoreCase("GoogleChrome") || config.getProperty("browser").equalsIgnoreCase("CHROME")) {
+			System.setProperty("webdriver.chrome.driver", System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
 
-			System.setProperty("webdriver.chrome.driver",
-					System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
-			// To remove message "You are using an unsupported command-line flag: --ignore-certificate-errors.
-			// Stability and security will suffer."
-			// Add an argument 'test-type'
-			DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+			// Set Chrome binary path
 			ChromeOptions options = new ChromeOptions();
-			options.addArguments("test-type");
-			options.addArguments("--headless", "window-size=1280,1024", "--no-sandbox"); // Enable for headless option
-//			capabilities.setCapability("chrome.binary",System.getProperty("user.dir")+ File.separator +"drivers"+ File.separator +"chromedriver.exe");
-			capabilities.setCapability(ChromeOptions.CAPABILITY, options);
-			driver = new ChromeDriver(capabilities);
-			log.info(config.getProperty("browser")+" driver is initialized..");
+			options.setBinary("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"); // Update this path if necessary
+
+			driver = new ChromeDriver(options);
+			log.info(config.getProperty("browser") + " driver is initialized..");
 		}else if (config.getProperty("browser").equalsIgnoreCase("htmlunit")) {
 			// http://sourceforge.net/projects/htmlunit/files/htmlunit/
 			driver = new HtmlUnitDriver();
@@ -167,7 +161,7 @@ public abstract class TestBase {
 		//Explicit Wait + Expected Conditions
 		wait=new WebDriverWait(driver, 120);
 	}
-	
+
 	@AfterSuite
 	public void tearDown() {
 		quitDriver();
@@ -189,7 +183,7 @@ public abstract class TestBase {
 			PropertyValue = props.getProperty(PropertyKey);
 		} catch(Exception e){
 			System.out.println(e.getMessage());
-		} 
+		}
 
 		return PropertyValue;
 	}
@@ -237,7 +231,7 @@ public abstract class TestBase {
 
 		try{
 			Assert.assertEquals(actual, expected);
-			log.info("Actual string: [ "+actual+" ] does match with Expected string: [ "+expected+" ]");		
+			log.info("Actual string: [ "+actual+" ] does match with Expected string: [ "+expected+" ]");
 
 		}catch(AssertionError e){
 			log.error("Actual string: [ "+actual+" ] does not match with Expected string: [ "+expected+" ]");
@@ -246,7 +240,7 @@ public abstract class TestBase {
 
 		}
 
-	} 
+	}
 
 	/**
 	 * Quit Driver.

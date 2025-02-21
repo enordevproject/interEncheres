@@ -1,29 +1,33 @@
 package sanitySuite;
 
-import org.testng.annotations.Test;
-
 import base.TestBase;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import pages.Home;
 
+public class firstTest extends TestBase {
 
-public class firstTest extends TestBase{
+    private Home homePage;
 
-
-
-    // Create an instance of the Home page class
-    Home homePage = new Home(driver);
-
-
-        @Test(priority = 1, description = "Open page and click on login")
-        public void openPageAndClickLogin() {
-            log.info("Open Google Search URL.");
-            driver.get(data.getProperty("base.url"));  // Opening the base URL
+    @BeforeClass
+    public void setUp() {
+        // Initialize the driver using TestBase
 
 
 
-            // Click on the login button
-            homePage.clickLoginButton();
+        // Initialize the Home page object
+        homePage = new Home(driver);
+    }
 
-            log.info("Clicked on the login button.");
-        }
+    @Test(priority = 1, description = "Open page, click on login, and perform login")
+    public void openPageAndLogin() {
+        log.info("Navigating to Interencheres home page.");
+        homePage.performLogin("test@test.com","tesdd");
+
+
+
+
+
+
+    }
 }

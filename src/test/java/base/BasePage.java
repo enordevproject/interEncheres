@@ -1,32 +1,32 @@
 package base;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.util.Date;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.apache.log4j.xml.DOMConfigurator;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class PageBase {
+public abstract class BasePage {
 
     /**
      * logger for class.
      */
-    private static final Logger logger = Logger.getLogger(PageBase.class);
+    protected static final Logger log = Logger.getLogger(BasePage.class);
 
     /**
      * by default 20s to wait
@@ -41,28 +41,136 @@ public class PageBase {
     /**
      * Current driver
      */
+    private static boolean isInitalized=false;
     protected static WebDriver driver;
 
     /**
-     * default constructor.
+     * WebDriverWait for explicit waits
      */
-    public PageBase(WebDriver driver) {
-        setDriver(driver);
+    protected static WebDriverWait wait;
+
+    /**
+     * Configuration properties
+     */
+    protected static Properties config = null;
+
+    /**
+     * Data properties
+     */
+    protected static Properties data = null;
+
+    /**
+     * Initialize logs, config, and driver
+     */
+    protected  BasePage() {
+        if(!isInitalized){
+            initLogs();
+            initConfig();
+            initDriver();
+        }
     }
 
-    public WebDriver getDriver() {
-        return driver;
+    public BasePage(WebDriver driver) {
+        this.driver = driver;
     }
-
-    public static void setDriver(WebDriver driver) {
-        PageBase.driver = driver;
+    /**
+     * Initialize Logger.
+     */
+    private static void initLogs() {
+        if (log == null) {
+            DOMConfigurator.configure(System.getProperty("user.dir") + File.separator + "config" + File.separator + "log4j.xml");
+            log.info("Logger is initialized..");
+        }
     }
 
     /**
-     * Waiting WebElement By to disappear, 20 seconds by default
-     *
-     * @param webElementBy
+     * Initialize configuration and data properties.
      */
+    private static void initConfig() {
+        if (config == null) {
+            try {
+                // Initialize config properties file
+                config = new Properties();
+                String config_fileName = "config.properties";
+                String config_path = System.getProperty("user.dir") + File.separator + "config" + File.separator + config_fileName;
+                FileInputStream config_ip = new FileInputStream(config_path);
+                config.load(config_ip);
+                log.info("Config file initialized.");
+
+                // Initialize data properties file
+                data = new Properties();
+                String data_fileName = "data.properties";
+                String data_path = System.getProperty("user.dir") + File.separator + "config" + File.separator + data_fileName;
+                FileInputStream data_ip = new FileInputStream(data_path);
+                data.load(data_ip);
+                log.info("Data file initialized.");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Initialize WebDriver based on configuration.
+     */
+    private static void initDriver() {
+        if (driver != null) {
+            return; // Driver is already initialized
+        }
+
+        String browser = config.getProperty("browser");
+
+        if (browser.equalsIgnoreCase("GoogleChrome") || browser.equalsIgnoreCase("CHROME")) {
+            // Set the path to ChromeDriver
+            System.setProperty("webdriver.chrome.driver",
+                    System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
+
+            // Configure ChromeOptions
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--no-sandbox"); // Disable sandbox for headless mode
+            options.addArguments("--disable-dev-shm-usage"); // Overcome limited resource problems
+            options.addArguments("--headless"); // Run in headless mode
+            options.addArguments("--window-size=1280,1024"); // Set window size for headless mode
+
+            // Initialize ChromeDriver
+            driver = new ChromeDriver(options);
+            log.info("Chrome driver is initialized in headless mode.");
+        } else if (browser.equalsIgnoreCase("htmlunit")) {
+            // Initialize HtmlUnitDriver
+            driver = new HtmlUnitDriver();
+            log.info("HtmlUnit driver is initialized.");
+        } else {
+            throw new IllegalArgumentException("Unsupported browser: " + browser);
+        }
+
+        // Configure implicit wait (fetch timeout from config.properties)
+        String waitTime = config.getProperty("implicit.wait", "30"); // Default to 30 seconds if not specified
+        driver.manage().timeouts().implicitlyWait(Long.parseLong(waitTime), TimeUnit.SECONDS);
+        log.info("Implicit wait set to " + waitTime + " seconds.");
+
+        // Maximize the browser window (if not in headless mode)
+        if (!browser.equalsIgnoreCase("htmlunit")) {
+            driver.manage().window().maximize();
+            log.info("Browser window maximized.");
+        }
+
+        // Initialize WebDriverWait (fetch timeout from config.properties)
+        String explicitWaitTime = config.getProperty("explicit.wait", "120"); // Default to 120 seconds if not specified
+        wait = new WebDriverWait(driver, Long.parseLong(explicitWaitTime));
+        log.info("Explicit wait set to " + explicitWaitTime + " seconds.");
+    }
+    /**
+     * Quit Driver.
+     */
+    public static void quitDriver() {
+        if (driver != null) {
+            driver.quit();
+            driver = null;
+            log.info("Closing Browser.");
+        }
+    }
     public void waitForElementToDisappear(By webElementBy) {
         waitForElementToDisappear(webElementBy, DEFAULT_TIMEOUT); // assuming DEFAULT_TIMEOUT is an integer value
     }
@@ -96,15 +204,15 @@ public class PageBase {
      *
      * @param webElementBy
      */
-    public WebElement waitForElementToBeClickable(By webElementBy) {
-        WebDriverWait wait = new WebDriverWait(driver, DEFAULT_TIMEOUT); // Use long for timeout
-        wait.until(ExpectedConditions.jsReturnsValue("return jQuery.active == 0"));
-        return wait.until(ExpectedConditions.elementToBeClickable(findElement(webElementBy)));
+
+    public WebElement waitForElementToBeClickable(By locator) {
+        WebDriverWait wait = new WebDriverWait(driver, DEFAULT_TIMEOUT);
+        return wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
 
-    public WebElement waitForElementToBeVisible(By webElementBy) {
+    public WebElement waitForElementToBeVisible(By locator) {
         WebDriverWait wait = new WebDriverWait(driver, DEFAULT_TIMEOUT); // Use long for timeout
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(webElementBy));
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
     public WebElement waitForElementToBeVisibleExplicitly(By webElementBy) {
@@ -149,12 +257,7 @@ public class PageBase {
 
 
 
-    protected boolean checkWebElementVisible(By webElement) {
-        WebElement findElement = findElement(webElement);
-        if (findElement == null)
-            return false;
-        return findElement.isDisplayed();
-    }
+
 
     protected void clickWithJavaScript(WebElement webElement) {
         JavascriptExecutor js = (JavascriptExecutor) driver;
