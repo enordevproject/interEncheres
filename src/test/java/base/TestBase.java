@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -159,7 +160,7 @@ public abstract class TestBase {
 		driver.manage().window().maximize();
 
 		//Explicit Wait + Expected Conditions
-		wait=new WebDriverWait(driver, 120);
+		wait=new WebDriverWait(driver, 30);
 	}
 
 	@AfterSuite

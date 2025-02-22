@@ -1,9 +1,14 @@
 package pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import base.BasePage;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 /*******************************************************************************************
  * Page Factory class for Interencheres Home Page
@@ -31,7 +36,7 @@ public class Home extends BasePage {
     private By passInput = By.xpath("//input[@autocomplete='current-password' and @type='password']");
     private By submitLoginButton = By.xpath("//button[@type='submit']");
     private By closLoginCross = By.xpath("//button[@class='v-btn v-btn--icon v-btn--round theme--light v-size--default']//span[@class='v-btn__content']");
-    private By searchInput = By.xpath("//*[@id=\"input-107\"]");
+    private By searchInput = By.xpath("//input[@type='search' and @role='button']");
     private By searchButton = By.xpath("//button[@class='v-btn v-btn--has-bg theme--light elevation-0 v-size--small grey darken-1']");
 
     /*******************************************************************************************
@@ -103,11 +108,31 @@ public class Home extends BasePage {
      * @param searchTerm The term to search for.
      */
     public void enterSearchTerm(String searchTerm) {
-        WebElement searchField = waitForElementToBeClickable(searchInput);
-        searchField.click(); // Click to focus on the search input field
-        searchField.clear(); // Clear any existing text
-        searchField.sendKeys(searchTerm); // Enter the search term
-        log.info("Entered search term: " + searchTerm);
+        try {
+            // Wait for the overlay to disappear
+            WebDriverWait wait = new WebDriverWait(driver, 10);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("div.v-overlay__scrim")));
+
+            // Locate the search input field
+            WebElement searchInput = driver.findElement(By.xpath("//input[@id='input-107']"));
+
+            // Scroll the element into view
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", searchInput);
+
+            // Click the search input field using JavaScript
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", searchInput);
+
+            // Clear any existing text
+            searchInput.clear();
+
+            // Enter the search term
+            searchInput.sendKeys(searchTerm);
+
+            log.info("Entered search term: " + searchTerm);
+        } catch (Exception e) {
+            log.error("Failed to enter search term: " + e.getMessage());
+            throw e; // Re-throw the exception to fail the test
+        }
     }
 
     /**
