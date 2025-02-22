@@ -46,7 +46,7 @@ public class Search extends BasePage {
     // XPath pour les informations spécifiques de chaque lot
     private final By LOT_NUMBER_XPATH = By.xpath(".//span[@class='font-weight-bold']");
     private final By LOT_DESCRIPTION_XPATH = By.xpath(".//div[contains(@class, 'description')]");
-    private final By LOT_ESTIMATION_XPATH = By.xpath("//div[@class='pa-1 col-md-4 col-lg-3 col-6 pa-0']//a[@class='d-flex fill-height']");
+    private final By LOT_ESTIMATION_XPATH = By.xpath("//div[@class='estimates d-flex flex-wrap justify-center']//span[@class='text-pre-wrap flex-shrink-0 mx-1 text-center']");
     private final By LOT_AUCTION_HOUSE_XPATH = By.xpath("//div[@class='pa-1 col-md-4 col-lg-3 col-6 pa-0']//div[@class='organization-name text-caption font-weight-medium text_primary--text pt-2 px-2']//span[2]");
     private final By IMG_URL_XPATH = By.xpath("//div[@class='v-responsive__content d-flex align-center justify-center']/img");
     private final By AUCTION_URL_XPATH = By.xpath("//a[@class='d-flex fill-height']");
