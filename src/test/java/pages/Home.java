@@ -2,11 +2,8 @@ package pages;
 
 import org.openqa.selenium.*;
 import base.BasePage;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 /*******************************************************************************************
  * Page Factory class for Interencheres Home Page
@@ -14,19 +11,6 @@ import java.time.Duration;
  *******************************************************************************************/
 
 public class Home extends BasePage {
-
-    /**
-     * Constructor to initialize the Home page.
-     *
-     * @param driver The WebDriver instance.
-     */
-    public Home(WebDriver driver) {
-        super(driver);
-    }
-
-    /*******************************************************************************************
-     * All WebElements are identified by locators
-     *******************************************************************************************/
 
     // Locators
     private By loginButton = By.xpath("//button[contains(@class, 'v-btn') and .//div[text()='Se connecter']]");
@@ -37,15 +21,34 @@ public class Home extends BasePage {
     private By searchInput = By.xpath("//input[@type='search' and @role='button']");
     private By searchButton = By.xpath("//button[@class='v-btn v-btn--has-bg theme--light elevation-0 v-size--small grey darken-1']");
 
+    /**
+     * Constructor to initialize the Home page.
+     * @param driver The WebDriver instance.
+     */
+    public Home(WebDriver driver) {
+        super(driver);
+    }
+
     /*******************************************************************************************
      * All Methods for performing actions
      *******************************************************************************************/
+
+    private void clickWhenReady(By locator) {
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+    }
+
+    private void sendTextWhenReady(By locator, String text) {
+        WebElement element = waitForElementToBeClickable(locator);
+        element.clear();
+        element.sendKeys(text);
+    }
 
     /**
      * Clicks the Login button on the home page.
      */
     public void clickLoginButton() {
-        waitForElementToBeClickable(loginButton).click();
+        clickWhenReady(loginButton);
         log.info("Clicked on the Login button.");
     }
 
@@ -57,17 +60,13 @@ public class Home extends BasePage {
         log.info("Navigated to Interencheres home page.");
     }
 
-
     /**
      * Enters the email address in the login form.
      *
      * @param email The email address to enter.
      */
     public void enterEmail(String email) {
-        WebElement emailField = waitForElementToBeClickable(mailInput);
-        emailField.click(); // Click to focus on the email input field
-        emailField.clear(); // Clear any existing text
-        emailField.sendKeys(email); // Enter the email
+        sendTextWhenReady(mailInput, email);
         log.info("Entered email: " + email);
     }
 
@@ -77,10 +76,7 @@ public class Home extends BasePage {
      * @param password The password to enter.
      */
     public void enterPassword(String password) {
-        WebElement passwordField = waitForElementToBeClickable(passInput);
-        passwordField.click(); // Click to focus on the password input field
-        passwordField.clear(); // Clear any existing text
-        passwordField.sendKeys(password); // Enter the password
+        sendTextWhenReady(passInput, password);
         log.info("Entered password.");
     }
 
@@ -88,7 +84,7 @@ public class Home extends BasePage {
      * Clicks the Submit button on the login form.
      */
     public void clickSubmitLoginButton() {
-        waitForElementToBeClickable(submitLoginButton).click();
+        clickWhenReady(submitLoginButton);
         log.info("Clicked on the Submit Login button.");
     }
 
@@ -96,7 +92,7 @@ public class Home extends BasePage {
      * Closes the login form by clicking the close button (cross).
      */
     public void closeLoginForm() {
-        waitForElementToBeClickable(closLoginCross).click();
+        clickWhenReady(closLoginCross);
         log.info("Closed the login form.");
     }
 
@@ -106,52 +102,17 @@ public class Home extends BasePage {
      * @param searchTerm The term to search for.
      */
     public void enterSearchTerm(String searchTerm) {
-        try {
-            // Wait for the overlay to disappear
-            WebDriverWait wait = new WebDriverWait(driver, 10);
-            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("div.v-overlay__scrim")));
-
-            // Locate the search input field
-            WebElement searchInputElement = driver.findElement(searchInput);
-
-            // Scroll the element into view
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", searchInputElement);
-
-            // Click the search input field using JavaScript
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", searchInputElement);
-
-            // Clear the input field by repeatedly pressing BACKSPACE for 2 seconds
-            Actions actions = new Actions(driver);
-            actions.click(searchInputElement); // Focus on the input field
-
-            // Repeatedly press BACKSPACE for 2 seconds to simulate holding it
-            long startTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - startTime < 2000) { // 2 seconds
-                actions.sendKeys(Keys.BACK_SPACE).perform();
-                try {
-                    Thread.sleep(50); // Small delay to mimic holding down the key
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            // Enter the search term
-            searchInputElement.sendKeys(searchTerm);
-
-            log.info("Entered search term: " + searchTerm);
-        } catch (Exception e) {
-            log.error("Failed to enter search term: " + e.getMessage());
-            throw e; // Re-throw the exception to fail the test
-        }
+        WebElement searchInputElement = waitForElementToBeClickable(searchInput);
+        searchInputElement.clear(); // Clear the input field directly
+        searchInputElement.sendKeys(searchTerm);
+        log.info("Entered search term: " + searchTerm);
     }
-
-
 
     /**
      * Clicks the Search button.
      */
     public void clickSearchButton() {
-        waitForElementToBeClickable(searchButton).click();
+        clickWhenReady(searchButton);
         log.info("Clicked on the Search button.");
     }
 
@@ -165,24 +126,15 @@ public class Home extends BasePage {
         clickSearchButton();
         log.info("Performed search for: " + searchTerm);
     }
+
     public void performLogin(String email, String password) {
         navigateToHomePage();
         try {
-            // Click the Login button
             clickLoginButton();
-            log.info("Clicked on the Login button.");
-
-            // Enter the email
             enterEmail(email);
-            log.info("Entered email: " + email);
-
-            // Enter the password
             enterPassword(password);
-            log.info("Entered password.");
-
-            // Click the Submit Login button
             clickSubmitLoginButton();
-            log.info("Clicked on the Submit Login button.");
+            log.info("Performed login.");
         } catch (Exception e) {
             log.error("Failed to perform login: " + e.getMessage());
             throw e; // Re-throw the exception to fail the test

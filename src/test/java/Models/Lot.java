@@ -2,7 +2,7 @@ package Models;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Lot")
@@ -19,16 +19,19 @@ public class Lot {
     private String imgUrl;
 
     @Column(name = "estimationPrice", length = 50)
-    private String estimationPrice;  // Changed to BigDecimal for price handling
+    private String estimationPrice;
 
     @Column(name = "date", length = 50)
-    private String date;  // Changed to LocalDate for proper date handling
+    private String date;
 
     @Column(name = "maisonEnchere", length = 100)
     private String maisonEnchere;
 
     @Column(name = "url", length = 255)
     private String url;
+
+    @Column(name = "insertionDate")
+    private LocalDateTime insertionDate;
 
     // Constructor
     public Lot(String number, String description, String imgUrl,
@@ -45,7 +48,22 @@ public class Lot {
     // Default Constructor
     public Lot() {}
 
-    // Getters and Setters
+    // Getter for insertionDate
+    public LocalDateTime getInsertionDate() {
+        return insertionDate;
+    }
+
+    // Setter for insertionDate
+    public void setInsertionDate(LocalDateTime insertionDate) {
+        this.insertionDate = insertionDate;
+    }
+
+    @PrePersist
+    public void setDefaultInsertionDate() {
+        this.insertionDate = LocalDateTime.now();
+    }
+
+    // Getters and Setters for other fields
     public String getNumber() {
         return number;
     }
@@ -112,6 +130,7 @@ public class Lot {
                 ", date=" + date +
                 ", maisonEnchere='" + maisonEnchere + '\'' +
                 ", url='" + url + '\'' +
+                ", insertionDate=" + insertionDate +
                 '}';
     }
 }

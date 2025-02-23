@@ -10,6 +10,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -64,26 +65,8 @@ public class Search extends BasePage {
         return Integer.parseInt(cleanText);
     }
 
-    public void selectCountry(String country) {
-        // Clique sur le conteneur du sélecteur
-        WebElement selectElement = driver.findElement(countrySelect);
-        selectElement.click();
 
-        // Attendre que la liste soit visible (facultatif, selon le besoin)
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='v-list-item__title' and text()='" + country + "']")));
 
-        // Clique sur l'élément de la liste correspondant au pays
-        WebElement countryElement = driver.findElement(By.xpath("//div[@class='v-list-item__title' and text()='" + country + "']"));
-        countryElement.click();
-    }
-
-    // Méthode pour récupérer la date du lot
-    public String getLotDate() {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        WebElement lotDateElement = wait.until(ExpectedConditions.visibilityOfElementLocated(LOT_DATE_XPATH));
-        return lotDateElement.getText().trim();
-    }
 
     // Méthode pour récupérer les lots sur la page actuelle
     public List<Lot> getLotsOnCurrentPage() {
@@ -173,7 +156,11 @@ public class Search extends BasePage {
                 lot.setImgUrl(imgUrl);
                 lot.setUrl(url);
 
+                // Set the insertion date to current time
+                lot.setInsertionDate(LocalDateTime.now());
+
                 lots.add(lot);
+
 
             } catch (Exception e) {
                 e.printStackTrace(); // Handle any unexpected errors
@@ -242,7 +229,7 @@ public class Search extends BasePage {
     }
 
     // Method to get the last page number from the pagination
-    private int getLastPageNumber() {
+    public int getLastPageNumber() {
         WebDriverWait wait = new WebDriverWait(driver, 2);
 
         // Find the last page number in the pagination (not disabled)

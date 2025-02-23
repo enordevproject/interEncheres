@@ -1,6 +1,7 @@
 package sanitySuite;
 
 import Models.Lot;
+import base.BasePage;
 import base.TestBase;
 import hibernate.HibernateUtil;
 import org.hibernate.Session;
@@ -17,7 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class firstTest extends TestBase {
+public class FirstTest extends BasePage {
 
     private Home homePage;
     private Search searchPage;
@@ -38,38 +39,10 @@ public class firstTest extends TestBase {
         // Define search terms using ArrayList (for older Java versions)
         List<String> searchTerms = new ArrayList<>();
 
-        searchTerms.add("hp elitebook");
-        searchTerms.add("lenovo thinkpad");
-        searchTerms.add("vente judiciaire ordinateur");
-        searchTerms.add("saisie ordinateur");
-        searchTerms.add("liquidation judiciaire pc");
-        searchTerms.add("vente aux enchères ordinateur");
-        searchTerms.add("vente judiciaire informatique");
-        searchTerms.add("vente saisie ordinateur");
-        searchTerms.add("saisie pc portable");
-        searchTerms.add("actif judiciaire ordinateur");
-        searchTerms.add("enchères judiciaires pc");
-        searchTerms.add("juge liquidation ordinateur");
-        searchTerms.add("saisie biens informatique pc");
-        searchTerms.add("liquidation judiciaire informatique");
-        searchTerms.add("vente judiciaire matériel informatique");
-        searchTerms.add("décision judiciaire pc");
-        searchTerms.add("vente aux enchères pc portable");
-        searchTerms.add("ordinateur portable");
-        searchTerms.add("pc portable");
-        searchTerms.add("dell");
-        searchTerms.add("hp");
+
+
         searchTerms.add("lenovo");
-        searchTerms.add("macbook");
-        searchTerms.add("ultrabook");
-        searchTerms.add("laptop");
-        searchTerms.add("gaming pc");
-        searchTerms.add("workstation");
-        searchTerms.add("ordinateur professionnel");
-        searchTerms.add("pc reconditionné");
-        searchTerms.add("ordinateur d'occasion");
-        searchTerms.add("pc de bureau");
-        searchTerms.add("ordinateur mac");
+        searchTerms.add("portable");
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {

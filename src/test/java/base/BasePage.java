@@ -86,40 +86,39 @@ public abstract class BasePage {
                     System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
 
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--headless");
-            options.addArguments("--window-size=1280,1024");
+            options.addArguments("--headless");  // Headless mode for faster execution
+            options.addArguments("--no-sandbox"); // Avoid security issues in some environments
+            options.addArguments("--blink-settings=imagesEnabled=false"); // Disable images for faster load
+
+            // Disable logging for faster startup
+            options.addArguments("--log-level=3"); // Limit logging to errors only
 
             driver = new ChromeDriver(options);
-            log.info("Chrome driver is initialized in headless mode.");
+            log.info("Chrome driver initialized in headless mode with optimizations.");
         } else if (browser.equalsIgnoreCase("htmlunit")) {
-            driver = new HtmlUnitDriver();
-            log.info("HtmlUnit driver is initialized.");
+            driver = new HtmlUnitDriver(true);  // Use a headless HTML unit driver if required
+            log.info("HtmlUnit driver initialized.");
         } else {
             throw new IllegalArgumentException("Unsupported browser: " + browser);
         }
 
-        String waitTime = config.getProperty("implicit.wait", "30");
-
-// Parse the string to a long value
+        // Set timeouts after driver initialization
+        String waitTime = config.getProperty("implicit.wait", "10");
         long timeoutInSeconds = Long.parseLong(waitTime);
-
-// Set the implicit wait (you need to specify the time unit, which in this case is TimeUnit.SECONDS)
         driver.manage().timeouts().implicitlyWait(timeoutInSeconds, TimeUnit.SECONDS);
+        log.info("Implicit wait set to " + timeoutInSeconds + " seconds.");
 
-
-        log.info("Implicit wait set to " + waitTime + " seconds.");
-
-        if (!browser.equalsIgnoreCase("htmlunit")) {
-            driver.manage().window().maximize();
-            log.info("Browser window maximized.");
-        }
-
-        String explicitWaitTime = config.getProperty("explicit.wait", "120");
+        // Use explicit wait only when needed, avoid global WebDriverWait if possible
+        String explicitWaitTime = config.getProperty("explicit.wait", "60");
         wait = new WebDriverWait(driver, Long.parseLong(explicitWaitTime));
         log.info("Explicit wait set to " + explicitWaitTime + " seconds.");
+
+        // Avoid maximizing the window for headless mode as it's not necessary
+        if (!browser.equalsIgnoreCase("htmlunit")) {
+            driver.manage().window().setSize(new Dimension(1920, 1080));  // Set a fixed window size for headless mode if needed
+        }
     }
+
 
     public static void quitDriver() {
         if (driver != null) {
