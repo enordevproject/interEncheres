@@ -1,6 +1,6 @@
 package pages;
 
-
+import java.util.concurrent.*;
 import Models.Lot;
 import Models.Results;
 import org.openqa.selenium.*;
@@ -81,115 +81,82 @@ public class Search extends BasePage {
 
         log.info("Starting to extract lots on the current page. Found " + lotElements.size() + " lot elements.");
 
+        // Executor to process in parallel
+        ExecutorService executorService = Executors.newFixedThreadPool(10);  // Adjust the number of threads as needed
+        List<Callable<Lot>> tasks = new ArrayList<>();
+
+        // Add extraction tasks to executor
         for (WebElement lotElement : lotElements) {
-            try {
-                // Initialize default values
-                String lotNumber = "";
-                String description = "";
-                String estimationPrice = "";
-                String date = "";
-                String auctionHouse = "";
-                String imgUrl = "";
-                String url = "";
-
-                // Extract Lot Number (Handle missing or malformed)
+            tasks.add(() -> {
                 try {
-                    lotNumber = lotElement.findElement(LOT_NUMBER_XPATH).getText().trim();
-                    log.debug("Extracted Lot Number: " + lotNumber);
+                    // Extract only the URL first, handle it explicitly
+                    String url = extractUrl(lotElement);
+                    if (url == null) return null; // Skip if URL is missing
+
+                    // Create a Lot object and set defaults for non-URL fields
+                    Lot lot = new Lot();
+                    lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
+                    lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
+                    lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
+                    lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
+                    lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
+                    lot.setImgUrl(extractData(lotElement, IMG_URL_XPATH, "No image available"));
+                    lot.setUrl(url);
+
+                    // Set the insertion date to current time
+                    lot.setInsertionDate(LocalDateTime.now());
+
+                    return lot;
                 } catch (Exception e) {
-                    lotNumber = "No lot available"; // Default if missing
-                    log.warn("Lot Number extraction failed, defaulting to 'No lot available'.");
+                    log.error("Error processing lot: ", e);
+                    return null;
                 }
+            });
+        }
 
-                // Extract Description
-                try {
-                    description = lotElement.findElement(LOT_DESCRIPTION_XPATH).getText().trim();
-                    log.debug("Extracted Description: " + description);
-                } catch (Exception e) {
-                    description = "No description available"; // Default if missing
-                    log.warn("Description extraction failed, defaulting to 'No description available'.");
+        // Execute the tasks in parallel and collect results
+        try {
+            List<Future<Lot>> results = executorService.invokeAll(tasks);
+            for (Future<Lot> result : results) {
+                Lot lot = result.get();
+                if (lot != null) {
+                    lots.add(lot);
                 }
-
-                // Extract Estimation Price
-                try {
-                    estimationPrice = lotElement.findElement(LOT_ESTIMATION_XPATH).getText().trim();
-                    log.debug("Extracted Estimation Price: " + estimationPrice);
-                } catch (Exception e) {
-                    estimationPrice = "No estimation available"; // Default if missing
-                    log.warn("Estimation Price extraction failed, defaulting to 'No estimation available'.");
-                }
-
-                // Extract Date
-                try {
-                    date = lotElement.findElement(LOT_DATE_XPATH).getText().trim();
-                    log.debug("Extracted Date: " + date);
-                } catch (Exception e) {
-                    date = "No date available"; // Default if missing
-                    log.warn("Date extraction failed, defaulting to 'No date available'.");
-                }
-
-                // Extract Auction House
-                try {
-                    auctionHouse = lotElement.findElement(LOT_AUCTION_HOUSE_XPATH).getText().trim();
-                    log.debug("Extracted Auction House: " + auctionHouse);
-                } catch (Exception e) {
-                    auctionHouse = "No auction house available"; // Default if missing
-                    log.warn("Auction House extraction failed, defaulting to 'No auction house available'.");
-                }
-
-                // Extract Image URL
-                try {
-                    imgUrl = lotElement.findElement(IMG_URL_XPATH).getAttribute("src").trim();
-                    log.debug("Extracted Image URL: " + imgUrl);
-                } catch (Exception e) {
-                    imgUrl = "No image available"; // Default if missing
-                    log.warn("Image URL extraction failed, defaulting to 'No image available'.");
-                }
-
-                // Extract URL
-                try {
-                    String relativeUrl = lotElement.findElement(AUCTION_URL_XPATH).getAttribute("href").trim();
-                    if (!relativeUrl.startsWith("http")) {
-                        String baseUrl = "https://www.interencheres.com";
-                        url = baseUrl + relativeUrl;
-                    } else {
-                        url = relativeUrl;
-                    }
-                    log.debug("Extracted URL: " + url);
-                } catch (Exception e) {
-                    url = "No URL available"; // Default if missing
-                    log.warn("URL extraction failed, defaulting to 'No URL available'.");
-                }
-
-                // Create a Lot object and add to the list
-                Lot lot = new Lot();
-                lot.setNumber(lotNumber);
-                lot.setDescription(description);
-                lot.setEstimationPrice(estimationPrice);
-                lot.setDate(date);
-                lot.setMaisonEnchere(auctionHouse);
-                lot.setImgUrl(imgUrl);
-                lot.setUrl(url);
-
-                // Set the insertion date to current time
-                lot.setInsertionDate(LocalDateTime.now());
-
-                lots.add(lot);
-                log.info("Lot added: " + lot.getNumber());
-
-            } catch (Exception e) {
-                log.error("Error processing lot: ", e);
             }
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Error executing parallel tasks: ", e);
+        } finally {
+            executorService.shutdown(); // Ensure the executor is properly shut down
         }
 
         log.info("Finished extracting lots. Total lots extracted: " + lots.size());
         return lots;
     }
 
+    // Helper method to extract a URL from a lot element
+    private String extractUrl(WebElement lotElement) {
+        try {
+            String relativeUrl = lotElement.findElement(AUCTION_URL_XPATH).getAttribute("href").trim();
+            if (!relativeUrl.startsWith("http")) {
+                String baseUrl = "https://www.interencheres.com";
+                return baseUrl + relativeUrl;
+            } else {
+                return relativeUrl;
+            }
+        } catch (Exception e) {
+            log.warn("URL extraction failed.");
+            return null; // Return null if URL is missing
+        }
+    }
 
-
-
-
+    // Helper method to extract data with a default value
+    private String extractData(WebElement lotElement, By xpath, String defaultValue) {
+        try {
+            return lotElement.findElement(xpath).getText().trim();
+        } catch (Exception e) {
+            return defaultValue; // Return the default value if extraction fails
+        }
+    }
 
 
 

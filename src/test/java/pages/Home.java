@@ -102,6 +102,12 @@ public class Home extends BasePage {
      * @param searchTerm The term to search for.
      */
     public void enterSearchTerm(String searchTerm) {
+        try {
+            Thread.sleep(2000); // Wait for 2 seconds
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+            log.error("Thread sleep interrupted", e);
+        }
         WebElement searchInputElement = waitForElement(searchInput);
 
         // Clear the input field by pressing Backspace the length of the current value
@@ -110,10 +116,19 @@ public class Home extends BasePage {
             searchInputElement.sendKeys(Keys.BACK_SPACE); // Press Backspace for each character
         }
 
+        // Wait for 2 seconds
+        try {
+            Thread.sleep(2000); // Wait for 2 seconds
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+            log.error("Thread sleep interrupted", e);
+        }
+
         // Enter the new search term
         searchInputElement.sendKeys(searchTerm);
         log.info("Entered search term: " + searchTerm);
     }
+
 
     /**
      * Clicks the Search button.
@@ -129,6 +144,7 @@ public class Home extends BasePage {
      * @param searchTerm The term to search for.
      */
     public void performSearch(String searchTerm) {
+
         enterSearchTerm(searchTerm);
         clickSearchButton();
         log.info("Performed search for: " + searchTerm);
