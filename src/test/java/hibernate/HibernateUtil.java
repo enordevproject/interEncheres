@@ -5,19 +5,23 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.HibernateException;
 
 public class HibernateUtil {
-    private static final SessionFactory sessionFactory;
+    private static SessionFactory sessionFactory;
 
     static {
         try {
-            // This will try to load hibernate.cfg.xml from the classpath
-            sessionFactory = new Configuration().configure().buildSessionFactory();
-        } catch (HibernateException ex) {
-            System.err.println("Initial SessionFactory creation failed." + ex);
-            throw new ExceptionInInitializerError(ex);
+            Configuration configuration = new Configuration();
+            configuration.configure();
+            sessionFactory = configuration.buildSessionFactory();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ExceptionInInitializerError("Error initializing Hibernate: " + e.getMessage());
         }
     }
 
     public static SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            throw new IllegalStateException("SessionFactory not initialized.");
+        }
         return sessionFactory;
     }
 }

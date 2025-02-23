@@ -1,40 +1,35 @@
 package sanitySuite;
 
+import Models.Laptop;
 import Models.Lot;
 import Models.Results;
-import base.BasePage;
+import Models.GPTService;
 
+import base.BasePage;
+import hibernate.HibernateUtil;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 import pages.Home;
 import pages.Search;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
-public  class FirstTest extends BasePage {
+public class FirstTest extends BasePage {
     private static final Logger log = LoggerFactory.getLogger(FirstTest.class);
     private Home homePage;
     private Search searchPage;
 
     @BeforeClass
     public void setUp() {
-
         homePage = new Home(driver);
         searchPage = new Search(driver);
     }
-
-
     @Test(priority = 1, description = "Open page, perform search for multiple terms, and insert lots into the database")
     public void openPageAndSearch() {
         log.info("Navigating to Interencheres home page.");
@@ -85,31 +80,74 @@ public  class FirstTest extends BasePage {
 
         log.info("All search terms processed, and lots have been pushed to the database.");
     }
+    @Test(priority = 2, description = "Retrieve lots, send them to GPT-4, and store laptops in the database")
+    public void processLotsWithGPT() {
+        log.info("🔄 [Start] Processing lots with GPT-4...");
+
+        List<Lot> lotsFromDatabase = Results.getAllLotsFromDatabase();
+        if (lotsFromDatabase.isEmpty()) {
+            log.warn("⚠️ No lots found in database.");
+            return;
+        }
+
+        log.info("✅ Retrieved {} lots.", lotsFromDatabase.size());
+
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            for (Lot lot : lotsFromDatabase) {
+                log.info("🔍 Processing lot: {}", lot.getUrl());
+
+                if (Results.checkIfLaptopExists(lot.getUrl())) {
+                    log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
+                    continue;
+                }
+
+                log.info("🧠 Sending lot to GPT-4...");
+                Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
+
+                if (generatedLaptop != null) {
+               //     generatedLaptop.setLot(lot);
+                    log.info("✅ Laptop generated: {}");
+
+
+                    session.persist(generatedLaptop);
+                    log.info("💾 Laptop inserted into database for lot {}.", lot.getUrl());
+                } else {
+                    log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
+                }
+            }
+
+            transaction.commit();
+            log.info("✅ [Finish] Processing complete.");
+        } catch (Exception e) {
+            log.error("❌ Error during lot processing: {}", e.getMessage(), e);
+        }
+    }
 
 
     @AfterSuite
     public void tearDown() {
         if (driver != null) {
             try {
-                BasePage.quitDriver(); // Using the quitDriver method from BasePage to quit the driver
-                log.info("Driver successfully quit.");
+                BasePage.quitDriver();
+                log.info("🚪 Driver successfully closed.");
             } catch (Exception e) {
-                log.error("Error while quitting driver: {}", e.getMessage());
+                log.error("❌ Error closing driver: {}", e.getMessage());
             }
         }
 
-        // Kill the ChromeDriver process if it's still running
         try {
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
                 Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe");
-                log.info("ChromeDriver process terminated on Windows.");
+                log.info("🛑 ChromeDriver terminated on Windows.");
             } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
                 Runtime.getRuntime().exec("pkill chromedriver");
-                log.info("ChromeDriver process terminated on Unix-like OS.");
+                log.info("🛑 ChromeDriver terminated on Unix-like OS.");
             }
         } catch (IOException e) {
-            log.error("Error killing chromedriver process: {}", e.getMessage());
+            log.error("❌ Error terminating ChromeDriver process: {}", e.getMessage());
         }
     }
 }

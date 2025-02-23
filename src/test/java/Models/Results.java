@@ -3,8 +3,12 @@ package Models;
 import hibernate.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +77,46 @@ public class Results {
         tx.commit();
         session.close();
     }
+    // ✅ Use HibernateUtil to get session
+    public static List<Lot> getAllLotsFromDatabase() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Lot", Lot.class).list();
+        } catch (Exception e) {
+            System.err.println("❌ Error fetching lots from DB: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public static void insertLaptopIntoDatabase(Laptop laptop) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.persist(laptop);
+            transaction.commit();
+            System.out.println("✅ Laptop successfully inserted into database.");
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            System.err.println("❌ Error inserting laptop: " + e.getMessage());
+        }
+    }
+
+
+    public static boolean checkIfLaptopExists(String lotUrl) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            String hql = "SELECT COUNT(*) FROM Laptop WHERE lotUrl = :lotUrl";
+            Long count = (Long) session.createQuery(hql)
+                    .setParameter("lotUrl", lotUrl)
+                    .uniqueResult();
+            return count > 0;
+        } catch (Exception e) {
+            System.err.println("❌ Error checking laptop existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+
+
 
     private boolean checkIfUrlExists(String url) {
         // Ensure session is available in the current context

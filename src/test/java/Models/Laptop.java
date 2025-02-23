@@ -1,5 +1,7 @@
 package Models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.util.Date;
 
@@ -10,10 +12,6 @@ public class Laptop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "lot_id", nullable = false)
-    private Lot lot;
 
     @Column(name = "lot_number")
     private int lotNumber;
@@ -67,9 +65,6 @@ public class Laptop {
     @Column(name = "storage_capacity")
     private int storageCapacity;
 
-    @Column(name = "storage_speed")
-    private int storageSpeed;
-
     @Column(name = "gpu_type", length = 50)
     private String gpuType;
 
@@ -94,18 +89,6 @@ public class Laptop {
     @Column(name = "face_recognition")
     private boolean faceRecognition;
 
-    @Column(name = "chassis_material", length = 100)
-    private String chassisMaterial;
-
-    @Column(name = "keyboard_backlight")
-    private boolean keyboardBacklight;
-
-    @Column(name = "keyboard_type", length = 50)
-    private String keyboardType;
-
-    @Column(name = "connectivity", length = 255)
-    private String connectivity;
-
     @Column(name = "battery_life", length = 50)
     private String batteryLife;
 
@@ -124,66 +107,106 @@ public class Laptop {
     @Column(name = "release_year")
     private int releaseYear;
 
-    // 🔥 AI-Generated Product Condition Based on Image
     @Column(name = "etat_produit_image", length = 50)
     private String etatProduitImage;
 
     @Column(name = "reason_for_condition", columnDefinition = "TEXT")
     private String reasonForCondition;
 
-    // 🔥 GPT Decision Insights
     @Column(name = "note_sur_10")
     private int noteSur10;
 
     @Column(name = "reason_for_score", columnDefinition = "TEXT")
     private String reasonForScore;
 
-    @Column(name = "bon_coin_estimation", length = 50)
-    private String bonCoinEstimation;
-
-    @Column(name = "facebook_estimation", length = 50)
-    private String facebookEstimation;
-
-    @Column(name = "internet_estimation", length = 50)
-    private String internetEstimation;
-
     @Column(name = "recommended_to_buy")
     private boolean recommendedToBuy;
 
-    // 🔹 Default Constructor (Required for Hibernate)
+    // ✅ No-Arg Constructor (Required by Jackson)
     public Laptop() {}
 
-    // 🔹 Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // ✅ JSON Constructor for Proper Deserialization
+    @JsonCreator
+    public Laptop(
+            @JsonProperty("lot_number") int lotNumber,
+            @JsonProperty("description") String description,
+            @JsonProperty("lot_url") String lotUrl,
+            @JsonProperty("img_url") String imgUrl,
+            @JsonProperty("date") String date, // ✅ Fix: String instead of Date for JSON parsing
+            @JsonProperty("maison_enchere") String maisonEnchere,
+            @JsonProperty("quantity") int quantity,
+            @JsonProperty("brand") String brand,
+            @JsonProperty("model") String model,
+            @JsonProperty("processor_brand") String processorBrand,
+            @JsonProperty("processor_model") String processorModel,
+            @JsonProperty("processor_cores") int processorCores,
+            @JsonProperty("processor_clock_speed") double processorClockSpeed,
+            @JsonProperty("ram_size") int ramSize,
+            @JsonProperty("ram_type") String ramType,
+            @JsonProperty("storage_type") String storageType,
+            @JsonProperty("storage_capacity") int storageCapacity,
+            @JsonProperty("gpu_type") String gpuType,
+            @JsonProperty("gpu_model") String gpuModel,
+            @JsonProperty("gpu_vram") int gpuVram,
+            @JsonProperty("screen_size") double screenSize,
+            @JsonProperty("screen_resolution") String screenResolution,
+            @JsonProperty("touch_screen") boolean touchScreen,
+            @JsonProperty("fingerprint_sensor") boolean fingerprintSensor,
+            @JsonProperty("face_recognition") boolean faceRecognition,
+            @JsonProperty("battery_life") String batteryLife,
+            @JsonProperty("weight") double weight,
+            @JsonProperty("operating_system") String operatingSystem,
+            @JsonProperty("product_condition") String condition,
+            @JsonProperty("warranty") String warranty,
+            @JsonProperty("release_year") int releaseYear,
+            @JsonProperty("etat_produit_image") String etatProduitImage,
+            @JsonProperty("reason_for_condition") String reasonForCondition,
+            @JsonProperty("note_sur_10") int noteSur10,
+            @JsonProperty("reason_for_score") String reasonForScore,
+            @JsonProperty("recommended_to_buy") boolean recommendedToBuy
+    ) {
+        this.lotNumber = lotNumber;
+        this.description = description;
+        this.lotUrl = lotUrl;
+        this.imgUrl = imgUrl;
 
-    public Lot getLot() { return lot; }
-    public void setLot(Lot lot) { this.lot = lot; }
+        // ✅ Fix Date Parsing from String
+        try {
+            this.date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (Exception e) {
+            this.date = null; // Default to null if parsing fails
+        }
 
-    public int getLotNumber() { return lotNumber; }
-    public void setLotNumber(int lotNumber) { this.lotNumber = lotNumber; }
-
-    public String getEtatProduitImage() { return etatProduitImage; }
-    public void setEtatProduitImage(String etatProduitImage) { this.etatProduitImage = etatProduitImage; }
-
-    public String getReasonForCondition() { return reasonForCondition; }
-    public void setReasonForCondition(String reasonForCondition) { this.reasonForCondition = reasonForCondition; }
-
-    public int getNoteSur10() { return noteSur10; }
-    public void setNoteSur10(int noteSur10) { this.noteSur10 = noteSur10; }
-
-    public String getReasonForScore() { return reasonForScore; }
-    public void setReasonForScore(String reasonForScore) { this.reasonForScore = reasonForScore; }
-
-    public String getBonCoinEstimation() { return bonCoinEstimation; }
-    public void setBonCoinEstimation(String bonCoinEstimation) { this.bonCoinEstimation = bonCoinEstimation; }
-
-    public String getFacebookEstimation() { return facebookEstimation; }
-    public void setFacebookEstimation(String facebookEstimation) { this.facebookEstimation = facebookEstimation; }
-
-    public String getInternetEstimation() { return internetEstimation; }
-    public void setInternetEstimation(String internetEstimation) { this.internetEstimation = internetEstimation; }
-
-    public boolean isRecommendedToBuy() { return recommendedToBuy; }
-    public void setRecommendedToBuy(boolean recommendedToBuy) { this.recommendedToBuy = recommendedToBuy; }
+        this.maisonEnchere = maisonEnchere;
+        this.quantity = quantity;
+        this.brand = brand;
+        this.model = model;
+        this.processorBrand = processorBrand;
+        this.processorModel = processorModel;
+        this.processorCores = processorCores;
+        this.processorClockSpeed = processorClockSpeed;
+        this.ramSize = ramSize;
+        this.ramType = ramType;
+        this.storageType = storageType;
+        this.storageCapacity = storageCapacity;
+        this.gpuType = gpuType;
+        this.gpuModel = gpuModel;
+        this.gpuVram = gpuVram;
+        this.screenSize = screenSize;
+        this.screenResolution = screenResolution;
+        this.touchScreen = touchScreen;
+        this.fingerprintSensor = fingerprintSensor;
+        this.faceRecognition = faceRecognition;
+        this.batteryLife = batteryLife;
+        this.weight = weight;
+        this.operatingSystem = operatingSystem;
+        this.condition = condition;
+        this.warranty = warranty;
+        this.releaseYear = releaseYear;
+        this.etatProduitImage = etatProduitImage;
+        this.reasonForCondition = reasonForCondition;
+        this.noteSur10 = noteSur10;
+        this.reasonForScore = reasonForScore;
+        this.recommendedToBuy = recommendedToBuy;
+    }
 }
