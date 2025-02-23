@@ -6,8 +6,20 @@
 	<version>0.0.2-SNAPSHOT</version>
 	<name>WebTestFramework</name>
 	<description>Web testing framework using Java + Selenium Web driver + TestNG ...created by Shirish Kawatkar</description>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-	<profiles>
+    <profiles>
 
 		<!-- ################ Development Environment [dev]################ -->
 		<profile>

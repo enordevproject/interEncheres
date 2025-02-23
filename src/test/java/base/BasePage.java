@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.openqa.selenium.*;
@@ -23,16 +21,15 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 public abstract class BasePage {
 
     protected static final Logger log = Logger.getLogger(BasePage.class);
-    private final int DEFAULT_TIMEOUT = 25;
-    private final int TIMEOUT = 50;
-    private static boolean isInitalized = false;
+    private static final int DEFAULT_TIMEOUT = 25;
+    private static boolean isInitialized = false;
     protected static WebDriver driver;
     protected static WebDriverWait wait;
     protected static Properties config = null;
     protected static Properties data = null;
 
     protected BasePage() {
-        if (!isInitalized) {
+        if (!isInitialized) {
             initLogs();
             initConfig();
             initDriver();
@@ -75,50 +72,33 @@ public abstract class BasePage {
     }
 
     private static void initDriver() {
-        if (driver != null) {
-            return;
-        }
+        if (driver != null) return;
 
         String browser = config.getProperty("browser");
-
         if (browser.equalsIgnoreCase("GoogleChrome") || browser.equalsIgnoreCase("CHROME")) {
-            System.setProperty("webdriver.chrome.driver",
-                    System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
-
+            System.setProperty("webdriver.chrome.driver", System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
             ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless");  // Headless mode for faster execution
-            options.addArguments("--no-sandbox"); // Avoid security issues in some environments
-            options.addArguments("--blink-settings=imagesEnabled=false"); // Disable images for faster load
-
-            // Disable logging for faster startup
-            options.addArguments("--log-level=3"); // Limit logging to errors only
-
+            options.addArguments("--headless", "--no-sandbox", "--blink-settings=imagesEnabled=false", "--log-level=3");
             driver = new ChromeDriver(options);
             log.info("Chrome driver initialized in headless mode with optimizations.");
         } else if (browser.equalsIgnoreCase("htmlunit")) {
-            driver = new HtmlUnitDriver(true);  // Use a headless HTML unit driver if required
+            driver = new HtmlUnitDriver(true);
             log.info("HtmlUnit driver initialized.");
         } else {
             throw new IllegalArgumentException("Unsupported browser: " + browser);
         }
 
-        // Set timeouts after driver initialization
-        String waitTime = config.getProperty("implicit.wait", "10");
-        long timeoutInSeconds = Long.parseLong(waitTime);
+        long timeoutInSeconds = Long.parseLong(config.getProperty("implicit.wait", "10"));
         driver.manage().timeouts().implicitlyWait(timeoutInSeconds, TimeUnit.SECONDS);
         log.info("Implicit wait set to " + timeoutInSeconds + " seconds.");
 
-        // Use explicit wait only when needed, avoid global WebDriverWait if possible
-        String explicitWaitTime = config.getProperty("explicit.wait", "60");
-        wait = new WebDriverWait(driver, Long.parseLong(explicitWaitTime));
-        log.info("Explicit wait set to " + explicitWaitTime + " seconds.");
+        wait = new WebDriverWait(driver, Long.parseLong(config.getProperty("explicit.wait", "60")));
+        log.info("Explicit wait set to 60 seconds.");
 
-        // Avoid maximizing the window for headless mode as it's not necessary
         if (!browser.equalsIgnoreCase("htmlunit")) {
-            driver.manage().window().setSize(new Dimension(1920, 1080));  // Set a fixed window size for headless mode if needed
+            driver.manage().window().setSize(new Dimension(1920, 1080));
         }
     }
-
 
     public static void quitDriver() {
         if (driver != null) {
@@ -128,31 +108,12 @@ public abstract class BasePage {
         }
     }
 
-    public void waitForElementToDisappear(By webElementBy) {
-        waitForElementToDisappear(webElementBy, DEFAULT_TIMEOUT);
-    }
-
-    public void waitForElementToDisappear(By webElementBy, int timeoutInSeconds) {
-        WebDriverWait wait = new WebDriverWait(driver, timeoutInSeconds);
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(webElementBy));
-    }
-
-    public WebElement waitForElementToBeClickable(By locator) {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        return wait.until(ExpectedConditions.elementToBeClickable(locator));
-    }
-
-    public WebElement waitForElementToBeVisible(By locator) {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-    }
-
     public WebElement waitForElement(By by) {
         return waitForElement(by, DEFAULT_TIMEOUT);
     }
 
-    public WebElement waitForElement(By by, int waitSecond) {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
+    public WebElement waitForElement(By by, int timeoutInSeconds) {
+        WebDriverWait wait = new WebDriverWait(driver, timeoutInSeconds);
         return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
     }
 
@@ -166,10 +127,6 @@ public abstract class BasePage {
         clickWithJavaScript(findElement(webElement));
     }
 
-    protected String findTextOfElement(By webElement) {
-        return driver.findElement(webElement).getText();
-    }
-
     protected WebElement findElement(By webElement) {
         return driver.findElement(webElement);
     }
@@ -181,7 +138,6 @@ public abstract class BasePage {
     public void switchToNewWindow() {
         String currentWindow = driver.getWindowHandle();
         Set<String> allWindows = driver.getWindowHandles();
-
         for (String window : allWindows) {
             if (!window.equals(currentWindow)) {
                 driver.switchTo().window(window);
@@ -199,16 +155,11 @@ public abstract class BasePage {
         js.executeScript("arguments[0].scrollIntoView();", webElement);
     }
 
-    public String getInnerHtml(WebElement element) {
-        String text = ((JavascriptExecutor) driver).executeScript("return arguments[0].innerHTML", element).toString();
-        text = text.replaceAll("\n", "").replaceAll("\t", "").trim();
-        return text;
-    }
-
     public void acceptAlert() {
         driver.switchTo().alert().accept();
     }
 
+    // Additional Utility Functions
     protected void moveSlider(WebElement slider, double number, double max, double min) {
         int pixelsToMove = getPixelsToMove(slider, number, max, min);
         Actions sliderAction = new Actions(driver);
@@ -224,5 +175,19 @@ public abstract class BasePage {
         tempPixels = tempPixels * (amount - sliderMin);
         pixels = (int) tempPixels;
         return pixels;
+    }
+
+    // Optional Universal Logging for errors and retries
+    public void logErrorAndRetry(Runnable action, int retries) {
+        int attempt = 0;
+        while (attempt < retries) {
+            try {
+                action.run();
+                break;
+            } catch (Exception e) {
+                log.error("Attempt " + (attempt + 1) + " failed: " + e.getMessage());
+                attempt++;
+            }
+        }
     }
 }

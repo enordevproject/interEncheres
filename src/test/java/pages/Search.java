@@ -2,10 +2,14 @@ package pages;
 
 
 import Models.Lot;
+import Models.Results;
 import org.openqa.selenium.*;
 import base.BasePage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sanitySuite.FirstTest;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -17,8 +21,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public class Search extends BasePage {
-
-
+    private static final Logger log = LoggerFactory.getLogger(FirstTest.class);
     public Search(WebDriver driver) {
         super(driver);
     }
@@ -76,6 +79,8 @@ public class Search extends BasePage {
         List<WebElement> lotElements = driver.findElements(LOT_ITEMS_XPATH);
         List<Lot> lots = new ArrayList<>();
 
+        log.info("Starting to extract lots on the current page. Found " + lotElements.size() + " lot elements.");
+
         for (WebElement lotElement : lotElements) {
             try {
                 // Initialize default values
@@ -90,61 +95,71 @@ public class Search extends BasePage {
                 // Extract Lot Number (Handle missing or malformed)
                 try {
                     lotNumber = lotElement.findElement(LOT_NUMBER_XPATH).getText().trim();
-
+                    log.debug("Extracted Lot Number: " + lotNumber);
                 } catch (Exception e) {
                     lotNumber = "No lot available"; // Default if missing
+                    log.warn("Lot Number extraction failed, defaulting to 'No lot available'.");
                 }
 
                 // Extract Description
                 try {
                     description = lotElement.findElement(LOT_DESCRIPTION_XPATH).getText().trim();
+                    log.debug("Extracted Description: " + description);
                 } catch (Exception e) {
                     description = "No description available"; // Default if missing
+                    log.warn("Description extraction failed, defaulting to 'No description available'.");
                 }
 
                 // Extract Estimation Price
                 try {
                     estimationPrice = lotElement.findElement(LOT_ESTIMATION_XPATH).getText().trim();
+                    log.debug("Extracted Estimation Price: " + estimationPrice);
                 } catch (Exception e) {
                     estimationPrice = "No estimation available"; // Default if missing
+                    log.warn("Estimation Price extraction failed, defaulting to 'No estimation available'.");
                 }
 
                 // Extract Date
                 try {
                     date = lotElement.findElement(LOT_DATE_XPATH).getText().trim();
+                    log.debug("Extracted Date: " + date);
                 } catch (Exception e) {
                     date = "No date available"; // Default if missing
+                    log.warn("Date extraction failed, defaulting to 'No date available'.");
                 }
 
                 // Extract Auction House
                 try {
                     auctionHouse = lotElement.findElement(LOT_AUCTION_HOUSE_XPATH).getText().trim();
+                    log.debug("Extracted Auction House: " + auctionHouse);
                 } catch (Exception e) {
                     auctionHouse = "No auction house available"; // Default if missing
+                    log.warn("Auction House extraction failed, defaulting to 'No auction house available'.");
                 }
 
                 // Extract Image URL
                 try {
                     imgUrl = lotElement.findElement(IMG_URL_XPATH).getAttribute("src").trim();
+                    log.debug("Extracted Image URL: " + imgUrl);
                 } catch (Exception e) {
                     imgUrl = "No image available"; // Default if missing
+                    log.warn("Image URL extraction failed, defaulting to 'No image available'.");
                 }
 
+                // Extract URL
                 try {
-                    // Ensure the correct anchor element is selected for the current lot
                     String relativeUrl = lotElement.findElement(AUCTION_URL_XPATH).getAttribute("href").trim();
-
-                    // Prepend base URL if necessary
                     if (!relativeUrl.startsWith("http")) {
-                        String baseUrl = "https://www.interencheres.com";  // Adjust to the base URL
+                        String baseUrl = "https://www.interencheres.com";
                         url = baseUrl + relativeUrl;
                     } else {
                         url = relativeUrl;
                     }
+                    log.debug("Extracted URL: " + url);
                 } catch (Exception e) {
                     url = "No URL available"; // Default if missing
+                    log.warn("URL extraction failed, defaulting to 'No URL available'.");
                 }
-
 
                 // Create a Lot object and add to the list
                 Lot lot = new Lot();
@@ -160,50 +175,66 @@ public class Search extends BasePage {
                 lot.setInsertionDate(LocalDateTime.now());
 
                 lots.add(lot);
-
+                log.info("Lot added: " + lot.getNumber());
 
             } catch (Exception e) {
-                e.printStackTrace(); // Handle any unexpected errors
+                log.error("Error processing lot: ", e);
             }
         }
 
+        log.info("Finished extracting lots. Total lots extracted: " + lots.size());
         return lots;
     }
 
 
 
-    public List<Lot> getAllLots() {
-        List<Lot> allLots = new ArrayList<>();
 
-        // Check if no results are present
-        if (isNoResultsPresent()) {
-            log.info("No lots found matching the search criteria.");
-            return allLots; // Return empty list if no results
-        }
 
-        // Process the first page
-        allLots.addAll(getLotsOnCurrentPage());
 
-        // Check if pagination exists
-        if (isPaginationPresent()) {
-            // Get the last page number to determine how many pages to loop through
-            int lastPageNumber = getLastPageNumber();
 
-            for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
-                // Go to the next page
-                goToNextPage();
-                // Wait for the next page's content to load
-                waitForPageContent();
-                // Collect lots from the new page
-                allLots.addAll(getLotsOnCurrentPage());
+
+      /*  public List<Lot> getAllLots() {
+            List<Lot> allLots = new ArrayList<>();
+
+            // Check if no results are present
+            if (isNoResultsPresent()) {
+                log.info("No lots found matching the search criteria.");
+                return allLots; // Return empty list if no results
             }
-        }
 
-        return allLots;
-    }
+            // Initialize Results for the first page
+            // Store results for the current page
+            Results currentPageResults = new Results();
+
+            // Process the first page
+            currentPageResults.setLots(getLotsOnCurrentPage()); // Store lots on the first page
+            allLots.addAll(currentPageResults.getLots()); // Add the first page lots to the total
+
+            // Check if pagination exists
+            if (isPaginationPresent()) {
+                // Get the last page number to determine how many pages to loop through
+                int lastPageNumber = getLastPageNumber();
+
+                for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
+                    // Go to the next page
+                    goToNextPage();
+                    // Wait for the next page's content to load
+                    waitForPageContent();
+
+                    // Clear the current page's Results and fetch new lots
+                    currentPageResults = new Results(); // Clear previous results
+                    currentPageResults.setLots(getLotsOnCurrentPage()); // Add new page results
+
+                    // Add new lots from the current page
+                    allLots.addAll(currentPageResults.getLots());
+                }
+            }
+
+            return allLots;
+        }*/
 
     // Method to check if there are no results
-    private boolean isNoResultsPresent() {
+    public boolean isNoResultsPresent() {
         try {
             WebDriverWait wait = new WebDriverWait(driver, 2);
             // Check for the no-results message using the 'noResultsMessage' By variable
@@ -216,7 +247,7 @@ public class Search extends BasePage {
     }
 
     // Method to check if pagination is present
-    private boolean isPaginationPresent() {
+    public boolean isPaginationPresent() {
         try {
             WebDriverWait wait = new WebDriverWait(driver, 2);
             // Try to find the pagination element
@@ -252,7 +283,7 @@ public class Search extends BasePage {
     }
 
     // Explicit wait for page content to load
-    private void waitForPageContent() {
+    public void waitForPageContent() {
         WebDriverWait wait = new WebDriverWait(driver, 2);
         wait.until(ExpectedConditions.presenceOfElementLocated(LOT_ITEMS_XPATH));
     }

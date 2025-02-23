@@ -39,7 +39,7 @@ public class Home extends BasePage {
     }
 
     private void sendTextWhenReady(By locator, String text) {
-        WebElement element = waitForElementToBeClickable(locator);
+        WebElement element = waitForElement(locator);
         element.clear();
         element.sendKeys(text);
     }
@@ -102,8 +102,15 @@ public class Home extends BasePage {
      * @param searchTerm The term to search for.
      */
     public void enterSearchTerm(String searchTerm) {
-        WebElement searchInputElement = waitForElementToBeClickable(searchInput);
-        searchInputElement.clear(); // Clear the input field directly
+        WebElement searchInputElement = waitForElement(searchInput);
+
+        // Clear the input field by pressing Backspace the length of the current value
+        String currentValue = searchInputElement.getAttribute("value");
+        for (int i = 0; i < currentValue.length(); i++) {
+            searchInputElement.sendKeys(Keys.BACK_SPACE); // Press Backspace for each character
+        }
+
+        // Enter the new search term
         searchInputElement.sendKeys(searchTerm);
         log.info("Entered search term: " + searchTerm);
     }

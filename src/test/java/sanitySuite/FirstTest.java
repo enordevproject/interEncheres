@@ -1,11 +1,13 @@
 package sanitySuite;
 
 import Models.Lot;
+import Models.Results;
 import base.BasePage;
-import base.TestBase;
-import hibernate.HibernateUtil;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -16,76 +18,72 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class FirstTest extends BasePage {
 
+public  class FirstTest extends BasePage {
+    private static final Logger log = LoggerFactory.getLogger(FirstTest.class);
     private Home homePage;
     private Search searchPage;
 
     @BeforeClass
     public void setUp() {
+
         homePage = new Home(driver);
         searchPage = new Search(driver);
     }
-    // Open session from HibernateUtil
-    Session session = HibernateUtil.getSessionFactory().openSession();
-    Transaction tx = session.beginTransaction();
+
+
     @Test(priority = 1, description = "Open page, perform search for multiple terms, and insert lots into the database")
     public void openPageAndSearch() {
         log.info("Navigating to Interencheres home page.");
         homePage.navigateToHomePage(); // Navigate to the home page
 
-        // Define search terms using ArrayList (for older Java versions)
-        List<String> searchTerms = new ArrayList<>();
-
-
-
-        searchTerms.add("lenovo");
-        searchTerms.add("portable");
+        // Define search terms
+        List<String> searchTerms = Arrays.asList("ordinateur portable", "QSsQS", "dell", "QSsQS", "QSsQS", "QSsQS"); // Use Arrays.asList()
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {
-            log.info("Performing search for term: " + searchTerm);
+            log.info("Performing search for term: {}", searchTerm);
             homePage.performSearch(searchTerm); // Perform the search for the current term
 
-            // Retrieve the number of lots and all lots across all pages
+            // Check if no results are found
+            if (searchPage.isNoResultsPresent()) {
+                log.info("No results found for search term: {}", searchTerm);
+                continue; // Skip further processing if no results are found
+            }
+
             int numberOfLots = searchPage.getNumberOfLots();
-            log.info("Number of lots found for search term '" + searchTerm + "': " + numberOfLots);
-            System.out.println("Number of lots found for '" + searchTerm + "': " + numberOfLots);
+            log.info("Number of lots found for search term '{}': {}", searchTerm, numberOfLots);
 
-            List<Lot> allLots = searchPage.getAllLots(); // Get all the lots for the current search term
-            long addedCount = allLots.stream()
-                    .filter(lot -> !checkIfUrlExists(lot.getUrl())) // Filter out existing URLs
-                    .peek(lot -> {
-                        // If a lot with the same ID exists, merge the new lot.
-                        session.merge(lot); // Save or update the lot
-                        System.out.println("Lot with URL: " + lot.getUrl() + " has been successfully added to the database.");
-                    })
-                    .count(); // Count the added lots
+            Results resultsOnCurrentPage = new Results();
 
-            // Log and print the total number of added lots for the current search term
-            log.info("Total lots added for search term '" + searchTerm + "': " + addedCount);
-            System.out.println("Total lots added for search term '" + searchTerm + "': " + addedCount);
+            // Add lots from the first page
+            resultsOnCurrentPage.setLots(searchPage.getLotsOnCurrentPage());
+            resultsOnCurrentPage.pushLotsToDatabase(resultsOnCurrentPage.getLots());
+            resultsOnCurrentPage.getLots().clear();
+
+            // Check for pagination and process additional pages
+            if (searchPage.isPaginationPresent()) {
+                int lastPageNumber = searchPage.getLastPageNumber();
+                log.info("Pagination detected. Last page number: {}", lastPageNumber);
+
+                for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
+                    log.info("Navigating to page {}.", currentPage);
+                    // Navigate to next page and wait for content
+                    searchPage.goToNextPage();
+                    searchPage.waitForPageContent();
+
+                    // Add lots from the current page
+                    resultsOnCurrentPage.setLots(searchPage.getLotsOnCurrentPage());
+                    resultsOnCurrentPage.pushLotsToDatabase(resultsOnCurrentPage.getLots());
+                    resultsOnCurrentPage.getLots().clear();
+                }
+            }
         }
 
-        // Flush the session and commit the transaction after processing all search terms
-        session.flush();
-        tx.commit(); // Commit the transaction
-        session.close(); // Close the session
-    }
-
-
-
-
-
-    // Method to check if the URL already exists in the database
-    private boolean checkIfUrlExists(String url) {
-        String hql = "SELECT COUNT(*) FROM Lot l1_0 WHERE l1_0.url = :url"; // Assuming this is correct
-        Long count = (Long) session.createQuery(hql)
-                .setParameter("url", url)
-                .uniqueResult();
-        return count > 0; // Return true if the URL already exists
+        log.info("All search terms processed, and lots have been pushed to the database.");
     }
 
 
@@ -93,9 +91,10 @@ public class FirstTest extends BasePage {
     public void tearDown() {
         if (driver != null) {
             try {
-                driver.quit();
+                BasePage.quitDriver(); // Using the quitDriver method from BasePage to quit the driver
+                log.info("Driver successfully quit.");
             } catch (Exception e) {
-                System.out.println("Error while quitting driver: " + e.getMessage());
+                log.error("Error while quitting driver: {}", e.getMessage());
             }
         }
 
@@ -104,12 +103,13 @@ public class FirstTest extends BasePage {
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
                 Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe");
+                log.info("ChromeDriver process terminated on Windows.");
             } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
                 Runtime.getRuntime().exec("pkill chromedriver");
+                log.info("ChromeDriver process terminated on Unix-like OS.");
             }
         } catch (IOException e) {
-            System.out.println("Error killing chromedriver process: " + e.getMessage());
+            log.error("Error killing chromedriver process: {}", e.getMessage());
         }
     }
-
 }
