@@ -65,6 +65,7 @@ public class Results {
                 .peek(lot -> {
                     session.merge(lot); // Save or update the lot in the database
                     System.out.println("Lot with URL: " + lot.getUrl() + " has been successfully added to the database.");
+                    System.out.println("📸 Image URL: " + lot.getImgUrl()); // Debugging line
                 })
                 .count(); // Count the added lots
 

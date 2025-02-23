@@ -36,7 +36,7 @@ public class FirstTest extends BasePage {
         homePage.navigateToHomePage(); // Navigate to the home page
 
         // Define search terms
-        List<String> searchTerms = Arrays.asList("ideapad"); // Use Arrays.asList()
+        List<String> searchTerms = Arrays.asList("ordinateur portable","dell","lenovo","hp"); // Use Arrays.asList()
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {

@@ -100,7 +100,7 @@ public class Search extends BasePage {
                     lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
                     lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
                     lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
-                    lot.setImgUrl(extractData(lotElement, IMG_URL_XPATH, "No image available"));
+                    lot.setImgUrl(extractImgData(lotElement, IMG_URL_XPATH, "No image available"));
                     lot.setUrl(url);
 
                     // Set the insertion date to current time
@@ -155,6 +155,14 @@ public class Search extends BasePage {
             return lotElement.findElement(xpath).getText().trim();
         } catch (Exception e) {
             return defaultValue; // Return the default value if extraction fails
+        }
+    }
+    private String extractImgData(WebElement lotElement, By xpath, String defaultValue) {
+        try {
+            WebElement imgElement = lotElement.findElement(xpath);
+            return imgElement.getAttribute("src"); // ✅ Extract `src` from `<img>`
+        } catch (Exception e) {
+            return defaultValue; // Return default value if extraction fails
         }
     }
 

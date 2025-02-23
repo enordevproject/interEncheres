@@ -1,23 +1,21 @@
 package Models;
 
-import Utils.ConfigLoader;
+import  Utils.ConfigLoader;
+import Utils.ImageUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hibernate.HibernateUtil;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.hibernate.Session;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,9 +24,8 @@ public class GPTService {
         ObjectMapper objectMapper = new ObjectMapper();
         Laptop generatedLaptop = null;
 
-        // Charger la configuration API depuis la base de données
+        // ✅ Load API Configuration
         ApiInfo apiInfo = ApiInfoDAO.getApiInfoByName("Interencheres - Laptop");
-
         if (apiInfo == null) {
             System.out.println("❌ Aucune configuration API trouvée pour OpenAI !");
             return null;
@@ -39,7 +36,18 @@ public class GPTService {
             request.setHeader("Authorization", "Bearer " + apiInfo.getApiKey());
             request.setHeader("Content-Type", "application/json");
 
-            // ✅ Construction du JSON pour GPT-4 Turbo
+            // ✅ Load GPT properties from config
+            Map<String, Object> properties = ConfigLoader.getGptProperties();
+            if (properties == null || properties.isEmpty()) {
+                System.out.println("❌ Erreur : Les propriétés GPT sont introuvables.");
+                return null;
+            }
+
+            // ✅ Fetch and convert image to Base64
+            String base64Image = ImageUtils.downloadImageAsBase64(lot.getImgUrl());
+            boolean hasImage = base64Image != null && !base64Image.isEmpty();
+
+            // ✅ Construct the JSON payload
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", apiInfo.getModel());
             requestBody.put("response_format", Map.of("type", "json_object"));
@@ -49,26 +57,32 @@ public class GPTService {
             requestBody.put("frequency_penalty", apiInfo.getFrequencyPenalty());
             requestBody.put("presence_penalty", apiInfo.getPresencePenalty());
 
-            Map<String, Object> properties = ConfigLoader.getGptProperties();
+            // ✅ Construct GPT messages
+            List<Map<String, Object>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", "Tu es un expert en enchères de laptops. Fournis un JSON structuré."));
 
-            // 🔹 Messages pour GPT
-            List<Map<String, Object>> messages = List.of(
-                    Map.of("role", "system", "content", "Tu es un expert en enchères de laptops. Fournis un JSON structuré."),
-                    Map.of("role", "user", "content", String.format(
-                            "Voici un lot de laptop provenant d’une enchère :\n"
-                                    + "- Numéro du lot : %s\n"
-                                    + "- URL du lot : %s\n"
-                                    + "- Description du lot : %s\n"
-                                    + "- Maison d'enchères : %s\n"
-                                    + "- Image : %s\n"
-                                    + "Retourne uniquement du JSON structuré et complet.",
-                            lot.getNumber(), lot.getUrl(), lot.getDescription(), lot.getMaisonEnchere(),
-                            lot.getImgUrl() != null ? lot.getImgUrl() : "Aucune image disponible"
-                    ))
-            );
+            messages.add(Map.of("role", "user", "content", String.format(
+                    "Voici un lot de laptop provenant d’une enchère :\n"
+                            + "- Numéro du lot : %s\n"
+                            + "- URL du lot : %s\n"
+                            + "- Description du lot : %s\n"
+                            + "- Maison d'enchères : %s\n"
+                            + "Retourne uniquement du JSON structuré et complet.",
+                    lot.getNumber(), lot.getUrl(), lot.getDescription(), lot.getMaisonEnchere()
+            )));
+
+            // ✅ Include image data in the request if available
+            if (hasImage) {
+                messages.add(Map.of(
+                        "role", "user",
+                        "content", "Voici une image du lot en Base64 :",
+                        "image", base64Image
+                ));
+            }
 
             requestBody.put("messages", messages);
 
+            // ✅ Define the tool function to be called
             requestBody.put("tools", List.of(Map.of(
                     "type", "function",
                     "function", Map.of(
@@ -82,6 +96,10 @@ public class GPTService {
                     )
             )));
 
+            // ✅ Force GPT to call the function
+            requestBody.put("tool_choice", "required");
+
+            // ✅ Send API request
             StringEntity entity = new StringEntity(objectMapper.writeValueAsString(requestBody), ContentType.APPLICATION_JSON);
             request.setEntity(entity);
 
@@ -89,40 +107,47 @@ public class GPTService {
             try (CloseableHttpResponse response = httpClient.execute(request);
                  InputStream responseStream = response.getEntity().getContent()) {
 
-                // Convert response to a string for debugging
+                // ✅ Convert response to string
                 String jsonResponse = new BufferedReader(new InputStreamReader(responseStream))
                         .lines().collect(Collectors.joining("\n"));
 
-                // Print full JSON response for debugging
                 System.out.println("📥 JSON Response from GPT-4:\n" + jsonResponse);
 
-                // Parse the response into a JSON object
+                // ✅ Parse JSON response
                 JsonNode rootNode = objectMapper.readTree(jsonResponse);
 
-                // Validate that the response has expected fields
-                if (!rootNode.has("choices") || rootNode.get("choices").isEmpty()) {
-                    System.out.println("❌ Erreur : 'choices' manquant dans la réponse JSON.");
+                // ✅ Validate response structure
+                JsonNode choices = rootNode.path("choices");
+                if (!choices.isArray() || choices.isEmpty()) {
+                    System.out.println("❌ Erreur : 'choices' manquant ou vide dans la réponse JSON.");
                     return null;
                 }
 
-                // Extract the tool call arguments
-                JsonNode toolCallNode = rootNode.path("choices").get(0)
-                        .path("message").path("tool_calls")
-                        .get(0).path("function").path("arguments");
+                JsonNode firstChoice = choices.get(0);
+                JsonNode toolCalls = firstChoice.path("message").path("tool_calls");
 
-                // Debugging: Print extracted JSON before parsing
-                System.out.println("📌 Extracted JSON Arguments:\n" + toolCallNode.toPrettyString());
+                if (!toolCalls.isArray() || toolCalls.isEmpty()) {
+                    System.out.println("❌ Erreur : 'tool_calls' absent ou vide dans la réponse JSON.");
+                    return null;
+                }
 
-                // Convert toolCallNode from a **stringified JSON** into a proper JSON object
+                // ✅ Extract function arguments
+                JsonNode toolCallNode = toolCalls.get(0).path("function").path("arguments");
+
+                if (toolCallNode.isMissingNode()) {
+                    System.out.println("❌ Erreur : 'arguments' absent ou mal formé.");
+                    return null;
+                }
+
+                // ✅ Convert function arguments from stringified JSON
                 JsonNode parsedArguments = objectMapper.readTree(toolCallNode.asText());
 
-                // Deserialize properly
+                // ✅ Deserialize JSON to Laptop object
                 generatedLaptop = objectMapper.treeToValue(parsedArguments, Laptop.class);
 
-
-                // Debugging: Print generated laptop attributes
+                // ✅ Save to database
                 if (generatedLaptop != null) {
-                    System.out.println("✅ Laptop généré avec succès : ");
+                    System.out.println("✅ Laptop généré avec succès : " + generatedLaptop);
                     Results.insertLaptopIntoDatabase(generatedLaptop);
                 } else {
                     System.out.println("❌ Erreur : Laptop non généré correctement.");
@@ -135,8 +160,13 @@ public class GPTService {
             } catch (Exception e) {
                 System.out.println("❌ Erreur inattendue : " + e.getMessage());
             }
-            return generatedLaptop;
-
         }
+        return generatedLaptop;
     }
 }
+
+
+
+
+
+
