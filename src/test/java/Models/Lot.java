@@ -1,5 +1,6 @@
 package Models;
 
+import Utils.ImageUtils;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -118,6 +119,9 @@ public class Lot {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+    public String getImgAsBase64() {
+        return ImageUtils.downloadImageAsBase64(this.imgUrl);
     }
 
     @Override

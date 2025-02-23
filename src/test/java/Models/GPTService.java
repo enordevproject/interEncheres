@@ -1,5 +1,6 @@
 package Models;
 
+import Utils.ConfigLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,44 +49,7 @@ public class GPTService {
             requestBody.put("frequency_penalty", apiInfo.getFrequencyPenalty());
             requestBody.put("presence_penalty", apiInfo.getPresencePenalty());
 
-            // 🔹 Définition des propriétés pour la fonction GPT
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("lot_number", Map.of("type", "integer", "description", "Numéro de lot"));
-            properties.put("description", Map.of("type", "string", "description", "Description complète"));
-            properties.put("lot_url", Map.of("type", "string", "description", "URL de l'enchère"));
-            properties.put("img_url", Map.of("type", "string", "nullable", true, "description", "URL de l'image"));
-            properties.put("date", Map.of("type", "string", "description", "Date de l'enchère (YYYY-MM-DD)"));
-            properties.put("maison_enchere", Map.of("type", "string", "description", "Maison d'enchères"));
-            properties.put("quantity", Map.of("type", "integer", "description", "Quantité disponible"));
-            properties.put("brand", Map.of("type", "string", "description", "Marque du laptop"));
-            properties.put("model", Map.of("type", "string", "description", "Modèle du laptop"));
-            properties.put("processor_brand", Map.of("type", "string", "description", "Marque du processeur"));
-            properties.put("processor_model", Map.of("type", "string", "description", "Modèle du processeur"));
-            properties.put("processor_cores", Map.of("type", "integer", "description", "Nombre de cœurs du processeur"));
-            properties.put("processor_clock_speed", Map.of("type", "number", "description", "Fréquence du processeur en GHz"));
-            properties.put("ram_size", Map.of("type", "integer", "description", "Taille de la RAM en GB"));
-            properties.put("ram_type", Map.of("type", "string", "description", "Type de RAM (DDR4, DDR5, etc.)"));
-            properties.put("storage_type", Map.of("type", "string", "description", "Type de stockage"));
-            properties.put("storage_capacity", Map.of("type", "integer", "description", "Capacité du stockage en GB"));
-            properties.put("gpu_type", Map.of("type", "string", "description", "Type de GPU (NVIDIA, AMD, etc.)"));
-            properties.put("gpu_model", Map.of("type", "string", "description", "Modèle du GPU"));
-            properties.put("gpu_vram", Map.of("type", "integer", "description", "Mémoire vidéo du GPU"));
-            properties.put("screen_size", Map.of("type", "number", "description", "Taille de l'écran"));
-            properties.put("screen_resolution", Map.of("type", "string", "description", "Résolution de l'écran"));
-            properties.put("touch_screen", Map.of("type", "boolean", "description", "L'écran est-il tactile ?"));
-            properties.put("fingerprint_sensor", Map.of("type", "boolean", "description", "Capteur d'empreintes digitales"));
-            properties.put("face_recognition", Map.of("type", "boolean", "description", "Reconnaissance faciale"));
-            properties.put("battery_life", Map.of("type", "string", "description", "Autonomie de la batterie"));
-            properties.put("weight", Map.of("type", "number", "description", "Poids en kg"));
-            properties.put("operating_system", Map.of("type", "string", "description", "Système d'exploitation"));
-            properties.put("product_condition", Map.of("type", "string", "description", "État du laptop"));
-            properties.put("warranty", Map.of("type", "string", "description", "Garantie"));
-            properties.put("release_year", Map.of("type", "integer", "description", "Année de sortie"));
-            properties.put("note_sur_10", Map.of("type", "integer", "description", "Note de qualité sur 10"));
-            properties.put("reason_for_score", Map.of("type", "string", "description", "Raison de la note attribuée"));
-            properties.put("recommended_to_buy", Map.of("type", "boolean", "description", "Recommandé à l'achat"));
-            properties.put("etat_produit_image", Map.of("type", "string", "nullable", true, "description", "État du produit détecté par IA"));
-            properties.put("reason_for_condition", Map.of("type", "string", "nullable", true, "description", "Raison des défauts détectés"));
+            Map<String, Object> properties = ConfigLoader.getGptProperties();
 
             // 🔹 Messages pour GPT
             List<Map<String, Object>> messages = List.of(
