@@ -17,6 +17,13 @@ public class HibernateUtil {
             throw new ExceptionInInitializerError("Error initializing Hibernate: " + e.getMessage());
         }
     }
+    private static SessionFactory buildSessionFactory() {
+        try {
+            return new Configuration().configure().buildSessionFactory();
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError("Error initializing Hibernate: " + e.getMessage());
+        }
+    }
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory == null) {

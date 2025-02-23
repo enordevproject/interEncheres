@@ -91,14 +91,17 @@ public class Results {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            session.persist(laptop);
-            transaction.commit();
-            System.out.println("✅ Laptop successfully inserted into database.");
+            session.persist(laptop); // Use persist() instead of save()
+            transaction.commit(); // ✅ Ensure commit after each laptop insertion
+            System.out.println("💾 Laptop inserted successfully: ");
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            System.err.println("❌ Error inserting laptop: " + e.getMessage());
+            if (transaction != null) {
+                transaction.rollback(); // ✅ Rollback on failure
+            }
+            System.out.println("❌ Failed to insert laptop: " + e.getMessage());
         }
     }
+
 
 
     public static boolean checkIfLaptopExists(String lotUrl) {

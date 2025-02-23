@@ -154,6 +154,7 @@ public class GPTService {
 
                 // Deserialize properly
                 generatedLaptop = objectMapper.treeToValue(parsedArguments, Laptop.class);
+                generatedLaptop.setImgUrl(lot.getImgUrl());
 
                 // Debugging: Print generated laptop attributes
                 if (generatedLaptop != null) {

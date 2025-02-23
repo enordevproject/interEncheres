@@ -36,7 +36,7 @@ public class FirstTest extends BasePage {
         homePage.navigateToHomePage(); // Navigate to the home page
 
         // Define search terms
-        List<String> searchTerms = Arrays.asList("ordinateur portable", "QSsQS", "dell", "QSsQS", "QSsQS", "QSsQS"); // Use Arrays.asList()
+        List<String> searchTerms = Arrays.asList("ideapad"); // Use Arrays.asList()
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {
@@ -81,48 +81,49 @@ public class FirstTest extends BasePage {
         log.info("All search terms processed, and lots have been pushed to the database.");
     }
     @Test(priority = 2, description = "Retrieve lots, send them to GPT-4, and store laptops in the database")
-    public void processLotsWithGPT() {
+    public void processLotsWithGPT() throws IOException {
         log.info("🔄 [Start] Processing lots with GPT-4...");
 
         List<Lot> lotsFromDatabase = Results.getAllLotsFromDatabase();
         if (lotsFromDatabase.isEmpty()) {
-            log.warn("⚠️ No lots found in database.");
+            log.warn("⚠️ No lots found in the database.");
             return;
         }
 
         log.info("✅ Retrieved {} lots.", lotsFromDatabase.size());
 
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Transaction transaction = session.beginTransaction();
+        for (Lot lot : lotsFromDatabase) {
+            log.info("🔍 Processing lot: {}", lot.getUrl());
 
-            for (Lot lot : lotsFromDatabase) {
-                log.info("🔍 Processing lot: {}", lot.getUrl());
-
-                if (Results.checkIfLaptopExists(lot.getUrl())) {
-                    log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
-                    continue;
-                }
-
-                log.info("🧠 Sending lot to GPT-4...");
-                Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
-
-                if (generatedLaptop != null) {
-               //     generatedLaptop.setLot(lot);
-                    log.info("✅ Laptop generated: {}");
-
-
-                    session.persist(generatedLaptop);
-                    log.info("💾 Laptop inserted into database for lot {}.", lot.getUrl());
-                } else {
-                    log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
-                }
+            // Check if a laptop for this lot already exists
+            if (Results.checkIfLaptopExists(lot.getUrl())) {
+                log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
+                continue;
             }
 
-            transaction.commit();
-            log.info("✅ [Finish] Processing complete.");
-        } catch (Exception e) {
-            log.error("❌ Error during lot processing: {}", e.getMessage(), e);
+            log.info("🧠 Sending lot to GPT-4...");
+            Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
+
+            if (generatedLaptop != null) {
+                log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
+
+                // Insert the laptop into the database
+                try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+                    Transaction transaction = session.beginTransaction();
+
+                    session.persist(generatedLaptop);
+                    transaction.commit();
+
+                    log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
+                } catch (Exception e) {
+                    log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
+                }
+            } else {
+                log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
+            }
         }
+
+        log.info("✅ [Finish] Processing complete.");
     }
 
 
