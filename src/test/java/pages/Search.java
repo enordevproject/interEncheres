@@ -49,8 +49,9 @@ public class Search extends BasePage {
     private final By LOT_ESTIMATION_XPATH = By.xpath("//div[@class='estimates d-flex flex-wrap justify-center']//span[@class='text-pre-wrap flex-shrink-0 mx-1 text-center']");
     private final By LOT_AUCTION_HOUSE_XPATH = By.xpath("//div[@class='pa-1 col-md-4 col-lg-3 col-6 pa-0']//div[@class='organization-name text-caption font-weight-medium text_primary--text pt-2 px-2']//span[2]");
     private final By IMG_URL_XPATH = By.xpath("//div[@class='v-responsive__content d-flex align-center justify-center']/img");
-    private final By AUCTION_URL_XPATH = By.xpath("//a[@class='d-flex fill-height']");
+    private final By AUCTION_URL_XPATH = By.xpath(".//a[@class='d-flex fill-height']");
 
+    private By noResultsMessage = By.xpath("//p[contains(text(), 'Aucun lot ne correspond à cette demande')]");
 
     // Méthode pour récupérer les lots sur la page actuelle
 
@@ -146,12 +147,21 @@ public class Search extends BasePage {
                     imgUrl = "No image available"; // Default if missing
                 }
 
-                // Extract URL
                 try {
-                    url = lotElement.findElement(AUCTION_URL_XPATH).getAttribute("href").trim();
+                    // Ensure the correct anchor element is selected for the current lot
+                    String relativeUrl = lotElement.findElement(AUCTION_URL_XPATH).getAttribute("href").trim();
+
+                    // Prepend base URL if necessary
+                    if (!relativeUrl.startsWith("http")) {
+                        String baseUrl = "https://www.interencheres.com";  // Adjust to the base URL
+                        url = baseUrl + relativeUrl;
+                    } else {
+                        url = relativeUrl;
+                    }
                 } catch (Exception e) {
                     url = "No URL available"; // Default if missing
                 }
+
 
                 // Create a Lot object and add to the list
                 Lot lot = new Lot();
@@ -178,26 +188,60 @@ public class Search extends BasePage {
     public List<Lot> getAllLots() {
         List<Lot> allLots = new ArrayList<>();
 
+        // Check if no results are present
+        if (isNoResultsPresent()) {
+            log.info("No lots found matching the search criteria.");
+            return allLots; // Return empty list if no results
+        }
+
         // Process the first page
         allLots.addAll(getLotsOnCurrentPage());
 
-        // Get the last page number to determine how many pages to loop through
-        int lastPageNumber = getLastPageNumber();
+        // Check if pagination exists
+        if (isPaginationPresent()) {
+            // Get the last page number to determine how many pages to loop through
+            int lastPageNumber = getLastPageNumber();
 
-        for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
-            // Go to next page
-            goToNextPage();
-            // Wait for the next page's content to load
-            waitForPageContent();
-            // Collect lots from the new page
-            allLots.addAll(getLotsOnCurrentPage());
+            for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
+                // Go to the next page
+                goToNextPage();
+                // Wait for the next page's content to load
+                waitForPageContent();
+                // Collect lots from the new page
+                allLots.addAll(getLotsOnCurrentPage());
+            }
         }
 
         return allLots;
     }
 
+    // Method to check if there are no results
+    private boolean isNoResultsPresent() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 2);
+            // Check for the no-results message using the 'noResultsMessage' By variable
+            WebElement noResultsMessageElement = wait.until(ExpectedConditions.presenceOfElementLocated(noResultsMessage));
+            return noResultsMessageElement != null;
+        } catch (Exception e) {
+            // If the message is not found, no results are present
+            return false;
+        }
+    }
+
+    // Method to check if pagination is present
+    private boolean isPaginationPresent() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 2);
+            // Try to find the pagination element
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".v-pagination")));
+            return true;
+        } catch (Exception e) {
+            // If pagination is not found, return false
+            return false;
+        }
+    }
+
     // Method to get the last page number from the pagination
-    // Improved XPath to specifically target the last page button (without disabled classes)
     private int getLastPageNumber() {
         WebDriverWait wait = new WebDriverWait(driver, 2);
 

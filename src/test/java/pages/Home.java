@@ -1,10 +1,8 @@
 package pages;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import base.BasePage;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -114,19 +112,31 @@ public class Home extends BasePage {
             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("div.v-overlay__scrim")));
 
             // Locate the search input field
-            WebElement searchInput = driver.findElement(By.xpath("//input[@id='input-107']"));
+            WebElement searchInputElement = driver.findElement(searchInput);
 
             // Scroll the element into view
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", searchInput);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", searchInputElement);
 
             // Click the search input field using JavaScript
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", searchInput);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", searchInputElement);
 
-            // Clear any existing text
-            searchInput.clear();
+            // Clear the input field by repeatedly pressing BACKSPACE for 2 seconds
+            Actions actions = new Actions(driver);
+            actions.click(searchInputElement); // Focus on the input field
+
+            // Repeatedly press BACKSPACE for 2 seconds to simulate holding it
+            long startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < 2000) { // 2 seconds
+                actions.sendKeys(Keys.BACK_SPACE).perform();
+                try {
+                    Thread.sleep(50); // Small delay to mimic holding down the key
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
             // Enter the search term
-            searchInput.sendKeys(searchTerm);
+            searchInputElement.sendKeys(searchTerm);
 
             log.info("Entered search term: " + searchTerm);
         } catch (Exception e) {
@@ -134,6 +144,8 @@ public class Home extends BasePage {
             throw e; // Re-throw the exception to fail the test
         }
     }
+
+
 
     /**
      * Clicks the Search button.
