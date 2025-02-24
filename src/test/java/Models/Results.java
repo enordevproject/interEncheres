@@ -193,7 +193,6 @@ public class Results {
 
 
 
-
     public static void generateHtmlReport() {
         List<Laptop> laptops = getAllLaptopsFromDatabase();
 
@@ -226,6 +225,9 @@ public class Results {
                 .append("<style>.table-container {overflow-x: auto; width: 100%;} th, td { white-space: nowrap; text-align: center; vertical-align: middle; }</style>")
                 .append("</head><body class='container-fluid'><h2 class='my-3 text-center'>💻 Laptop Inventory Analysis</h2>");
 
+        // Results Counter
+        html.append("<h5 class='text-center'>Results: <span id='resultsCount'>" + laptops.size() + "</span></h5>");
+
         // Filters Section
         html.append("<div class='container'><div class='row filter-section'>")
                 .append("<div class='col-md-2'><input type='text' id='brandFilter' class='form-control' placeholder='🔍 Brand'></div>")
@@ -256,13 +258,7 @@ public class Results {
                     .append("<td>" + (laptop.getDate() != null ? sdf.format(laptop.getDate()) : "N/A") + "</td>")
                     .append("<td>" + laptop.getBrand() + "</td>")
                     .append("<td>" + laptop.getModel() + "</td>")
-                    .append("<td><b>🖥 Processor:</b> " + laptop.getProcessorBrand() + " " + laptop.getProcessorModel() +
-                            "<br><b>💾 RAM:</b> " + laptop.getRamSize() + "GB " + laptop.getRamType() +
-                            "<br><b>💽 Storage:</b> " + laptop.getStorageType() + " " + laptop.getStorageCapacity() + "GB" +
-                            "<br><b>🎮 GPU:</b> " + laptop.getGpuModel() + " (" + laptop.getGpuVram() + "GB VRAM)" +
-                            "<br><b>🖥 Screen:</b> " + laptop.getScreenSize() + " inches" +
-                            (laptop.isTouchScreen() ? " (Touch ✅)" : " (No Touch ❌)") +
-                            "<br><b>💻 OS:</b> " + laptop.getOperatingSystem() + "</td>")
+                    .append("<td>" + laptop.getProcessorBrand() + " " + laptop.getProcessorModel() + "</td>")
                     .append("<td>⭐ " + laptop.getNoteSur10() + "/10 (" + laptop.getCondition() + ")</td>")
                     .append("<td>" + laptop.getReasonForCondition() + "</td>")
                     .append("<td><b>💰 BonCoin:</b> <a href='" + bonCoinLink + "' target='_blank'>" + laptop.getBonCoinEstimation() + "€</a></td>")
@@ -274,23 +270,32 @@ public class Results {
 
         html.append("</tbody></table></div>");
 
-        // JavaScript for Filtering (Fixed Column Indexes)
+        // JavaScript for Filtering & Auto-Complete
         html.append("<script>")
+                .append("$(function() {")
+                .append("$('#brandFilter').autocomplete({ source: " + new Gson().toJson(brands) + " });")
+                .append("$('#modelFilter').autocomplete({ source: " + new Gson().toJson(models) + " });")
+                .append("$('#processorFilter').autocomplete({ source: " + new Gson().toJson(processors) + " });")
+                .append("$('#sellerFilter').autocomplete({ source: " + new Gson().toJson(sellers) + " });")
+                .append("});")
+
                 .append("function applyFilters() {")
                 .append("var brand = $('#brandFilter').val().toLowerCase();")
                 .append("var model = $('#modelFilter').val().toLowerCase();")
                 .append("var processor = $('#processorFilter').val().toLowerCase();")
                 .append("var condition = $('#conditionFilter').val();")
                 .append("var seller = $('#sellerFilter').val().toLowerCase();")
+                .append("var visibleCount = 0;")
                 .append("$('#laptopTable tbody tr').each(function() {")
                 .append("var row = $(this);")
-                .append("var match = (!brand || row.find('td:eq(2)').text().toLowerCase().includes(brand)) &&")
-                .append("(!model || row.find('td:eq(3)').text().toLowerCase().includes(model)) &&")
-                .append("(!processor || row.find('td:eq(4)').text().toLowerCase().includes(processor)) &&")
-                .append("(!condition || row.find('td:eq(5)').text().includes(condition)) &&")
-                .append("(!seller || row.find('td:eq(8)').text().toLowerCase().includes(seller));")
-                .append("row.toggle(match);")
-                .append("});")
+                .append("var rowBrand = row.find('td:eq(2)').text().toLowerCase();")
+                .append("var rowModel = row.find('td:eq(3)').text().toLowerCase();")
+                .append("var rowProcessor = row.find('td:eq(4)').text().toLowerCase();")
+                .append("var rowCondition = row.find('td:eq(5)').text();")
+                .append("var rowSeller = row.find('td:eq(8)').text().toLowerCase();")
+                .append("var match = (!brand || rowBrand.includes(brand)) && (!model || rowModel.includes(model)) && (!processor || rowProcessor.includes(processor)) && (!condition || rowCondition.includes(condition)) && (!seller || rowSeller.includes(seller));")
+                .append("if (match) { visibleCount++; row.show(); } else { row.hide(); }")
+                .append("}); $('#resultsCount').text(visibleCount);")
                 .append("}")
                 .append("</script>");
 
@@ -298,10 +303,14 @@ public class Results {
 
         try (FileWriter fileWriter = new FileWriter(filePath)) {
             fileWriter.write(html.toString());
+            Desktop.getDesktop().browse(new File(filePath).toURI());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+
 
 
     // Method to generate <option> elements for dropdowns
