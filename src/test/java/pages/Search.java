@@ -70,8 +70,6 @@ public class Search extends BasePage {
 
 
 
-
-    // Méthode pour récupérer les lots sur la page actuelle
     public List<Lot> getLotsOnCurrentPage() {
         WebDriverWait wait = new WebDriverWait(driver, 10);
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(LOT_ITEMS_XPATH));
@@ -81,29 +79,28 @@ public class Search extends BasePage {
 
         log.info("Starting to extract lots on the current page. Found " + lotElements.size() + " lot elements.");
 
-        // Executor to process in parallel
-        ExecutorService executorService = Executors.newFixedThreadPool(10);  // Adjust the number of threads as needed
-        List<Callable<Lot>> tasks = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        List<Future<Lot>> futures = new ArrayList<>();
 
-        // Add extraction tasks to executor
         for (WebElement lotElement : lotElements) {
-            tasks.add(() -> {
+            futures.add(executorService.submit(() -> {
                 try {
-                    // Extract only the URL first, handle it explicitly
+                    // Extract URL first
                     String url = extractUrl(lotElement);
-                    if (url == null) return null; // Skip if URL is missing
+                    if (url == null) return null; // Skip if no URL
 
-                    // Create a Lot object and set defaults for non-URL fields
+                    // Extract data synchronously within the same thread
                     Lot lot = new Lot();
-                    lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
-                    lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
-                    lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
-                    lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
-                    lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
-                    lot.setImgUrl(extractImgData(lotElement, IMG_URL_XPATH, "No image available"));
-                    lot.setUrl(url);
+                    synchronized (lotElement) { // Ensures the correct image is assigned
+                        lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
+                        lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
+                        lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
+                        lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
+                        lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
+                        lot.setImgUrl(extractImgData(lotElement, IMG_URL_XPATH, "No image available")); // ✅ Corrected assignment
+                        lot.setUrl(url);
+                    }
 
-                    // Set the insertion date to current time
                     lot.setInsertionDate(LocalDateTime.now());
 
                     return lot;
@@ -111,27 +108,26 @@ public class Search extends BasePage {
                     log.error("Error processing lot: ", e);
                     return null;
                 }
-            });
+            }));
         }
 
-        // Execute the tasks in parallel and collect results
-        try {
-            List<Future<Lot>> results = executorService.invokeAll(tasks);
-            for (Future<Lot> result : results) {
-                Lot lot = result.get();
+        // Collect results
+        for (Future<Lot> future : futures) {
+            try {
+                Lot lot = future.get();
                 if (lot != null) {
                     lots.add(lot);
                 }
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error executing parallel tasks: ", e);
             }
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error executing parallel tasks: ", e);
-        } finally {
-            executorService.shutdown(); // Ensure the executor is properly shut down
         }
 
+        executorService.shutdown();
         log.info("Finished extracting lots. Total lots extracted: " + lots.size());
         return lots;
     }
+
 
     // Helper method to extract a URL from a lot element
     private String extractUrl(WebElement lotElement) {
@@ -159,10 +155,18 @@ public class Search extends BasePage {
     }
     private String extractImgData(WebElement lotElement, By xpath, String defaultValue) {
         try {
+            // Ensure image extraction is limited to the current lot element
             WebElement imgElement = lotElement.findElement(xpath);
-            return imgElement.getAttribute("src"); // ✅ Extract `src` from `<img>`
+            String imgUrl = imgElement.getAttribute("src");
+
+            // Convert relative URL to absolute if needed
+            if (imgUrl != null && imgUrl.startsWith("//")) {
+                imgUrl = "https:" + imgUrl;
+            }
+
+            return imgUrl;
         } catch (Exception e) {
-            return defaultValue; // Return default value if extraction fails
+            return defaultValue; // Return default if no image found
         }
     }
 

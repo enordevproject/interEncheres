@@ -8,10 +8,52 @@ import java.util.Date;
 @Entity
 @Table(name = "laptop")
 public class Laptop {
+    public Laptop(){
 
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public int getLotNumber() {
+        return lotNumber;
+    }
+
+    public void setLotNumber(int lotNumber) {
+        this.lotNumber = lotNumber;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
     @Column(name = "lot_number")
     private int lotNumber;
@@ -65,6 +107,9 @@ public class Laptop {
     @Column(name = "storage_capacity")
     private int storageCapacity;
 
+    @Column(name = "storage_speed")
+    private int storageSpeed;
+
     @Column(name = "gpu_type", length = 50)
     private String gpuType;
 
@@ -88,6 +133,18 @@ public class Laptop {
 
     @Column(name = "face_recognition")
     private boolean faceRecognition;
+
+    @Column(name = "chassis_material", length = 100)
+    private String chassisMaterial;
+
+    @Column(name = "keyboard_backlight")
+    private boolean keyboardBacklight;
+
+    @Column(name = "keyboard_type", length = 50)
+    private String keyboardType;
+
+    @Column(name = "connectivity", length = 255)
+    private String connectivity;
 
     @Column(name = "battery_life", length = 50)
     private String batteryLife;
@@ -119,20 +176,29 @@ public class Laptop {
     @Column(name = "reason_for_score", columnDefinition = "TEXT")
     private String reasonForScore;
 
+    @Column(name = "bon_coin_estimation", length = 50)
+    private String bonCoinEstimation;
+
+    @Column(name = "facebook_estimation", length = 50)
+    private String facebookEstimation;
+
+    @Column(name = "internet_estimation", length = 50)
+    private String internetEstimation;
+
     @Column(name = "recommended_to_buy")
     private boolean recommendedToBuy;
 
-    // ✅ No-Arg Constructor (Required by Jackson)
-    public Laptop() {}
+    @Column(name = "image", columnDefinition = "TEXT")
+    private String image;
 
-    // ✅ JSON Constructor for Proper Deserialization
+    // ✅ JSON Constructor
     @JsonCreator
     public Laptop(
             @JsonProperty("lot_number") int lotNumber,
             @JsonProperty("description") String description,
             @JsonProperty("lot_url") String lotUrl,
             @JsonProperty("img_url") String imgUrl,
-            @JsonProperty("date") String date, // ✅ Fix: String instead of Date for JSON parsing
+            @JsonProperty("date") String date,
             @JsonProperty("maison_enchere") String maisonEnchere,
             @JsonProperty("quantity") int quantity,
             @JsonProperty("brand") String brand,
@@ -145,6 +211,7 @@ public class Laptop {
             @JsonProperty("ram_type") String ramType,
             @JsonProperty("storage_type") String storageType,
             @JsonProperty("storage_capacity") int storageCapacity,
+            @JsonProperty("storage_speed") int storageSpeed,
             @JsonProperty("gpu_type") String gpuType,
             @JsonProperty("gpu_model") String gpuModel,
             @JsonProperty("gpu_vram") int gpuVram,
@@ -153,6 +220,10 @@ public class Laptop {
             @JsonProperty("touch_screen") boolean touchScreen,
             @JsonProperty("fingerprint_sensor") boolean fingerprintSensor,
             @JsonProperty("face_recognition") boolean faceRecognition,
+            @JsonProperty("chassis_material") String chassisMaterial,
+            @JsonProperty("keyboard_backlight") boolean keyboardBacklight,
+            @JsonProperty("keyboard_type") String keyboardType,
+            @JsonProperty("connectivity") String connectivity,
             @JsonProperty("battery_life") String batteryLife,
             @JsonProperty("weight") double weight,
             @JsonProperty("operating_system") String operatingSystem,
@@ -163,18 +234,21 @@ public class Laptop {
             @JsonProperty("reason_for_condition") String reasonForCondition,
             @JsonProperty("note_sur_10") int noteSur10,
             @JsonProperty("reason_for_score") String reasonForScore,
-            @JsonProperty("recommended_to_buy") boolean recommendedToBuy
+            @JsonProperty("bon_coin_estimation") String bonCoinEstimation,
+            @JsonProperty("facebook_estimation") String facebookEstimation,
+            @JsonProperty("internet_estimation") String internetEstimation,
+            @JsonProperty("recommended_to_buy") boolean recommendedToBuy,
+            @JsonProperty("image") String image
     ) {
         this.lotNumber = lotNumber;
         this.description = description;
         this.lotUrl = lotUrl;
         this.imgUrl = imgUrl;
 
-        // ✅ Fix Date Parsing from String
         try {
             this.date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date);
         } catch (Exception e) {
-            this.date = null; // Default to null if parsing fails
+            this.date = null;
         }
 
         this.maisonEnchere = maisonEnchere;
@@ -189,6 +263,7 @@ public class Laptop {
         this.ramType = ramType;
         this.storageType = storageType;
         this.storageCapacity = storageCapacity;
+        this.storageSpeed = storageSpeed;
         this.gpuType = gpuType;
         this.gpuModel = gpuModel;
         this.gpuVram = gpuVram;
@@ -197,6 +272,10 @@ public class Laptop {
         this.touchScreen = touchScreen;
         this.fingerprintSensor = fingerprintSensor;
         this.faceRecognition = faceRecognition;
+        this.chassisMaterial = chassisMaterial;
+        this.keyboardBacklight = keyboardBacklight;
+        this.keyboardType = keyboardType;
+        this.connectivity = connectivity;
         this.batteryLife = batteryLife;
         this.weight = weight;
         this.operatingSystem = operatingSystem;
@@ -207,22 +286,11 @@ public class Laptop {
         this.reasonForCondition = reasonForCondition;
         this.noteSur10 = noteSur10;
         this.reasonForScore = reasonForScore;
+        this.bonCoinEstimation = bonCoinEstimation;
+        this.facebookEstimation = facebookEstimation;
+        this.internetEstimation = internetEstimation;
         this.recommendedToBuy = recommendedToBuy;
-    }
-    public int getLotNumber() {
-        return lotNumber;
-    }
-
-    public void setLotNumber(int lotNumber) {
-        this.lotNumber = lotNumber;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+        this.image = image;
     }
 
     public String getLotUrl() {
@@ -232,27 +300,6 @@ public class Laptop {
     public void setLotUrl(String lotUrl) {
         this.lotUrl = lotUrl;
     }
-
-    public String getImgUrl() {
-        return imgUrl;
-    }
-
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        try {
-            this.date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date);
-        } catch (Exception e) {
-            this.date = null;
-        }
-    }
-
     public String getMaisonEnchere() {
         return maisonEnchere;
     }
@@ -349,6 +396,14 @@ public class Laptop {
         this.storageCapacity = storageCapacity;
     }
 
+    public int getStorageSpeed() {
+        return storageSpeed;
+    }
+
+    public void setStorageSpeed(int storageSpeed) {
+        this.storageSpeed = storageSpeed;
+    }
+
     public String getGpuType() {
         return gpuType;
     }
@@ -411,6 +466,38 @@ public class Laptop {
 
     public void setFaceRecognition(boolean faceRecognition) {
         this.faceRecognition = faceRecognition;
+    }
+
+    public String getChassisMaterial() {
+        return chassisMaterial;
+    }
+
+    public void setChassisMaterial(String chassisMaterial) {
+        this.chassisMaterial = chassisMaterial;
+    }
+
+    public boolean isKeyboardBacklight() {
+        return keyboardBacklight;
+    }
+
+    public void setKeyboardBacklight(boolean keyboardBacklight) {
+        this.keyboardBacklight = keyboardBacklight;
+    }
+
+    public String getKeyboardType() {
+        return keyboardType;
+    }
+
+    public void setKeyboardType(String keyboardType) {
+        this.keyboardType = keyboardType;
+    }
+
+    public String getConnectivity() {
+        return connectivity;
+    }
+
+    public void setConnectivity(String connectivity) {
+        this.connectivity = connectivity;
     }
 
     public String getBatteryLife() {
@@ -493,12 +580,44 @@ public class Laptop {
         this.reasonForScore = reasonForScore;
     }
 
+    public String getBonCoinEstimation() {
+        return bonCoinEstimation;
+    }
+
+    public void setBonCoinEstimation(String bonCoinEstimation) {
+        this.bonCoinEstimation = bonCoinEstimation;
+    }
+
+    public String getFacebookEstimation() {
+        return facebookEstimation;
+    }
+
+    public void setFacebookEstimation(String facebookEstimation) {
+        this.facebookEstimation = facebookEstimation;
+    }
+
+    public String getInternetEstimation() {
+        return internetEstimation;
+    }
+
+    public void setInternetEstimation(String internetEstimation) {
+        this.internetEstimation = internetEstimation;
+    }
+
     public boolean isRecommendedToBuy() {
         return recommendedToBuy;
     }
 
     public void setRecommendedToBuy(boolean recommendedToBuy) {
         this.recommendedToBuy = recommendedToBuy;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
 }

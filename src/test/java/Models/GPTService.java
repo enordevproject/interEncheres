@@ -75,7 +75,7 @@ public class GPTService {
             if (hasImage) {
                 messages.add(Map.of(
                         "role", "user",
-                        "content", "Voici une image du lot en Base64 :",
+                        "content", "Voici une image du lot en Base64  analyse bien : Si une image est fournie, détecte les défauts visibles (rayures, fissures, touches manquantes, écran endommagé si background image est blanc sache c'est une image possible pas reel).",
                         "image", base64Image
                 ));
             }
@@ -87,7 +87,7 @@ public class GPTService {
                     "type", "function",
                     "function", Map.of(
                             "name", "generate_laptop",
-                            "description", "Génère un objet Laptop à partir des données d'enchères.",
+                            "description", "Génère un objet Laptop à partir des données d'enchères si pas de données suffisants utilise tes connaisances pour determiner les spec de pc en se basant sur l'image fournis  base64 aussi. attention quelques input ne sont pas des pc il faut pas mettre des faux infos si pas pc dire pas pc et aussi verifie ça avec l'image fourbise",
                             "parameters", Map.of(
                                     "type", "object",
                                     "properties", properties,
@@ -148,6 +148,7 @@ public class GPTService {
                 // ✅ Save to database
                 if (generatedLaptop != null) {
                     System.out.println("✅ Laptop généré avec succès : " + generatedLaptop);
+                    generatedLaptop.setImgUrl(lot.getImgUrl());
                     Results.insertLaptopIntoDatabase(generatedLaptop);
                 } else {
                     System.out.println("❌ Erreur : Laptop non généré correctement.");

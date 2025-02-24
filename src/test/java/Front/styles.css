@@ -1,0 +1,61 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.sidebar {
+    width: 300px;
+    position: fixed;
+    top: 0;
+    left: -310px;
+    height: 100%;
+    background: #f8f9fa;
+    box-shadow: 2px 0px 5px rgba(0,0,0,0.2);
+    padding: 20px;
+    transition: left 0.3s ease-in-out;
+    overflow-y: auto;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.filter-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.filter-section {
+    margin-bottom: 10px;
+}
+
+.filter-section input,
+.filter-section select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.filter-section button {
+    width: 100%;
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+#filterToggle {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 1000;
+}
