@@ -619,5 +619,24 @@ public class Laptop {
     public void setImage(String image) {
         this.image = image;
     }
+    public String getSpecs() {
+        return "<b>🖥 Processor:</b> " + getProcessorBrand() + " " + getProcessorModel() + " (" + getProcessorCores() + " Cores, " + getProcessorClockSpeed() + "GHz)" +
+                "<br><b>💾 RAM:</b> " + getRamSize() + "GB " + getRamType() +
+                "<br><b>💽 Storage:</b> " + getStorageType() + " " + getStorageCapacity() + "GB, Speed: " + getStorageSpeed() + "MB/s" +
+                "<br><b>🎮 GPU:</b> " + getGpuType() + " " + getGpuModel() + " (" + getGpuVram() + "GB VRAM)" +
+                "<br><b>🖥 Screen:</b> " + getScreenSize() + " inches, Resolution: " + getScreenResolution() +
+                (isTouchScreen() ? " (Touch ✅)" : " (No Touch ❌)") +
+                "<br><b>🔋 Battery:</b> " + getBatteryLife() +
+                "<br><b>⚡ Weight:</b> " + getWeight() + "kg" +
+                "<br><b>💻 OS:</b> " + getOperatingSystem() +
+                "<br><b>⌨️ Keyboard:</b> " + getKeyboardType() + (isKeyboardBacklight() ? " (Backlit ✅)" : " (No Backlight ❌)") +
+                "<br><b>🔒 Security:</b> " + (isFingerprintSensor() ? "Fingerprint ✅" : "No Fingerprint ❌") + ", " +
+                (isFaceRecognition() ? "Face Recognition ✅" : "No Face Recognition ❌") +
+                "<br><b>📡 Connectivity:</b> " + getConnectivity() +
+                "<br><b>🏗️ Chassis:</b> " + getChassisMaterial() +
+                "<br><b>📅 Release Year:</b> " + getReleaseYear() +
+                "<br><b>🛡️ Warranty:</b> " + (getWarranty() != null ? getWarranty() : "N/A");
+    }
+
 
 }

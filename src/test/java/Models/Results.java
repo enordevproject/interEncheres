@@ -191,8 +191,6 @@ public class Results {
 
 
 
-
-
     public static void generateHtmlReport() {
         List<Laptop> laptops = getAllLaptopsFromDatabase();
 
@@ -222,7 +220,10 @@ public class Results {
                 .append("<script src='https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js'></script>")
                 .append("<script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.js'></script>")
                 .append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css'>")
-                .append("<style>.table-container {overflow-x: auto; width: 100%;} th, td { white-space: nowrap; text-align: center; vertical-align: middle; }</style>")
+                .append("<style>")
+                .append(".table-container {overflow-x: auto; width: 100%;} th, td { white-space: nowrap; text-align: center; vertical-align: middle; }")
+                .append(".hover-box { position: absolute; display: none; background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000; max-width: 300px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); }")
+                .append("</style>")
                 .append("</head><body class='container-fluid'><h2 class='my-3 text-center'>💻 Laptop Inventory Analysis</h2>");
 
         // Results Counter
@@ -245,15 +246,16 @@ public class Results {
 
         // Table
         html.append("<div class='table-container'><table id='laptopTable' class='table table-striped'><thead><tr>")
-                .append("<th>📌 Lot</th><th>📅 Date</th><th>🏢 Brand</th><th>🔖 Model</th><th>🔧 Technical Specifications</th>")
-                .append("<th>📊 Score & Condition</th><th>🛠 Condition Justification</th><th>💰 Price Estimations</th><th>🏢 Seller</th><th>✅ Recommendation</th><th>🖼 Image</th></tr></thead><tbody>");
+                .append("<th>📌 Lot</th><th>📅 Date</th><th>🏢 Brand</th><th>🔖 Model</th><th>🖥️ Processor</th>")
+                .append("<th>📊 Score & Condition</th><th>🛠 Condition Justification</th><th>💰 Price Estimations</th>")
+                .append("<th>🏢 Seller</th><th>✅ Recommendation</th><th>🖼 Image</th></tr></thead><tbody>");
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         for (Laptop laptop : laptops) {
             String bonCoinLink = "https://www.leboncoin.fr/recherche/?category=17&text=" + laptop.getBrand() + "+" + laptop.getModel();
 
-            html.append("<tr>")
+            html.append("<tr class='hover-trigger' data-specs='" + laptop.getSpecs().replace("'", "\\'") + "'>")
                     .append("<td><a href='" + laptop.getLotUrl() + "' target='_blank'>" + laptop.getLotNumber() + "</a></td>")
                     .append("<td>" + (laptop.getDate() != null ? sdf.format(laptop.getDate()) : "N/A") + "</td>")
                     .append("<td>" + laptop.getBrand() + "</td>")
@@ -270,13 +272,16 @@ public class Results {
 
         html.append("</tbody></table></div>");
 
-        // JavaScript for Filtering & Auto-Complete
+        // Hover box (hidden by default)
+        html.append("<div class='hover-box' id='hoverBox'></div>");
+
+        // JavaScript for Hover Effect & Filtering Fix
         html.append("<script>")
-                .append("$(function() {")
-                .append("$('#brandFilter').autocomplete({ source: " + new Gson().toJson(brands) + " });")
-                .append("$('#modelFilter').autocomplete({ source: " + new Gson().toJson(models) + " });")
-                .append("$('#processorFilter').autocomplete({ source: " + new Gson().toJson(processors) + " });")
-                .append("$('#sellerFilter').autocomplete({ source: " + new Gson().toJson(sellers) + " });")
+                .append("$(document).ready(function() {")
+                .append("$('.hover-trigger').hover(function(event) {")
+                .append("var specs = $(this).attr('data-specs');")
+                .append("$('#hoverBox').html(specs).css({ top: event.pageY + 10 + 'px', left: event.pageX + 10 + 'px' }).show();")
+                .append("}, function() { $('#hoverBox').hide(); });")
                 .append("});")
 
                 .append("function applyFilters() {")
@@ -308,6 +313,8 @@ public class Results {
             e.printStackTrace();
         }
     }
+
+
 
 
 
