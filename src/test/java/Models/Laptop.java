@@ -209,4 +209,296 @@ public class Laptop {
         this.reasonForScore = reasonForScore;
         this.recommendedToBuy = recommendedToBuy;
     }
+    public int getLotNumber() {
+        return lotNumber;
+    }
+
+    public void setLotNumber(int lotNumber) {
+        this.lotNumber = lotNumber;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getLotUrl() {
+        return lotUrl;
+    }
+
+    public void setLotUrl(String lotUrl) {
+        this.lotUrl = lotUrl;
+    }
+
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        try {
+            this.date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (Exception e) {
+            this.date = null;
+        }
+    }
+
+    public String getMaisonEnchere() {
+        return maisonEnchere;
+    }
+
+    public void setMaisonEnchere(String maisonEnchere) {
+        this.maisonEnchere = maisonEnchere;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getProcessorBrand() {
+        return processorBrand;
+    }
+
+    public void setProcessorBrand(String processorBrand) {
+        this.processorBrand = processorBrand;
+    }
+
+    public String getProcessorModel() {
+        return processorModel;
+    }
+
+    public void setProcessorModel(String processorModel) {
+        this.processorModel = processorModel;
+    }
+
+    public int getProcessorCores() {
+        return processorCores;
+    }
+
+    public void setProcessorCores(int processorCores) {
+        this.processorCores = processorCores;
+    }
+
+    public double getProcessorClockSpeed() {
+        return processorClockSpeed;
+    }
+
+    public void setProcessorClockSpeed(double processorClockSpeed) {
+        this.processorClockSpeed = processorClockSpeed;
+    }
+
+    public int getRamSize() {
+        return ramSize;
+    }
+
+    public void setRamSize(int ramSize) {
+        this.ramSize = ramSize;
+    }
+
+    public String getRamType() {
+        return ramType;
+    }
+
+    public void setRamType(String ramType) {
+        this.ramType = ramType;
+    }
+
+    public String getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(String storageType) {
+        this.storageType = storageType;
+    }
+
+    public int getStorageCapacity() {
+        return storageCapacity;
+    }
+
+    public void setStorageCapacity(int storageCapacity) {
+        this.storageCapacity = storageCapacity;
+    }
+
+    public String getGpuType() {
+        return gpuType;
+    }
+
+    public void setGpuType(String gpuType) {
+        this.gpuType = gpuType;
+    }
+
+    public String getGpuModel() {
+        return gpuModel;
+    }
+
+    public void setGpuModel(String gpuModel) {
+        this.gpuModel = gpuModel;
+    }
+
+    public int getGpuVram() {
+        return gpuVram;
+    }
+
+    public void setGpuVram(int gpuVram) {
+        this.gpuVram = gpuVram;
+    }
+
+    public double getScreenSize() {
+        return screenSize;
+    }
+
+    public void setScreenSize(double screenSize) {
+        this.screenSize = screenSize;
+    }
+
+    public String getScreenResolution() {
+        return screenResolution;
+    }
+
+    public void setScreenResolution(String screenResolution) {
+        this.screenResolution = screenResolution;
+    }
+
+    public boolean isTouchScreen() {
+        return touchScreen;
+    }
+
+    public void setTouchScreen(boolean touchScreen) {
+        this.touchScreen = touchScreen;
+    }
+
+    public boolean isFingerprintSensor() {
+        return fingerprintSensor;
+    }
+
+    public void setFingerprintSensor(boolean fingerprintSensor) {
+        this.fingerprintSensor = fingerprintSensor;
+    }
+
+    public boolean isFaceRecognition() {
+        return faceRecognition;
+    }
+
+    public void setFaceRecognition(boolean faceRecognition) {
+        this.faceRecognition = faceRecognition;
+    }
+
+    public String getBatteryLife() {
+        return batteryLife;
+    }
+
+    public void setBatteryLife(String batteryLife) {
+        this.batteryLife = batteryLife;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public String getOperatingSystem() {
+        return operatingSystem;
+    }
+
+    public void setOperatingSystem(String operatingSystem) {
+        this.operatingSystem = operatingSystem;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public int getReleaseYear() {
+        return releaseYear;
+    }
+
+    public void setReleaseYear(int releaseYear) {
+        this.releaseYear = releaseYear;
+    }
+
+    public String getEtatProduitImage() {
+        return etatProduitImage;
+    }
+
+    public void setEtatProduitImage(String etatProduitImage) {
+        this.etatProduitImage = etatProduitImage;
+    }
+
+    public String getReasonForCondition() {
+        return reasonForCondition;
+    }
+
+    public void setReasonForCondition(String reasonForCondition) {
+        this.reasonForCondition = reasonForCondition;
+    }
+
+    public int getNoteSur10() {
+        return noteSur10;
+    }
+
+    public void setNoteSur10(int noteSur10) {
+        this.noteSur10 = noteSur10;
+    }
+
+    public String getReasonForScore() {
+        return reasonForScore;
+    }
+
+    public void setReasonForScore(String reasonForScore) {
+        this.reasonForScore = reasonForScore;
+    }
+
+    public boolean isRecommendedToBuy() {
+        return recommendedToBuy;
+    }
+
+    public void setRecommendedToBuy(boolean recommendedToBuy) {
+        this.recommendedToBuy = recommendedToBuy;
+    }
+
 }

@@ -4,6 +4,9 @@ import hibernate.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -88,6 +91,7 @@ public class Results {
         }
     }
 
+
     public static void insertLaptopIntoDatabase(Laptop laptop) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -135,4 +139,150 @@ public class Results {
             return false; // Return false in case of error (optional logging can be added)
         }
     }
+    /**
+     * ✅ Fetches all laptops from the database.
+     * @return List of Laptop objects.
+     */
+    public static List<Laptop> getAllLaptopsFromDatabase() {
+        List<Laptop> laptops = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            laptops = session.createQuery("FROM Laptop", Laptop.class).list();
+
+            transaction.commit();
+        } catch (Exception e) {
+            System.err.println("❌ Error fetching laptops from DB: " + e.getMessage());
+        }
+        return laptops;
+    }
+    // ✅ This method is executed in parallel for each lot
+    public static void processLot(Lot lot) throws IOException {
+        log.info("🔍 Processing lot: {}", lot.getUrl());
+
+        if (Results.checkIfLaptopExists(lot.getUrl())) {
+            log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
+            return;
+        }
+
+        log.info("🧠 Sending lot to GPT-4...");
+        Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
+
+        if (generatedLaptop != null) {
+            log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
+
+            // ✅ Insert into database
+            try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+                Transaction transaction = session.beginTransaction();
+
+                session.persist(generatedLaptop);
+                transaction.commit();
+
+                log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
+            } catch (Exception e) {
+                log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
+            }
+        } else {
+            log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
+        }
+    }
+
+    public static void generateHtmlReport() {
+        List<Laptop> laptops = getAllLaptopsFromDatabase();
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html lang='en'><head>");
+        html.append("<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+        html.append("<title>Laptop Inventory</title>");
+        html.append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>");
+        html.append("<script src='https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js'></script>");
+        html.append("<script src='https://cdn.jsdelivr.net/npm/datatables.net/js/jquery.dataTables.min.js'></script>");
+        html.append("<script src='https://cdn.jsdelivr.net/npm/datatables.net-bs5/js/dataTables.bootstrap5.min.js'></script>");
+        html.append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/datatables.net-bs5/css/dataTables.bootstrap5.min.css'>");
+        html.append("<style>img {border-radius: 8px;}</style>");
+        html.append("</head><body class='container'><h2 class='my-3'>Laptop Inventory</h2>");
+        html.append("<table id='laptopTable' class='table table-striped table-bordered'><thead><tr>");
+
+        // ✅ Define Table Headers
+        html.append("<th>Lot Number</th><th>Brand</th><th>Model</th><th>Specifications</th>");
+        html.append("<th>Chassis</th><th>Keyboard</th><th>Connectivity</th>");
+        html.append("<th>Battery</th><th>Weight</th><th>OS</th><th>Condition</th><th>Estimation</th>");
+        html.append("<th>Score</th><th>Recommendation</th><th>Image</th></tr></thead><tbody>");
+
+        for (Laptop laptop : laptops) {
+            html.append("<tr>");
+
+            // ✅ Lot Number as a clickable link
+            html.append("<td><a href='").append(laptop.getLotUrl()).append("' target='_blank'>")
+                    .append(laptop.getLotNumber()).append("</a></td>");
+
+            // ✅ Brand & Model
+            html.append("<td>").append(laptop.getBrand()).append("</td>");
+            html.append("<td>").append(laptop.getModel()).append("</td>");
+
+            // ✅ Specifications
+            html.append("<td>")
+                    .append("<strong>Processor:</strong> ").append(laptop.getProcessorBrand()).append(" ")
+                    .append(laptop.getProcessorModel()).append(" - ").append(laptop.getProcessorClockSpeed()).append("GHz - ")
+                    .append(laptop.getProcessorCores()).append(" Cores<br>")
+                    .append("<strong>RAM:</strong> ").append(laptop.getRamSize()).append("GB ").append(laptop.getRamType()).append("<br>")
+                    .append("<strong>Storage:</strong> ").append(laptop.getStorageCapacity()).append("GB ")
+                    .append(laptop.getStorageType()).append(" (Speed: ")
+                    .append("<strong>GPU:</strong> ").append(laptop.getGpuType()).append(" ").append(laptop.getGpuModel()).append(" (").append(laptop.getGpuVram()).append("GB VRAM)<br>")
+                    .append("<strong>Screen:</strong> ").append(laptop.getScreenSize()).append("” ")
+                    .append(laptop.getScreenResolution()).append(" - Touch: ").append(laptop.isTouchScreen() ? "✅" : "❌")
+                    .append("</td>");
+
+
+
+
+
+            // ✅ Battery & Weight
+            html.append("<td>").append(laptop.getBatteryLife()).append("</td>");
+            html.append("<td>").append(laptop.getWeight()).append("kg</td>");
+
+            // ✅ OS & Condition
+            html.append("<td>").append(laptop.getOperatingSystem()).append("</td>");
+            html.append("<td>").append(laptop.getCondition()).append("</td>");
+
+
+            // ✅ Score & Recommendation
+            html.append("<td>Score: ").append(laptop.getNoteSur10()).append("/10")
+                    .append("<br>Reason: ").append(laptop.getReasonForScore()).append("</td>");
+            html.append("<td>").append(laptop.isRecommendedToBuy() ? "✅ Recommended" : "❌ Not Recommended").append("</td>");
+
+            // ✅ Image Handling
+            html.append("<td>");
+            if (laptop.getImgUrl() != null && !laptop.getImgUrl().isEmpty()) {
+                html.append("<img src='").append(laptop.getImgUrl()).append("' width='100'>");
+            } else {
+                html.append("<img src='https://via.placeholder.com/100' width='100' alt='No Image Available'>");
+            }
+            html.append("</td>");
+
+            html.append("</tr>");
+        }
+
+        html.append("</tbody></table>");
+        html.append("<script>$(document).ready(function() { $('#laptopTable').DataTable(); });</script>");
+        html.append("</body></html>");
+
+        // ✅ Save File Inside `test/java/front/`
+        String directoryPath = "src/test/java/front/";
+        File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdirs(); // ✅ Create the directory if it doesn't exist
+        }
+
+        // ✅ Save the HTML file
+        String filePath = directoryPath + "laptops_report.html";
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            fileWriter.write(html.toString());
+            System.out.println("✅ Laptops report generated: " + filePath);
+        } catch (IOException e) {
+            System.err.println("❌ Error writing HTML report: " + e.getMessage());
+        }
+    }
+
 }
+

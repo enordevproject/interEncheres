@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Inventory</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">💻 Laptop Inventory</h2>
+
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="searchBrand" class="form-control" placeholder="Search by Brand">
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="searchProcessor" class="form-control" placeholder="Search by Processor">
+        </div>
+        <div class="col-md-3">
+            <select id="filterRAM" class="form-control">
+                <option value="">Filter by RAM</option>
+                <option value="8">8 GB</option>
+                <option value="16">16 GB</option>
+                <option value="32">32 GB</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary" onclick="fetchLaptops()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <!-- Laptop Table -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Processor</th>
+            <th>RAM</th>
+            <th>GPU</th>
+            <th>Storage</th>
+            <th>Price (€)</th>
+            <th>Image</th>
+        </tr>
+        </thead>
+        <tbody id="laptop-table">
+        <!-- Laptops will be loaded here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function fetchLaptops() {
+        $.getJSON('/api/laptops', function(laptops) {
+            let tableBody = $("#laptop-table");
+            tableBody.empty();
+
+            let searchBrand = $("#searchBrand").val().toLowerCase();
+            let searchProcessor = $("#searchProcessor").val().toLowerCase();
+            let filterRAM = $("#filterRAM").val();
+
+            laptops.forEach(laptop => {
+                if (
+                    (searchBrand === "" || laptop.brand.toLowerCase().includes(searchBrand)) &&
+                    (searchProcessor === "" || laptop.processorModel.toLowerCase().includes(searchProcessor)) &&
+                    (filterRAM === "" || laptop.ramSize == filterRAM)
+                ) {
+                    tableBody.append(`
+                        <tr>
+                            <td>${laptop.brand}</td>
+                            <td>${laptop.model}</td>
+                            <td>${laptop.processorBrand} ${laptop.processorModel}</td>
+                            <td>${laptop.ramSize} GB</td>
+                            <td>${laptop.gpuModel} (${laptop.gpuVram} GB)</td>
+                            <td>${laptop.storageCapacity} GB ${laptop.storageType}</td>
+                            <td>€${laptop.price || "N/A"}</td>
+                            <td><img src="${laptop.imgUrl}" class="img-thumbnail" width="100"></td>
+                        </tr>
+                    `);
+                }
+            });
+        });
+    }
+
+    $(document).ready(function() {
+        fetchLaptops();
+    });
+</script>
+
+</body>
+</html>

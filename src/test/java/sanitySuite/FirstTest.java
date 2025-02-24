@@ -17,8 +17,12 @@ import pages.Home;
 import pages.Search;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class FirstTest extends BasePage {
     private static final Logger log = LoggerFactory.getLogger(FirstTest.class);
@@ -36,7 +40,7 @@ public class FirstTest extends BasePage {
         homePage.navigateToHomePage(); // Navigate to the home page
 
         // Define search terms
-        List<String> searchTerms = Arrays.asList("ordinateur portable","dell","lenovo","hp"); // Use Arrays.asList()
+        List<String> searchTerms = Arrays.asList("portable","dell","lenovo","hp"); // Use Arrays.asList()
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {
@@ -80,7 +84,7 @@ public class FirstTest extends BasePage {
 
         log.info("All search terms processed, and lots have been pushed to the database.");
     }
-    @Test(priority = 2, description = "Retrieve lots, send them to GPT-4, and store laptops in the database")
+    @Test(priority = 2, description = "Retrieve lots, send them to GPT-4, and store laptops in the database in parallel")
     public void processLotsWithGPT() throws IOException {
         log.info("🔄 [Start] Processing lots with GPT-4...");
 
@@ -92,41 +96,41 @@ public class FirstTest extends BasePage {
 
         log.info("✅ Retrieved {} lots.", lotsFromDatabase.size());
 
+        // ✅ Create a thread pool with 10 parallel tasks
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        List<Future<Void>> futures = new ArrayList<>();
+
         for (Lot lot : lotsFromDatabase) {
-            log.info("🔍 Processing lot: {}", lot.getUrl());
+            futures.add(executorService.submit(() -> {
+                Results.processLot(lot);
+                return null;
+            }));
+        }
 
-            // Check if a laptop for this lot already exists
-            if (Results.checkIfLaptopExists(lot.getUrl())) {
-                log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
-                continue;
-            }
-
-            log.info("🧠 Sending lot to GPT-4...");
-            Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
-
-            if (generatedLaptop != null) {
-                log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
-
-                // Insert the laptop into the database
-                try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-                    Transaction transaction = session.beginTransaction();
-
-                    session.persist(generatedLaptop);
-                    transaction.commit();
-
-                    log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
-                } catch (Exception e) {
-                    log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
-                }
-            } else {
-                log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
+        // ✅ Wait for all tasks to complete
+        for (Future<Void> future : futures) {
+            try {
+                future.get(); // Ensure each task completes
+            } catch (Exception e) {
+                log.error("❌ Error processing a lot: {}", e.getMessage(), e);
             }
         }
+
+        // ✅ Shutdown executor
+        executorService.shutdown();
 
         log.info("✅ [Finish] Processing complete.");
     }
 
 
+
+    @Test(priority = 3, description = "Generate an HTML report of laptops from the database")
+    public void generateLaptopHTMLReport() {
+        System.out.println("🔄 Generating laptops report...");
+        Results.generateHtmlReport();
+        System.out.println("✅ Laptops report successfully generated!");
+    }
     @AfterSuite
     public void tearDown() {
         if (driver != null) {
