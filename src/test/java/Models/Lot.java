@@ -3,7 +3,12 @@ package Models;
 import Utils.ImageUtils;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 @Entity
 @Table(name = "Lot")
@@ -97,9 +102,16 @@ public class Lot {
         this.estimationPrice = estimationPrice;
     }
 
-    public String getDate() {
-        return date;
+
+
+    public Date getDate() {
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (ParseException e) {
+            throw new RuntimeException("Invalid date format", e);
+        }
     }
+
 
     public void setDate(String date) {
         this.date = date;

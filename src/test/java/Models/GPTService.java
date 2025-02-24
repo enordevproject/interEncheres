@@ -149,6 +149,7 @@ public class GPTService {
                 if (generatedLaptop != null) {
                     System.out.println("✅ Laptop généré avec succès : " + generatedLaptop);
                     generatedLaptop.setImgUrl(lot.getImgUrl());
+                    generatedLaptop.setDate(lot.getDate());
                     Results.insertLaptopIntoDatabase(generatedLaptop);
                 } else {
                     System.out.println("❌ Erreur : Laptop non généré correctement.");
