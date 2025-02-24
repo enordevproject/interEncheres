@@ -330,5 +330,20 @@ public class Results {
     }
 
 
+    public static void generateJsonReport() {
+        List<Laptop> laptops = getAllLaptopsFromDatabase();
+        String filePath = "src/test/java/Front/laptops_report.json"; // Use the correct folder
+
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            new Gson().toJson(laptops, fileWriter);
+            System.out.println("✅ JSON report generated at: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
 
 }

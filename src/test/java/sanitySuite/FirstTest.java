@@ -16,6 +16,8 @@ import org.testng.annotations.*;
 import pages.Home;
 import pages.Search;
 
+import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,12 +127,31 @@ public class FirstTest extends BasePage {
 
 
 
-    @Test(priority = 3, description = "Generate an HTML report of laptops from the database")
-    public void generateLaptopHTMLReport() {
-        System.out.println("🔄 Generating laptops report...");
-        Results.generateHtmlReport();
-        System.out.println("✅ Laptops report successfully generated!");
+    @Test(priority = 3, description = "Generate a JSON report of laptops from the database and open it in browser")
+    public void generateLaptopJSONReport() {
+        System.out.println("🔄 Generating laptops JSON report...");
+
+        // Generate JSON report
+        Results.generateJsonReport();
+
+        // File path where JSON is generated
+        String filePath = "src/test/java/Front/laptops_report.json";
+
+        File jsonFile = new File(filePath);
+
+        // Open file in browser
+        if (jsonFile.exists()) {
+            try {
+                Desktop.getDesktop().browse(jsonFile.toURI());
+                System.out.println("✅ Laptops JSON report opened in browser!");
+            } catch (IOException e) {
+                System.err.println("❌ Error opening JSON report: " + e.getMessage());
+            }
+        } else {
+            System.err.println("❌ JSON report file not found!");
+        }
     }
+
     @AfterSuite
     public void tearDown() {
         if (driver != null) {
