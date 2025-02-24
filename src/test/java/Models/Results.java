@@ -194,8 +194,6 @@ public class Results {
 
 
 
-
-
     public static void generateHtmlReport() {
         List<Laptop> laptops = getAllLaptopsFromDatabase();
 
@@ -228,30 +226,18 @@ public class Results {
                 .append("<style>.table-container {overflow-x: auto; width: 100%;} th, td { white-space: nowrap; text-align: center; vertical-align: middle; }</style>")
                 .append("</head><body class='container-fluid'><h2 class='my-3 text-center'>💻 Laptop Inventory Analysis</h2>");
 
-        // Filters Section with Dropdowns
+        // Filters Section
         html.append("<div class='container'><div class='row filter-section'>")
-                .append("<div class='col-md-2'><select id='brandFilter' class='form-control'><option value=''>🔍 Brand</option>")
-                .append(getOptions(brands))
-                .append("</select></div>")
-                .append("<div class='col-md-2'><select id='modelFilter' class='form-control'><option value=''>🔍 Model</option>")
-                .append(getOptions(models))
-                .append("</select></div>")
-                .append("<div class='col-md-2'><select id='processorFilter' class='form-control'><option value=''>🔍 Processor</option>")
-                .append(getOptions(processors))
-                .append("</select></div>")
+                .append("<div class='col-md-2'><input type='text' id='brandFilter' class='form-control' placeholder='🔍 Brand'></div>")
+                .append("<div class='col-md-2'><input type='text' id='modelFilter' class='form-control' placeholder='🔍 Model'></div>")
+                .append("<div class='col-md-2'><input type='text' id='processorFilter' class='form-control' placeholder='🔍 Processor'></div>")
                 .append("<div class='col-md-2'><select id='conditionFilter' class='form-control'><option value=''>🔍 Condition</option>")
                 .append(getOptions(conditions))
                 .append("</select></div>")
-                .append("<div class='col-md-2'><select id='sellerFilter' class='form-control'><option value=''>🏢 Seller</option>")
-                .append(getOptions(sellers))
-                .append("</select></div>")
+                .append("<div class='col-md-2'><input type='text' id='sellerFilter' class='form-control' placeholder='🏢 Seller'></div>")
                 .append("<div class='col-md-2'><select id='yearFilter' class='form-control'><option value=''>📅 Release Year</option>")
                 .append(getOptions(releaseYears))
                 .append("</select></div>")
-                .append("<div class='col-md-2'><select id='backlightFilter' class='form-control'><option value=''>⌨️ Backlit Keyboard</option>")
-                .append("<option value='Yes'>Yes</option><option value='No'>No</option></select></div>")
-                .append("<div class='col-md-2'><select id='touchFilter' class='form-control'><option value=''>🖥 Touch Screen</option>")
-                .append("<option value='Yes'>Yes</option><option value='No'>No</option></select></div>")
                 .append("<div class='col-md-12 text-center mt-2'><button class='btn btn-primary' onclick='applyFilters()'>Apply Filters</button></div>")
                 .append("</div></div>");
 
@@ -273,38 +259,50 @@ public class Results {
                     .append("<td><b>🖥 Processor:</b> " + laptop.getProcessorBrand() + " " + laptop.getProcessorModel() +
                             "<br><b>💾 RAM:</b> " + laptop.getRamSize() + "GB " + laptop.getRamType() +
                             "<br><b>💽 Storage:</b> " + laptop.getStorageType() + " " + laptop.getStorageCapacity() + "GB" +
+                            "<br><b>🎮 GPU:</b> " + laptop.getGpuModel() + " (" + laptop.getGpuVram() + "GB VRAM)" +
                             "<br><b>🖥 Screen:</b> " + laptop.getScreenSize() + " inches" +
-                            (laptop.isTouchScreen() ? " (Touch ✅)" : " (No Touch ❌)") + "</td>")
+                            (laptop.isTouchScreen() ? " (Touch ✅)" : " (No Touch ❌)") +
+                            "<br><b>💻 OS:</b> " + laptop.getOperatingSystem() + "</td>")
                     .append("<td>⭐ " + laptop.getNoteSur10() + "/10 (" + laptop.getCondition() + ")</td>")
                     .append("<td>" + laptop.getReasonForCondition() + "</td>")
-                    .append("<td><b>💰 BonCoin:</b> <a href='" + bonCoinLink + "' target='_blank'>" + laptop.getBonCoinEstimation() + "€</a>" +
-                            "<br><b>📘 Facebook:</b> " + laptop.getFacebookEstimation() + "€" +
-                            "<br><b>🌍 Internet:</b> " + laptop.getInternetEstimation() + "€</td>")
+                    .append("<td><b>💰 BonCoin:</b> <a href='" + bonCoinLink + "' target='_blank'>" + laptop.getBonCoinEstimation() + "€</a></td>")
                     .append("<td>" + laptop.getMaisonEnchere() + "</td>")
                     .append("<td>" + (laptop.isRecommendedToBuy() ? "✅ Yes" : "❌ No") + "</td>")
                     .append("<td><img src='" + laptop.getImgUrl() + "' width='100px'></td>")
                     .append("</tr>");
         }
 
-        html.append("</tbody></table></div></body></html>");
+        html.append("</tbody></table></div>");
 
-        // Save file
+        // JavaScript for Filtering (Fixed Column Indexes)
+        html.append("<script>")
+                .append("function applyFilters() {")
+                .append("var brand = $('#brandFilter').val().toLowerCase();")
+                .append("var model = $('#modelFilter').val().toLowerCase();")
+                .append("var processor = $('#processorFilter').val().toLowerCase();")
+                .append("var condition = $('#conditionFilter').val();")
+                .append("var seller = $('#sellerFilter').val().toLowerCase();")
+                .append("$('#laptopTable tbody tr').each(function() {")
+                .append("var row = $(this);")
+                .append("var match = (!brand || row.find('td:eq(2)').text().toLowerCase().includes(brand)) &&")
+                .append("(!model || row.find('td:eq(3)').text().toLowerCase().includes(model)) &&")
+                .append("(!processor || row.find('td:eq(4)').text().toLowerCase().includes(processor)) &&")
+                .append("(!condition || row.find('td:eq(5)').text().includes(condition)) &&")
+                .append("(!seller || row.find('td:eq(8)').text().toLowerCase().includes(seller));")
+                .append("row.toggle(match);")
+                .append("});")
+                .append("}")
+                .append("</script>");
+
+        html.append("</body></html>");
+
         try (FileWriter fileWriter = new FileWriter(filePath)) {
             fileWriter.write(html.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        // Open file in browser
-        try {
-            File file = new File(filePath);
-            if (file.exists() && Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(file.toURI());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
+
 
     // Method to generate <option> elements for dropdowns
     private static String getOptions(Set<?> items) {
