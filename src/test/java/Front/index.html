@@ -104,17 +104,24 @@
         <thead>
         <tr>
             <th>🖼 Image</th>
+            <th>📅 Auction Date</th>
             <th>📌 Lot</th>
             <th>🏢 Brand</th>
             <th>🔖 Model</th>
             <th>🔎 Processor</th>
             <th>💾 RAM</th>
             <th>💽 Storage</th>
-            <th>📊 Condition</th>
-            <th>💰 Price</th>
+            <th>📏 Screen Size</th>
+            <th>🎮 GPU Type</th>
+            <th>📅 Release Year</th>
+            <th>📊 Condition (Rating)</th>
+            <th>📝 Justification</th>
+            <th>💰 BonCoin Estimation (€)</th>
             <th>🏢 Seller</th>
             <th>✅ Recommendation</th>
+            <th>⭐ Note (out of 10)</th>
         </tr>
+
         </thead>
         <tbody id="laptopTable"></tbody>
     </table>
@@ -211,23 +218,68 @@
 
             let row = `
         <tr class="toggle-row" data-index="${index}">
-            <td data-label="Image"><img src="${laptop.imgUrl}" alt="Laptop Image"></td>
+            <td data-label="Image"><img src="${laptop.imgUrl}" alt="Laptop Image" style="max-width: 80px;"></td>
+            <td data-label="Auction Date">${laptop.date ? new Date(laptop.date).toLocaleDateString() : "N/A"}</td>
             <td data-label="Lot"><a href="${laptop.lotUrl}" target="_blank">${laptop.lotNumber}</a></td>
             <td data-label="Brand">${laptop.brand}</td>
             <td data-label="Model">${laptop.model}</td>
-            <td data-label="Processor">${laptop.processorBrand} ${laptop.processorModel}</td>
+            <td data-label="Processor">${laptop.processorBrand} ${laptop.processorModel} (${laptop.processorCores} Cores, ${laptop.processorClockSpeed} GHz)</td>
             <td data-label="RAM">${laptop.ramSize}GB ${laptop.ramType}</td>
-            <td data-label="Storage">${laptop.storageType} ${laptop.storageCapacity}GB</td>
-            <td data-label="Condition" class="rating">⭐ ${laptop.noteSur10}/10 (${laptop.condition})</td>
+            <td data-label="Storage">${laptop.storageType} ${laptop.storageCapacity}GB (${laptop.storageSpeed} MB/s)</td>
+            <td data-label="Screen Size">${laptop.screenSize}" (${laptop.screenResolution})</td>
+            <td data-label="GPU Type">${laptop.gpuType} ${laptop.gpuModel} (${laptop.gpuVram}GB VRAM)</td>
+            <td data-label="Release Year">${laptop.releaseYear}</td>
+            <td data-label="Condition">⭐ ${laptop.noteSur10}/10 (${laptop.condition})</td>
             <td data-label="Price"><b>💰 <a href="${bonCoinLink}" target="_blank">${laptop.bonCoinEstimation}€</a></b></td>
             <td data-label="Seller">${laptop.maisonEnchere}</td>
             <td data-label="Recommendation">${laptop.recommendedToBuy ? "✅ Yes" : "❌ No"}</td>
+            <td data-label="Note">${laptop.noteSur10}/10</td>
         </tr>
         <tr class="details-row" id="details-${index}">
-            <td colspan="11" class="details-content">
-                <div class="highlight"><b>📋 Description:</b> ${laptop.description || "No description available"}</div>
-                <br> <b>💻 Specs:</b> ${getSpecs(laptop)}
-                <br> <b>📌 Condition Reason:</b> ${laptop.reasonForCondition || "N/A"}
+            <td colspan="17" class="details-content">
+                <div class="highlight">
+                    <b>📋 Description:</b> ${formatDescription(laptop.description)}
+                </div>
+                <br>
+                <b>🖼 Additional Images:</b>
+                ${laptop.image ? `<img src="${laptop.image}" alt="Extra Image" style="max-width: 150px;">` : "No additional images"}
+                <br><br>
+
+                <b>💻 Full Specifications:</b>
+                <br> <b>🔎 Processor:</b> ${laptop.processorBrand} ${laptop.processorModel} (${laptop.processorCores} Cores, ${laptop.processorClockSpeed} GHz)
+                <br> <b>💾 RAM:</b> ${laptop.ramSize}GB ${laptop.ramType}
+                <br> <b>💽 Storage:</b> ${laptop.storageType} ${laptop.storageCapacity}GB (${laptop.storageSpeed} MB/s)
+                <br> <b>🎮 GPU:</b> ${laptop.gpuType} ${laptop.gpuModel} (${laptop.gpuVram}GB VRAM)
+                <br> <b>📏 Screen Size:</b> ${laptop.screenSize}" (${laptop.screenResolution})
+                <br> <b>🖥 Touch Screen:</b> ${laptop.touchScreen ? "✅ Yes" : "❌ No"}
+                <br> <b>🔋 Battery Life:</b> ${laptop.batteryLife || "Unknown"}
+                <br> <b>⚡ Weight:</b> ${laptop.weight}kg
+                <br> <b>💻 OS:</b> ${laptop.operatingSystem || "Not specified"}
+                <br> <b>🏗️ Chassis Material:</b> ${laptop.chassisMaterial || "Unknown"}
+                <br> <b>⌨️ Keyboard:</b> ${laptop.keyboardType} (${laptop.keyboardBacklight ? "Backlit ✅" : "No Backlight ❌"})
+                <br> <b>🔒 Security Features:</b>
+                ${laptop.fingerprintSensor ? "Fingerprint ✅" : "No Fingerprint ❌"},
+                ${laptop.faceRecognition ? "Face Recognition ✅" : "No Face Recognition ❌"}
+                <br> <b>📡 Connectivity:</b> ${laptop.connectivity || "Not specified"}
+                <br><br>
+
+                <b>📊 Condition & Justification:</b>
+                <br> ⭐ Rating: ${laptop.noteSur10}/10 (${laptop.condition})
+                <br> 📝 Reason for Condition: ${laptop.reasonForCondition || "N/A"}
+                <br> 📌 Justification for Score: ${laptop.reasonForScore || "N/A"}
+                <br><br>
+
+                <b>💰 Price Valuation:</b>
+                <br> <b>🔗 BonCoin Estimation:</b> <a href="${bonCoinLink}" target="_blank">${laptop.bonCoinEstimation}€</a>
+                <br> <b>📘 Facebook Estimation:</b> ${laptop.facebookEstimation || "N/A"}
+                <br> <b>🌍 Internet Estimation:</b> ${laptop.internetEstimation || "N/A"}
+                <br><br>
+
+                <b>🏢 Seller Information:</b>
+                <br> 🏢 Auction House: ${laptop.maisonEnchere}
+                <br> 📅 Auction Date: ${laptop.date ? new Date(laptop.date).toLocaleDateString() : "N/A"}
+                <br> 🔢 Available Quantity: ${laptop.quantity}
+                <br> ✅ Recommended to Buy: ${laptop.recommendedToBuy ? "Yes ✅" : "No ❌"}
             </td>
         </tr>
     `;
@@ -239,6 +291,23 @@
             $(`#details-${index}`).toggle();
         });
     }
+    function formatDescription(text, wordsPerLine = 10) {
+        if (!text) return "No description available";
+
+        let words = text.split(" ");
+        let formattedText = "";
+
+        for (let i = 0; i < words.length; i++) {
+            formattedText += words[i] + " ";
+            if ((i + 1) % wordsPerLine === 0) {
+                formattedText += "<br>"; // Adds line break after every 10 words
+            }
+        }
+        return formattedText.trim();
+    }
+
+
+
     function applyFilters() {
         let dateStart = document.getElementById("dateStartFilter").value;
         let dateEnd = document.getElementById("dateEndFilter").value;

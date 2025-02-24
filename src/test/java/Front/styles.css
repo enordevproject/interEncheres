@@ -59,3 +59,77 @@ body {
     border-radius: 5px;
     z-index: 1000;
 }
+/* Scrollable table container */
+.scrollable-table-container {
+    width: 100%;
+    overflow-x: auto; /* Enables horizontal scroll */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* Ensures the table takes full width */
+.scrollable-table {
+    width: 100%;
+    min-width: 1800px; /* Adjust this if columns are still cut */
+    border-collapse: collapse;
+}
+
+/* Fixed size for main table rows */
+.toggle-row td {
+    white-space: nowrap;
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+    height: 60px; /* Ensures consistent row height */
+}
+
+/* Scrollable details row */
+.details-row {
+    display: none;
+    background-color: #f9f9f9;
+    width: 100%;
+}
+
+/* Enables vertical scroll for details */
+.details-content {
+    max-height: 300px; /* Limits height */
+    overflow-y: auto; /* Enables scrolling */
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+    border: 1px solid #ccc;
+}
+
+/* Prevents entire table from resizing when details expand */
+.toggle-row {
+    transition: none;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .scrollable-table th {
+        display: none;
+    }
+
+    .scrollable-table tr {
+        display: block;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .scrollable-table td {
+        display: block;
+        text-align: right;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .scrollable-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        font-weight: bold;
+    }
+}
