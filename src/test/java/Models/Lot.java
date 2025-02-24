@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 
 @Entity
@@ -105,11 +106,38 @@ public class Lot {
 
 
     public Date getDate() {
-        try {
-            return new SimpleDateFormat("yyyy-MM-dd").parse(date);
-        } catch (ParseException e) {
-            throw new RuntimeException("Invalid date format", e);
+        if (date == null || date.trim().isEmpty()) return null;
+
+        date = date.trim().toLowerCase();
+        Calendar calendar = Calendar.getInstance();
+
+        // 🔹 Gestion des expressions relatives
+        if (date.contains("aujourd")) {
+            return calendar.getTime();
+        } else if (date.contains("demain")) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+            return calendar.getTime();
+        } else if (date.contains("hier")) {
+            calendar.add(Calendar.DAY_OF_YEAR, -1);
+            return calendar.getTime();
         }
+
+        // 🔹 Formats possibles avec et sans heure
+        SimpleDateFormat[] formats = {
+                new SimpleDateFormat("yyyy-MM-dd HH:mm"),
+                new SimpleDateFormat("dd/MM/yyyy HH:mm"),
+                new SimpleDateFormat("yyyy-MM-dd"),
+                new SimpleDateFormat("dd/MM/yyyy")
+        };
+
+        for (SimpleDateFormat format : formats) {
+            try {
+                return format.parse(date);
+            } catch (ParseException ignored) {}
+        }
+
+        System.out.println("❌ Format de date invalide : " + date);
+        return null;
     }
 
 

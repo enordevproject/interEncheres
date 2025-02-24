@@ -31,6 +31,7 @@ public class GPTService {
             return null;
         }
 
+
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost request = new HttpPost(apiInfo.getApiUrl());
             request.setHeader("Authorization", "Bearer " + apiInfo.getApiKey());
@@ -59,7 +60,7 @@ public class GPTService {
 
             // ✅ Construct GPT messages
             List<Map<String, Object>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", "Tu es un expert en enchères de laptops. Fournis un JSON structuré."));
+            messages.add(Map.of("role", "system", "content", "Expert en enchères de laptops, génère un JSON structuré avec des spécifications précises. Vérifie l'authenticité du lot et détecte les défauts visibles. Si l'image a un fond blanc, elle peut être générée et non réelle.\""));
 
             messages.add(Map.of("role", "user", "content", String.format(
                     "Voici un lot de laptop provenant d’une enchère :\n"
@@ -75,7 +76,7 @@ public class GPTService {
             if (hasImage) {
                 messages.add(Map.of(
                         "role", "user",
-                        "content", "Voici une image du lot en Base64  analyse bien : Si une image est fournie, détecte les défauts visibles (rayures, fissures, touches manquantes, écran endommagé si background image est blanc sache c'est une image possible pas reel).",
+                        "content", "Voici une image du lot en Base64. Analyse attentivement : si une image est fournie, détecte les défauts visibles (rayures, fissures, touches manquantes, écran endommagé). Si le fond est blanc, l'image peut être générée et non réelle.",
                         "image", base64Image
                 ));
             }
@@ -87,7 +88,7 @@ public class GPTService {
                     "type", "function",
                     "function", Map.of(
                             "name", "generate_laptop",
-                            "description", "Génère un objet Laptop à partir des données d'enchères si pas de données suffisants utilise tes connaisances pour determiner les spec de pc en se basant sur l'image fournis  base64 aussi. attention quelques input ne sont pas des pc il faut pas mettre des faux infos si pas pc dire pas pc et aussi verifie ça avec l'image fourbise",
+                            "description", " ",
                             "parameters", Map.of(
                                     "type", "object",
                                     "properties", properties,

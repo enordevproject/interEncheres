@@ -42,7 +42,16 @@ public class FirstTest extends BasePage {
         homePage.navigateToHomePage(); // Navigate to the home page
 
         // Define search terms
-        List<String> searchTerms = Arrays.asList("portable","dell","lenovo","hp"); // Use Arrays.asList()
+        List<String> searchTerms = Arrays.asList(
+                "ordinateur", "ordinateur portable", "pc", "pc portable", "laptop",
+                "dell", "lenovo", "hp", "asus", "apple",
+                "i7", "i7 6th", "i7 7th", "i7 8th", "i7 9th",
+                "i7 10th", "i7 11th", "i7 12th", "i7 13th", "i7 14th",
+                "i5", "i5 8th", "i5 10th", "i5 12th", "i5 13th",
+                "vpro", "elitebook", "thinkpad", "latitude", "precision"
+        );
+
+// Use Arrays.asList()
 
         // Loop through each search term
         for (String searchTerm : searchTerms) {

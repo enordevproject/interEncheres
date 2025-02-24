@@ -92,19 +92,44 @@ public class Results {
             return List.of();
         }
     }
+    public static boolean isValidLaptop(Laptop laptop) {
+        if (laptop == null) return false;
 
+        // Check for invalid or missing critical fields
+        List<String> invalidValues = Arrays.asList("N/A", "Unknown", "Non précisé", "Sans garantie", "Non fonctionnel");
+
+        if (laptop.getBrand() == null || invalidValues.contains(laptop.getBrand())) return false;
+        if (laptop.getModel() == null || invalidValues.contains(laptop.getModel())) return false;
+        if (laptop.getProcessorModel() == null || invalidValues.contains(laptop.getProcessorModel())) return false;
+        if (laptop.getRamSize() <= 0) return false;
+        if (laptop.getStorageCapacity() <= 0) return false;
+        if (laptop.getScreenSize() <= 0) return false;
+
+        // Exclude non-laptop descriptions
+        String description = laptop.getDescription().toLowerCase();
+        List<String> nonLaptopKeywords = Arrays.asList("microphone", "ecran", "tablette", "imprimante", "pc fixe", "tour", "scanner");
+
+        for (String keyword : nonLaptopKeywords) {
+            if (description.contains(keyword)) return false;
+        }
+
+        return true;
+    }
 
     public static void insertLaptopIntoDatabase(Laptop laptop) {
+        if (!isValidLaptop(laptop)) {
+            System.out.println("❌ Laptop validation failed. Skipping insertion.");
+            return;
+        }
+
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            session.persist(laptop); // Use persist() instead of save()
-            transaction.commit(); // ✅ Ensure commit after each laptop insertion
-            System.out.println("💾 Laptop inserted successfully: ");
+            session.persist(laptop);
+            transaction.commit();
+            System.out.println("💾 Laptop inserted successfully.");
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback(); // ✅ Rollback on failure
-            }
+            if (transaction != null) transaction.rollback();
             System.out.println("❌ Failed to insert laptop: " + e.getMessage());
         }
     }
@@ -190,129 +215,6 @@ public class Results {
 
 
 
-
-    public static void generateHtmlReport() {
-        List<Laptop> laptops = getAllLaptopsFromDatabase();
-
-        // Collect unique values for auto-complete & dropdown filters
-        Set<String> brands = new HashSet<>();
-        Set<String> models = new HashSet<>();
-        Set<String> processors = new HashSet<>();
-        Set<String> sellers = new HashSet<>();
-        Set<String> conditions = new HashSet<>(Arrays.asList("New", "Used"));
-        Set<Integer> releaseYears = new HashSet<>();
-
-        for (Laptop laptop : laptops) {
-            brands.add(laptop.getBrand());
-            models.add(laptop.getModel());
-            processors.add(laptop.getProcessorBrand() + " " + laptop.getProcessorModel());
-            sellers.add(laptop.getMaisonEnchere());
-            releaseYears.add(laptop.getReleaseYear());
-        }
-
-        String filePath = "src/test/java/front/laptops_report.html";
-
-        StringBuilder html = new StringBuilder();
-        html.append("<!DOCTYPE html><html lang='en'><head>")
-                .append("<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>")
-                .append("<title>Laptop Inventory Analysis</title>")
-                .append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'>")
-                .append("<script src='https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js'></script>")
-                .append("<script src='https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.js'></script>")
-                .append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css'>")
-                .append("<style>")
-                .append(".table-container {overflow-x: auto; width: 100%;} th, td { white-space: nowrap; text-align: center; vertical-align: middle; }")
-                .append(".hover-box { position: absolute; display: none; background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000; max-width: 300px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); }")
-                .append("</style>")
-                .append("</head><body class='container-fluid'><h2 class='my-3 text-center'>💻 Laptop Inventory Analysis</h2>");
-
-        // Results Counter
-        html.append("<h5 class='text-center'>Results: <span id='resultsCount'>" + laptops.size() + "</span></h5>");
-
-        // Filters Section
-        html.append("<div class='container'><div class='row filter-section'>")
-                .append("<div class='col-md-2'><input type='text' id='brandFilter' class='form-control' placeholder='🔍 Brand'></div>")
-                .append("<div class='col-md-2'><input type='text' id='modelFilter' class='form-control' placeholder='🔍 Model'></div>")
-                .append("<div class='col-md-2'><input type='text' id='processorFilter' class='form-control' placeholder='🔍 Processor'></div>")
-                .append("<div class='col-md-2'><select id='conditionFilter' class='form-control'><option value=''>🔍 Condition</option>")
-                .append(getOptions(conditions))
-                .append("</select></div>")
-                .append("<div class='col-md-2'><input type='text' id='sellerFilter' class='form-control' placeholder='🏢 Seller'></div>")
-                .append("<div class='col-md-2'><select id='yearFilter' class='form-control'><option value=''>📅 Release Year</option>")
-                .append(getOptions(releaseYears))
-                .append("</select></div>")
-                .append("<div class='col-md-12 text-center mt-2'><button class='btn btn-primary' onclick='applyFilters()'>Apply Filters</button></div>")
-                .append("</div></div>");
-
-        // Table
-        html.append("<div class='table-container'><table id='laptopTable' class='table table-striped'><thead><tr>")
-                .append("<th>📌 Lot</th><th>📅 Date</th><th>🏢 Brand</th><th>🔖 Model</th><th>🖥️ Processor</th>")
-                .append("<th>📊 Score & Condition</th><th>🛠 Condition Justification</th><th>💰 Price Estimations</th>")
-                .append("<th>🏢 Seller</th><th>✅ Recommendation</th><th>🖼 Image</th></tr></thead><tbody>");
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (Laptop laptop : laptops) {
-            String bonCoinLink = "https://www.leboncoin.fr/recherche/?category=17&text=" + laptop.getBrand() + "+" + laptop.getModel();
-
-            html.append("<tr class='hover-trigger' data-specs='" + laptop.getSpecs().replace("'", "\\'") + "'>")
-                    .append("<td><a href='" + laptop.getLotUrl() + "' target='_blank'>" + laptop.getLotNumber() + "</a></td>")
-                    .append("<td>" + (laptop.getDate() != null ? sdf.format(laptop.getDate()) : "N/A") + "</td>")
-                    .append("<td>" + laptop.getBrand() + "</td>")
-                    .append("<td>" + laptop.getModel() + "</td>")
-                    .append("<td>" + laptop.getProcessorBrand() + " " + laptop.getProcessorModel() + "</td>")
-                    .append("<td>⭐ " + laptop.getNoteSur10() + "/10 (" + laptop.getCondition() + ")</td>")
-                    .append("<td>" + laptop.getReasonForCondition() + "</td>")
-                    .append("<td><b>💰 BonCoin:</b> <a href='" + bonCoinLink + "' target='_blank'>" + laptop.getBonCoinEstimation() + "€</a></td>")
-                    .append("<td>" + laptop.getMaisonEnchere() + "</td>")
-                    .append("<td>" + (laptop.isRecommendedToBuy() ? "✅ Yes" : "❌ No") + "</td>")
-                    .append("<td><img src='" + laptop.getImgUrl() + "' width='100px'></td>")
-                    .append("</tr>");
-        }
-
-        html.append("</tbody></table></div>");
-
-        // Hover box (hidden by default)
-        html.append("<div class='hover-box' id='hoverBox'></div>");
-
-        // JavaScript for Hover Effect & Filtering Fix
-        html.append("<script>")
-                .append("$(document).ready(function() {")
-                .append("$('.hover-trigger').hover(function(event) {")
-                .append("var specs = $(this).attr('data-specs');")
-                .append("$('#hoverBox').html(specs).css({ top: event.pageY + 10 + 'px', left: event.pageX + 10 + 'px' }).show();")
-                .append("}, function() { $('#hoverBox').hide(); });")
-                .append("});")
-
-                .append("function applyFilters() {")
-                .append("var brand = $('#brandFilter').val().toLowerCase();")
-                .append("var model = $('#modelFilter').val().toLowerCase();")
-                .append("var processor = $('#processorFilter').val().toLowerCase();")
-                .append("var condition = $('#conditionFilter').val();")
-                .append("var seller = $('#sellerFilter').val().toLowerCase();")
-                .append("var visibleCount = 0;")
-                .append("$('#laptopTable tbody tr').each(function() {")
-                .append("var row = $(this);")
-                .append("var rowBrand = row.find('td:eq(2)').text().toLowerCase();")
-                .append("var rowModel = row.find('td:eq(3)').text().toLowerCase();")
-                .append("var rowProcessor = row.find('td:eq(4)').text().toLowerCase();")
-                .append("var rowCondition = row.find('td:eq(5)').text();")
-                .append("var rowSeller = row.find('td:eq(8)').text().toLowerCase();")
-                .append("var match = (!brand || rowBrand.includes(brand)) && (!model || rowModel.includes(model)) && (!processor || rowProcessor.includes(processor)) && (!condition || rowCondition.includes(condition)) && (!seller || rowSeller.includes(seller));")
-                .append("if (match) { visibleCount++; row.show(); } else { row.hide(); }")
-                .append("}); $('#resultsCount').text(visibleCount);")
-                .append("}")
-                .append("</script>");
-
-        html.append("</body></html>");
-
-        try (FileWriter fileWriter = new FileWriter(filePath)) {
-            fileWriter.write(html.toString());
-            Desktop.getDesktop().browse(new File(filePath).toURI());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 
 
