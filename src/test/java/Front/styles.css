@@ -59,23 +59,25 @@ body {
     border-radius: 5px;
     z-index: 1000;
 }
-/* Scrollable table container */
+/* Make the table container always scrollable */
 .scrollable-table-container {
     width: 100%;
-    overflow-x: auto; /* Enables horizontal scroll */
+    overflow-x: auto !important; /* Ensures scroll stays */
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 10px;
+    min-height: 300px; /* Prevents shrinking */
+    max-height: 600px; /* Optional: Prevents too much vertical growth */
 }
 
-/* Ensures the table takes full width */
+/* Keep table width stable */
 .scrollable-table {
     width: 100%;
-    min-width: 1800px; /* Adjust this if columns are still cut */
+    min-width: 1800px !important; /* Prevents it from resizing */
     border-collapse: collapse;
 }
 
-/* Fixed size for main table rows */
+/* Fixed row size */
 .toggle-row td {
     white-space: nowrap;
     padding: 10px;
@@ -92,17 +94,27 @@ body {
     width: 100%;
 }
 
-/* Enables vertical scroll for details */
+/* Ensures details content scrolls separately */
 .details-content {
-    max-height: 300px; /* Limits height */
-    overflow-y: auto; /* Enables scrolling */
+    max-height: 300px;
+    overflow-y: auto;
     padding: 10px;
     text-align: left;
     font-size: 14px;
     border: 1px solid #ccc;
 }
 
-/* Prevents entire table from resizing when details expand */
+/* Ensures the table remains scrollable after loading */
+.fixed-table-layout {
+    table-layout: fixed !important;
+}
+
+/* Prevents shrinking when content loads */
+.sticky-scroll {
+    overflow-x: scroll !important;
+}
+
+/* Prevents UI breaking when details expand */
 .toggle-row {
     transition: none;
 }

@@ -31,73 +31,119 @@
 <!-- 필터 섹션 -->
 <div class="container">
     <div class="row filter-section">
-        <div class="col-md-2">
-            <input type="date" id="dateStartFilter" class="form-control" placeholder="📅 Auction Start Date" title="Select the starting date of the auction">
+        <!-- Auction Date Range -->
+        <div class="col-md-3">
+            <label>📅 Auction Date</label>
+            <input type="date" id="dateStartFilter" class="form-control">
         </div>
-        <div class="col-md-2">
-            <input type="date" id="dateEndFilter" class="form-control" placeholder="📅 Auction End Date" title="Select the ending date of the auction">
+        <div class="col-md-3">
+            <label>📅 to</label>
+            <input type="date" id="dateEndFilter" class="form-control">
         </div>
-        <div class="col-md-2">
-            <input type="number" id="noteMinFilter" class="form-control" placeholder="⭐ Min Rating (0-10)" title="Enter the minimum rating (0-10)">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="noteMaxFilter" class="form-control" placeholder="⭐ Max Rating (0-10)" title="Enter the maximum rating (0-10)">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="priceMinFilter" class="form-control" placeholder="💰 Min BonCoin Estimation (€)" title="Enter the minimum estimated price">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="priceMaxFilter" class="form-control" placeholder="💰 Max BonCoin Estimation (€)" title="Enter the maximum estimated price">
-        </div>
-        <div class="col-md-2">
-            <select id="recommendedFilter" class="form-control" title="Filter by recommended laptops">
-                <option value="">✅ Recommended to Buy</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="yearMinFilter" class="form-control" placeholder="📅 Min Release Year" title="Enter the earliest release year">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="yearMaxFilter" class="form-control" placeholder="📅 Max Release Year" title="Enter the latest release year">
-        </div>
-        <div class="col-md-2">
-            <select id="touchScreenFilter" class="form-control" title="Filter by touch screen availability">
-                <option value="">🖥 Touch Screen</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="screenSizeMinFilter" class="form-control" placeholder="📏 Min Screen Size (inches)" title="Enter the minimum screen size in inches">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="screenSizeMaxFilter" class="form-control" placeholder="📏 Max Screen Size (inches)" title="Enter the maximum screen size in inches">
-        </div>
-        <div class="col-md-2">
-            <select id="gpuTypeFilter" class="form-control" title="Select Integrated or Dedicated GPU">
-                <option value="">🎮 GPU Type</option>
-                <option value="Integrated">Integrated</option>
-                <option value="Dedicated">Dedicated</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="quantityMinFilter" class="form-control" placeholder="🔢 Min Quantity" title="Enter the minimum available quantity">
-        </div>
-        <div class="col-md-2">
-            <input type="number" id="quantityMaxFilter" class="form-control" placeholder="🔢 Max Quantity" title="Enter the maximum available quantity">
-        </div>
-        <div class="col-md-12 text-center mt-2">
-            <button class="btn btn-primary" onclick="applyFilters()" title="Apply filters based on selected criteria">Apply Filters</button>
-            <button class="btn btn-secondary" onclick="sortByBestLots()" title="Sort laptops by best lots">Sort by Best Lots</button>
-            <button class="btn btn-warning" onclick="resetFilters()" title="Reset all filter selections">Reset</button>
-            <button class="btn btn-dark" onclick="goBack()" title="Go back to the previous page">Back</button>
-        </div>
-    </div>
-    </div>
-</div>
 
+        <!-- Brand & Model Dropdowns -->
+        <div class="col-md-3">
+            <label>🏢 Brand</label>
+            <select id="brandFilter" class="form-control"></select>
+        </div>
+        <div class="col-md-3">
+            <label>🔖 Model</label>
+            <select id="modelFilter" class="form-control"></select>
+        </div>
+
+        <!-- Processor Dropdown -->
+        <div class="col-md-3">
+            <label>🔎 Processor</label>
+            <select id="processorFilter" class="form-control"></select>
+        </div>
+
+        <!-- RAM Interval Slider -->
+        <div class="col-md-3">
+            <label>💾 RAM (GB)</label>
+            <div id="ramSlider"></div>
+            <span id="ramValue">4 - 64 GB</span>
+        </div>
+
+        <!-- Rating Interval Slider -->
+        <div class="col-md-3">
+            <label>⭐ Rating (0-10)</label>
+            <div id="noteSlider"></div>
+            <span id="noteValue">0 - 10</span>
+        </div>
+
+        <!-- Recommended Selection -->
+        <div class="col-md-3">
+            <label>✅ Recommended</label>
+            <select id="recommendedFilter" class="form-control">
+                <option value="">Any</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
+        </div>
+
+        <!-- Release Year Interval Slider -->
+        <div class="col-md-3">
+            <label>📅 Release Year</label>
+            <div id="yearSlider"></div>
+            <span id="yearValue">2000 - 2024</span>
+        </div>
+
+        <!-- Screen Size Interval Slider -->
+        <div class="col-md-3">
+            <label>📏 Screen Size (inches)</label>
+            <div id="screenSizeSlider"></div>
+            <span id="screenSizeValue">10 - 20 inches</span>
+        </div>
+
+        <!-- BonCoin Price Interval Slider -->
+        <div class="col-md-3">
+            <label>💰 BonCoin Price (€)</label>
+            <div id="priceSlider"></div>
+            <span id="priceValue">0 - 5000€</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="col-md-12 text-center mt-2">
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-secondary" onclick="sortByBestLots()">Sort by Best Lots</button>
+            <button class="btn btn-warning" onclick="resetFilters()">Reset</button>
+            <button class="btn btn-dark" onclick="goBack()">Back</button>
+        </div>
+    </div>
+
+    <!-- Include jQuery UI for Sliders -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+</div>
+</div>
+<script>
+    $(function() {
+        function createSlider(id, min, max, step, unit) {
+            $(`#${id}`).slider({
+                range: true,
+                min: min,
+                max: max,
+                step: step,
+                values: [min, max],
+                slide: function(event, ui) {
+                    $(`#${id}Value`).text(ui.values[0] + " - " + ui.values[1] + " " + unit);
+                }
+            });
+        }
+
+        createSlider("ramSlider", 4, 64, 4, "GB");
+        createSlider("noteSlider", 0, 10, 1, "/10");
+        createSlider("yearSlider", 2000, 2024, 1, "");
+        createSlider("screenSizeSlider", 10, 20, 0.5, "inches");
+        createSlider("priceSlider", 0, 5000, 50, "€");
+
+        fetchLaptops();
+    });
+
+</script>
 <!-- 노트북 리스트 -->
 <div class="scrollable-table">
     <table class="table table-striped">
@@ -132,78 +178,145 @@
         try {
             let response = await fetch("laptops_report.json");
             let laptops = await response.json();
+
+            if (!Array.isArray(laptops) || laptops.length === 0) {
+                throw new Error("⚠️ No laptops found in dataset.");
+            }
+
+            console.log("✅ Successfully fetched laptops:", laptops.length);
             displayLaptops(laptops);
             populateFilters(laptops);
         } catch (error) {
             console.error("❌ Error loading laptops:", error);
+            $("#laptopTable").html("<tr><td colspan='11' class='text-center text-danger'>Error loading data.</td></tr>");
         }
     }
-    function populateFilters(laptops) {
-        let dateSet = new Set();
-        let noteSet = new Set();
-        let priceSet = new Set();
-        let yearSet = new Set();
-        let screenSizeSet = new Set();
-        let gpuTypeSet = new Set();
-        let quantitySet = new Set();
 
-        // Extract unique values from dataset
+    function populateFilters(laptops) {
+        let brandSet = new Set();
+        let modelSet = new Set();
+        let processorSet = new Set();
+        let gpuTypeSet = new Set();
+        let dateSet = new Set();
+        let notes = [];
+        let prices = [];
+        let years = [];
+        let screenSizes = [];
+        let ramSizes = [];
+        let quantities = [];
+
+        // Extract unique values & numerical ranges safely
         laptops.forEach(laptop => {
-            if (laptop.date) dateSet.add(new Date(laptop.date).toISOString().split("T")[0]); // Format YYYY-MM-DD
-            if (laptop.noteSur10) noteSet.add(parseFloat(laptop.noteSur10));
-            if (laptop.bonCoinEstimation) priceSet.add(parseFloat(laptop.bonCoinEstimation));
-            if (laptop.releaseYear) yearSet.add(parseInt(laptop.releaseYear));
-            if (laptop.screenSize) screenSizeSet.add(parseFloat(laptop.screenSize));
+            if (laptop.brand) brandSet.add(laptop.brand);
+            if (laptop.model) modelSet.add(laptop.model);
+            if (laptop.processorBrand && laptop.processorModel)
+                processorSet.add(`${laptop.processorBrand} ${laptop.processorModel}`);
             if (laptop.gpuType) gpuTypeSet.add(laptop.gpuType);
-            if (laptop.quantity) quantitySet.add(parseInt(laptop.quantity));
+            if (laptop.date) dateSet.add(new Date(laptop.date).getTime());
+            if (laptop.noteSur10) notes.push(parseFloat(laptop.noteSur10));
+            if (laptop.bonCoinEstimation) prices.push(parseFloat(laptop.bonCoinEstimation));
+            if (laptop.releaseYear) years.push(parseInt(laptop.releaseYear));
+            if (laptop.screenSize) screenSizes.push(parseFloat(laptop.screenSize));
+            if (laptop.ramSize) ramSizes.push(parseInt(laptop.ramSize));
+            if (laptop.quantity) quantities.push(parseInt(laptop.quantity));
         });
 
         // Convert sets to sorted arrays
-        let notes = Array.from(noteSet).sort((a, b) => a - b);
-        let prices = Array.from(priceSet).sort((a, b) => a - b);
-        let years = Array.from(yearSet).sort((a, b) => a - b);
-        let screenSizes = Array.from(screenSizeSet).sort((a, b) => a - b);
-        let gpuTypes = Array.from(gpuTypeSet);
-        let quantities = Array.from(quantitySet).sort((a, b) => a - b);
+        let brands = Array.from(brandSet).sort();
+        let models = Array.from(modelSet).sort();
+        let processors = Array.from(processorSet).sort();
+        let gpuTypes = Array.from(gpuTypeSet).sort();
 
-        // Helper function to safely update dropdowns
-        function updateDropdown(id, options) {
+        // Helper function to safely populate dropdowns
+        function updateDropdown(id, values) {
             let element = document.getElementById(id);
             if (element) {
-                element.innerHTML = `<option value="">🔍 Select ${id.replace("Filter", "")}</option>` +
-                    options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
+                element.innerHTML = `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join("");
             }
         }
 
-        // Set min/max values for number inputs if data exists
-        function setMinMaxInput(id, values) {
+        // Populate dropdowns safely
+        updateDropdown("brandFilter", brands);
+        updateDropdown("modelFilter", models);
+        updateDropdown("processorFilter", processors);
+        updateDropdown("gpuTypeFilter", gpuTypes);
+
+        // Helper function to create range sliders dynamically
+        function setRangeSlider(id, values, step = 1) {
             let element = document.getElementById(id);
             if (element && values.length > 0) {
-                element.min = values[0];
-                element.max = values[values.length - 1];
-                element.placeholder = `${element.placeholder} (${values[0]} - ${values[values.length - 1]})`;
+                values = values.filter(v => !isNaN(v)).sort((a, b) => a - b);
+                let minValue = values[0];
+                let maxValue = values[values.length - 1];
+
+                element.min = minValue;
+                element.max = maxValue;
+                element.step = step;
+                element.value = minValue + (maxValue - minValue) / 2; // Default to midpoint
+
+                let label = document.getElementById(id + "Label");
+                if (label) {
+                    label.innerHTML = `${minValue} - ${maxValue}`;
+                    element.oninput = function () {
+                        label.innerHTML = this.value;
+                    };
+                }
             }
         }
 
-        // Populate filters
-        if (document.getElementById("dateStartFilter")) document.getElementById("dateStartFilter").min = Math.min(...Array.from(dateSet));
-        if (document.getElementById("dateEndFilter")) document.getElementById("dateEndFilter").max = Math.max(...Array.from(dateSet));
+        // Set range sliders safely
+        setRangeSlider("noteFilter", notes, 0.5);
+        setRangeSlider("priceFilter", prices, 50);
+        setRangeSlider("yearFilter", years, 1);
+        setRangeSlider("screenSizeFilter", screenSizes, 0.5);
+        setRangeSlider("ramFilter", ramSizes, 1);
+        setRangeSlider("quantityFilter", quantities, 1);
 
-        setMinMaxInput("noteMinFilter", notes);
-        setMinMaxInput("noteMaxFilter", notes);
-        setMinMaxInput("priceMinFilter", prices);
-        setMinMaxInput("priceMaxFilter", prices);
-        setMinMaxInput("yearMinFilter", years);
-        setMinMaxInput("yearMaxFilter", years);
-        setMinMaxInput("screenSizeMinFilter", screenSizes);
-        setMinMaxInput("screenSizeMaxFilter", screenSizes);
-        setMinMaxInput("quantityMinFilter", quantities);
-        setMinMaxInput("quantityMaxFilter", quantities);
+        // Set min/max for Auction Date safely
+        if (dateSet.size > 0) {
+            let minDate = new Date(Math.min(...Array.from(dateSet))).toISOString().split("T")[0];
+            let maxDate = new Date(Math.max(...Array.from(dateSet))).toISOString().split("T")[0];
 
-        // Populate dropdown filters
-        updateDropdown("gpuTypeFilter", gpuTypes);
+            let dateStartEl = document.getElementById("dateStartFilter");
+            let dateEndEl = document.getElementById("dateEndFilter");
+
+            if (dateStartEl) dateStartEl.min = minDate;
+            if (dateEndEl) dateEndEl.max = maxDate;
+        }
+
+        // Populate Recommended filter safely
+        let recommendedEl = document.getElementById("recommendedFilter");
+        if (recommendedEl) {
+            recommendedEl.innerHTML = `
+            <option value="">Any</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        `;
+        }
     }
 
+    function getSliderValues(id) {
+        let slider = $(`#${id}`).slider("option", "values"); // Get values from jQuery UI slider
+        return { min: slider[0], max: slider[1] }; // Return min/max values
+    }
+
+
+
+
+    // Set min/max values for number inputs if data exists
+    function setMinMaxInput(id, values) {
+        let element = document.getElementById(id);
+        if (element && values && values.length > 0) {
+            values = values.filter(v => !isNaN(v)).sort((a, b) => a - b); // Ensure values are valid & sorted
+            let minValue = values[0];
+            let maxValue = values[values.length - 1];
+
+            element.min = minValue;
+            element.max = maxValue;
+            element.value = minValue; // Set default to minimum
+            element.placeholder = `${element.placeholder.replace(/\(.*?\)/, '')} (${minValue} - ${maxValue})`; // Avoid duplicate placeholders
+        }
+    }
 
 
 
@@ -211,6 +324,13 @@
 
     function displayLaptops(laptops) {
         let tableBody = document.getElementById("laptopTable");
+        let tableContainer = document.querySelector(".scrollable-table-container");
+
+        // Ensure tableContainer exists before accessing its scroll position
+        let prevScrollLeft = tableContainer ? tableContainer.scrollLeft : 0;
+        let prevScrollTop = tableContainer ? tableContainer.scrollTop : 0;
+
+        // Clear and repopulate the table
         tableBody.innerHTML = "";
 
         laptops.forEach((laptop, index) => {
@@ -263,20 +383,9 @@
                 <br> <b>📡 Connectivity:</b> ${laptop.connectivity || "Not specified"}
                 <br><br>
 
-                <b>📊 Condition & Justification:</b>
-                <br> ⭐ Rating: ${laptop.noteSur10}/10 (${laptop.condition})
-                <br> 📝 Reason for Condition: ${laptop.reasonForCondition || "N/A"}
-                <br> 📌 Justification for Score: ${laptop.reasonForScore || "N/A"}
-                <br><br>
-
                 <b>💰 Price Valuation:</b>
                 <br> <b>🔗 BonCoin Estimation:</b> <a href="${bonCoinLink}" target="_blank">${laptop.bonCoinEstimation}€</a>
-                <br> <b>📘 Facebook Estimation:</b> ${laptop.facebookEstimation || "N/A"}
-                <br> <b>🌍 Internet Estimation:</b> ${laptop.internetEstimation || "N/A"}
-                <br><br>
-
-                <b>🏢 Seller Information:</b>
-                <br> 🏢 Auction House: ${laptop.maisonEnchere}
+                <br> <b>🏢 Auction House:</b> ${laptop.maisonEnchere}
                 <br> 📅 Auction Date: ${laptop.date ? new Date(laptop.date).toLocaleDateString() : "N/A"}
                 <br> 🔢 Available Quantity: ${laptop.quantity}
                 <br> ✅ Recommended to Buy: ${laptop.recommendedToBuy ? "Yes ✅" : "No ❌"}
@@ -286,11 +395,18 @@
             tableBody.innerHTML += row;
         });
 
+        // Restore scroll position after table updates (only if tableContainer exists)
+        if (tableContainer) {
+            tableContainer.scrollLeft = prevScrollLeft;
+            tableContainer.scrollTop = prevScrollTop;
+        }
+
         $(".toggle-row").click(function () {
             let index = $(this).data("index");
             $(`#details-${index}`).toggle();
         });
     }
+
     function formatDescription(text, wordsPerLine = 10) {
         if (!text) return "No description available";
 
@@ -307,56 +423,96 @@
     }
 
 
-
     function applyFilters() {
-        let dateStart = document.getElementById("dateStartFilter").value;
-        let dateEnd = document.getElementById("dateEndFilter").value;
-        let noteMin = parseFloat(document.getElementById("noteMinFilter").value) || 0;
-        let noteMax = parseFloat(document.getElementById("noteMaxFilter").value) || 10;
-        let priceMin = parseFloat(document.getElementById("priceMinFilter").value) || 0;
-        let priceMax = parseFloat(document.getElementById("priceMaxFilter").value) || Infinity;
-        let recommended = document.getElementById("recommendedFilter").value;
-        let yearMin = parseInt(document.getElementById("yearMinFilter").value) || 0;
-        let yearMax = parseInt(document.getElementById("yearMaxFilter").value) || Infinity;
-        let touchScreen = document.getElementById("touchScreenFilter").value;
-        let screenSizeMin = parseFloat(document.getElementById("screenSizeMinFilter").value) || 0;
-        let screenSizeMax = parseFloat(document.getElementById("screenSizeMaxFilter").value) || Infinity;
-        let gpuType = document.getElementById("gpuTypeFilter").value;
-        let quantityMin = parseInt(document.getElementById("quantityMinFilter").value) || 0;
-        let quantityMax = parseInt(document.getElementById("quantityMaxFilter").value) || Infinity;
+        console.log("🔍 Applying Filters...");
 
-        // Loop through each row and filter
+        function getValue(id) {
+            let element = document.getElementById(id);
+            return element ? element.value.trim().toLowerCase() : "";
+        }
+
+        function getSliderValues(id) {
+            let slider = $(`#${id}`).slider("option", "values");
+            return { min: slider[0], max: slider[1] };
+        }
+
+        let filters = {
+            dateStart: document.getElementById("dateStartFilter").value || "",
+            dateEnd: document.getElementById("dateEndFilter").value || "",
+            brand: getValue("brandFilter"),
+            model: getValue("modelFilter"),
+            processor: getValue("processorFilter"),
+            gpuType: getValue("gpuTypeFilter"),
+            recommended: getValue("recommendedFilter"),
+            ram: getSliderValues("ramSlider"),
+            rating: getSliderValues("noteSlider"),
+            year: getSliderValues("yearSlider"),
+            screenSize: getSliderValues("screenSizeSlider"),
+            price: getSliderValues("priceSlider")
+        };
+
+        console.log("✅ Filters Applied:", filters);
+
+        let visibleRows = 0;
+
         $("#laptopTable tr.toggle-row").each(function () {
             let row = $(this);
+            let detailsRow = row.next(".details-row");
 
-            // Read values from table cells
-            let dateText = row.find("td[data-label='Date']").text().trim();
-            let date = dateText ? new Date(dateText) : null;
-            let note = parseFloat(row.find("td[data-label='Condition']").text().replace(/[^0-9.]/g, '')) || 0;
-            let price = parseFloat(row.find("td[data-label='Price']").text().replace(/[^0-9.]/g, '')) || 0;
-            let isRecommended = row.find("td[data-label='Recommendation']").text().includes("✅");
-            let releaseYear = parseInt(row.find("td[data-label='Release Year']").text()) || 0;
-            let screenSize = parseFloat(row.find("td[data-label='Screen Size']").text()) || 0;
-            let hasTouchScreen = row.find("td[data-label='Touch Screen']").text().includes("✅");
-            let currentGpuType = row.find("td[data-label='GPU']").text().trim();
-            let quantity = parseInt(row.find("td[data-label='Quantity']").text()) || 0;
+            try {
+                let laptopDateStr = row.find("td[data-label='Auction Date']").text().trim();
+                let laptopDate = laptopDateStr ? new Date(laptopDateStr) : null;
 
-            // Filter conditions
-            let match = (!dateStart || (date && date >= new Date(dateStart))) &&
-                (!dateEnd || (date && date <= new Date(dateEnd))) &&
-                (note >= noteMin && note <= noteMax) &&
-                (price >= priceMin && price <= priceMax) &&
-                (recommended === "" || (recommended === "true" && isRecommended) || (recommended === "false" && !isRecommended)) &&
-                (releaseYear >= yearMin && releaseYear <= yearMax) &&
-                (screenSize >= screenSizeMin && screenSize <= screenSizeMax) &&
-                (touchScreen === "" || (touchScreen === "true" && hasTouchScreen) || (touchScreen === "false" && !hasTouchScreen)) &&
-                (gpuType === "" || gpuType === currentGpuType) &&
-                (quantity >= quantityMin && quantity <= quantityMax);
+                let laptopBrand = row.find("td[data-label='Brand']").text().trim().toLowerCase();
+                let laptopModel = row.find("td[data-label='Model']").text().trim().toLowerCase();
+                let laptopProcessor = row.find("td[data-label='Processor']").text().trim().toLowerCase();
+                let laptopGPU = row.find("td[data-label='GPU Type']").text().trim().toLowerCase();
+                let laptopRAM = parseInt(row.find("td[data-label='RAM']").text().replace(/[^0-9]/g, '')) || 0;
+                let laptopRating = parseFloat(row.find("td[data-label='Condition']").text().replace(/[^0-9.]/g, '')) || 0;
+                let isRecommended = row.find("td[data-label='Recommendation']").text().includes("✅");
+                let laptopYear = parseInt(row.find("td[data-label='Release Year']").text().trim()) || 0;
+                let laptopScreenSize = parseFloat(row.find("td[data-label='Screen Size']").text().replace(/[^0-9.]/g, '')) || 0;
+                let laptopPrice = parseFloat(row.find("td[data-label='Price']").text().replace(/[^0-9.]/g, '')) || 0;
 
-            // Show or hide row based on filter match
-            row.toggle(match);
+                let match =
+                    (!filters.dateStart || (laptopDate && laptopDate >= new Date(filters.dateStart))) &&
+                    (!filters.dateEnd || (laptopDate && laptopDate <= new Date(filters.dateEnd))) &&
+                    (!filters.brand || laptopBrand.includes(filters.brand)) &&
+                    (!filters.model || laptopModel.includes(filters.model)) &&
+                    (!filters.processor || laptopProcessor.includes(filters.processor)) &&
+                    (!filters.gpuType || laptopGPU.includes(filters.gpuType)) &&
+                    (!filters.recommended || (filters.recommended === "true" && isRecommended) || (filters.recommended === "false" && !isRecommended)) &&
+                    (laptopRAM >= filters.ram.min && laptopRAM <= filters.ram.max) &&
+                    (laptopRating >= filters.rating.min && laptopRating <= filters.rating.max) &&
+                    (laptopYear >= filters.year.min && laptopYear <= filters.year.max) &&
+                    (laptopScreenSize >= filters.screenSize.min && laptopScreenSize <= filters.screenSize.max) &&
+                    (laptopPrice >= filters.price.min && laptopPrice <= filters.price.max);
+
+                if (match) {
+                    row.show();
+                    detailsRow.show();
+                    visibleRows++;
+                } else {
+                    row.hide();
+                    detailsRow.hide();
+                }
+            } catch (error) {
+                console.error("❌ Error filtering row:", error, row);
+            }
         });
+
+        $(".no-results").remove();
+
+        if (visibleRows === 0) {
+            console.warn("⚠️ No matching results found.");
+            $("#laptopTable").append("<tr class='no-results'><td colspan='17' class='text-center text-danger'>No results found.</td></tr>");
+        } else {
+            console.log(`✅ ${visibleRows} laptops displayed.`);
+        }
     }
+
+
+
 
 
 
