@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css">
 </head>
 <body>
-<button id="filterToggle">Filters</button>
+
 <div class="sidebar" id="filterPanel">
     <h3 class="filter-title">Filters</h3>
     <button id="closeSidebar" onclick="toggleSidebar()">✖ Close</button>
@@ -47,7 +47,7 @@
         <input type="number" id="ratingFilter" min="0" max="10" step="0.1">
     </div>
     <div class="filter-section">
-        <label>💰 Price (€)</label>
+        <label>💰 Boncoin Price (€)</label>
         <input type="number" id="priceFilter" placeholder="Max">
     </div>
     <div class="filter-section">
@@ -61,6 +61,11 @@
     <button onclick="applyFilters()">Apply Filters</button>
     <button onclick="resetFilters()">Reset</button>
 </div>
+<div class="results-panel" id="resultsPanel">
+    <button id="filterToggle">Filters</button>
+    Laptops Found: <span id="resultsCount">0</span>
+</div>
+
 
 <div class="scrollable-table-container">
     <table class="scrollable-table">
@@ -74,7 +79,7 @@
             <th>💾 RAM</th>
             <th>💽 Storage</th>
             <th>📏 Screen Size</th>
-            <th>💰 Price (€)</th>
+            <th>💰 Boncoin Price (€)</th>
             <th>🏢 Seller</th>
             <th>✅ Recommended</th>
         </tr>
@@ -113,6 +118,7 @@
             }
 
             let laptops = await response.json();
+            document.getElementById("resultsCount").textContent = laptops.length;
             console.log("✅ Received laptops:", laptops.length, "items");
 
             let tableBody = document.getElementById("laptopTable");
@@ -162,6 +168,7 @@
                             ✅ Recommended to Buy: ${laptop.recommended_to_buy ? "Yes ✅" : "No ❌"}
                         </td>
                     </tr>
+
                 `;
                 }).join("")
                 : "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";

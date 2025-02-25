@@ -132,6 +132,7 @@ public class Results {
     }
 
 
+
     public static boolean checkIfLaptopExists(String lotUrl) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String hql = "SELECT COUNT(*) FROM Laptop WHERE lotUrl = :lotUrl";
@@ -194,13 +195,17 @@ public class Results {
         if (generatedLaptop != null) {
             log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
 
-            // ✅ Insert into database
+            // 🚨 Validate the laptop before insertion
+            if (!isValidLaptop(generatedLaptop)) {
+                log.warn("❌ Laptop validation failed for lot {}. Skipping insertion.", lot.getUrl());
+                return;
+            }
+
+            // ✅ Insert into database only if valid
             try (Session session = HibernateUtil.getSessionFactory().openSession()) {
                 Transaction transaction = session.beginTransaction();
-
                 session.persist(generatedLaptop);
                 transaction.commit();
-
                 log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
             } catch (Exception e) {
                 log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
@@ -209,6 +214,7 @@ public class Results {
             log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
         }
     }
+
 
 
 

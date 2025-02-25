@@ -79,18 +79,15 @@ h2 {
 
 /* ✅ Filter Toggle Button */
 #filterToggle {
-    position: fixed;
-    top: 50px;
-    left: 10px;
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    z-index: 1100;
-    transition: left 0.3s ease-in-out;
-}
+     position: absolute;
+     left: 10px; /* Move filter button to left */
+     background: #007bff;
+     color: white;
+     border: none;
+     padding: 5px 10px;
+     cursor: pointer;
+     font-size: 14px;
+ }
 
 #filterToggle:hover {
     background: #0056b3;
@@ -193,4 +190,15 @@ button:hover {
     font-size: 14px;
     text-align: left;
     border: 1px solid #ccc;
+}
+.results-panel {
+    background: #eef;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Ensures count stays in center */
+    position: relative;
 }
