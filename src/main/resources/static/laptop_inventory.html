@@ -93,48 +93,68 @@
     document.getElementById("filterToggle").addEventListener("click", toggleSidebar);
 
     async function fetchLaptops(filters = {}) {
-        let query = new URLSearchParams(filters).toString();
-        let response = await fetch(`http://localhost:9090/api/laptops?${query}`);
-        let laptops = await response.json();
+        let filteredParams = Object.fromEntries(
+            Object.entries(filters).filter(([_, value]) => value.trim() !== "")
+        );
+        let query = new URLSearchParams(filteredParams).toString();
+        let endpoint = query
+            ? `http://localhost:9090/api/laptops/filter?${query}`
+            : "http://localhost:9090/api/laptops";
 
-        if (!laptops.length) {
-            document.getElementById("laptopTable").innerHTML = "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";
-            return;
-        }
+        console.log("🔎 Fetching laptops from:", endpoint);
 
-        let rows = laptops.map(laptop => `
+        try {
+            let response = await fetch(endpoint);
+            if (!response.ok) {
+                console.error("❌ API Error:", response.statusText);
+                document.getElementById("laptopTable").innerHTML =
+                    "<tr><td colspan='11' class='text-center text-danger'>❌ API Error</td></tr>";
+                return;
+            }
+
+            let laptops = await response.json();
+            console.log("✅ Received laptops:", laptops.length, "items");
+
+            let tableBody = document.getElementById("laptopTable");
+            tableBody.innerHTML = laptops.length
+                ? laptops.map(laptop => `
                 <tr>
-                    <td><img src="${laptop.imgUrl}" style="max-width: 80px;"></td>
-                    <td><a href="${laptop.lotUrl}" target="_blank">${laptop.lotNumber}</a></td>
-                    <td>${laptop.brand}</td>
-                    <td>${laptop.model}</td>
-                    <td>${laptop.processorBrand} ${laptop.processorModel}</td>
-                    <td>${laptop.ramSize}GB</td>
-                    <td>${laptop.storageType} ${laptop.storageCapacity}GB</td>
-                    <td>${laptop.screenSize} inches</td>
-                    <td><b>${laptop.bonCoinEstimation}€</b></td>
-                    <td>${laptop.maisonEnchere}</td>
-                    <td>${laptop.recommendedToBuy ? '✅ Yes' : '❌ No'}</td>
-                </tr>`).join("");
-
-        document.getElementById("laptopTable").innerHTML = rows;
+                    <td><img src="${laptop.img_url || ''}" style="max-width: 80px;"></td>
+                    <td><a href="${laptop.lot_url || '#'}" target="_blank">${laptop.lot_number || 'N/A'}</a></td>
+                    <td>${laptop.brand || 'N/A'}</td>
+                    <td>${laptop.model || 'N/A'}</td>
+                    <td>${laptop.processor_brand || 'N/A'} ${laptop.processor_model || ''}</td>
+                    <td>${laptop.ram_size ? laptop.ram_size + 'GB' : 'N/A'}</td>
+                    <td>${laptop.storage_type || 'N/A'} ${laptop.storage_capacity ? laptop.storage_capacity + 'GB' : ''}</td>
+                    <td>${laptop.screen_size ? laptop.screen_size + ' inches' : 'N/A'}</td>
+                    <td><b>${laptop.bon_coin_estimation || 'N/A'}</b></td>
+                    <td>${laptop.maison_enchere || 'N/A'}</td>
+                    <td>${laptop.recommended_to_buy ? '✅ Yes' : '❌ No'}</td>
+                </tr>`).join("")
+                : "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";
+        } catch (error) {
+            console.error("❌ Fetch error:", error);
+            document.getElementById("laptopTable").innerHTML =
+                "<tr><td colspan='11' class='text-center text-danger'>❌ Error loading data.</td></tr>";
+        }
     }
+
 
     function applyFilters() {
-        let filters = {
-            date: document.getElementById("dateFilter").value,
-            brand: document.getElementById("brandFilter").value,
-            model: document.getElementById("modelFilter").value,
-            ramSize: document.getElementById("ramFilter").value,
-            processorBrand: document.getElementById("processorFilter").value,
-            storageType: document.getElementById("storageFilter").value,
-            screenSize: document.getElementById("screenSizeFilter").value,
-            noteSur10: document.getElementById("ratingFilter").value,
-            bonCoinEstimation: document.getElementById("priceFilter").value,
-            recommendedToBuy: document.getElementById("recommendedFilter").value
-        };
+        let filters = Object.fromEntries(
+            [...document.querySelectorAll(".filter-section input, .filter-section select")]
+                .map(el => [el.id.replace("Filter", ""), el.value.trim()])
+                .filter(([_, value]) => value !== "") // Remove empty filters
+        );
+
         fetchLaptops(filters);
+        toggleSidebar();
     }
+
+
+
+
+
 
     function resetFilters() {
         document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => el.value = "");
@@ -156,9 +176,14 @@
         $("#storageFilter").autocomplete({ source: storages });
     }
 
+
     $(document).ready(() => {
         fetchLaptops();
         loadAutocompleteData();
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelector("button[onclick='applyFilters()']").addEventListener("click", applyFilters);
+        fetchLaptops(); // Load initial laptops
     });
 </script>
 </body>
