@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -14,7 +15,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-import org.openqa.selenium.interactions.Actions;
+
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -72,33 +73,50 @@ public abstract class BasePage {
     }
 
     private static void initDriver() {
-        if (driver != null) return;
+        if (driver != null) return; // Avoid initializing multiple times
 
-        String browser = config.getProperty("browser");
-        if (browser.equalsIgnoreCase("GoogleChrome") || browser.equalsIgnoreCase("CHROME")) {
-            System.setProperty("webdriver.chrome.driver", System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe");
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless", "--no-sandbox", "--blink-settings=imagesEnabled=false", "--log-level=3");
-            driver = new ChromeDriver(options);
-            log.info("Chrome driver initialized in headless mode with optimizations.");
-        } else if (browser.equalsIgnoreCase("htmlunit")) {
-            driver = new HtmlUnitDriver(true);
-            log.info("HtmlUnit driver initialized.");
-        } else {
-            throw new IllegalArgumentException("Unsupported browser: " + browser);
+        String browser = config.getProperty("browser", "CHROME").toUpperCase(); // Default to Chrome
+
+        switch (browser) {
+            case "CHROME":
+                String chromeDriverPath = System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe";
+                System.setProperty("webdriver.chrome.driver", chromeDriverPath);
+
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage");
+
+                // Check if headless mode is enabled in config
+                if (config.getProperty("headless", "false").equalsIgnoreCase("true")) {
+                    options.addArguments("--headless");
+                    log.info("Running Chrome in headless mode.");
+                }
+
+                driver = new ChromeDriver(options);
+                log.info("✅ ChromeDriver initialized successfully.");
+                break;
+
+            case "HTMLUNIT":
+                driver = new HtmlUnitDriver(true);
+                log.info("✅ HtmlUnitDriver initialized.");
+                break;
+
+            default:
+                throw new IllegalArgumentException("❌ Unsupported browser: " + browser);
         }
 
-        long timeoutInSeconds = Long.parseLong(config.getProperty("implicit.wait", "10"));
-        driver.manage().timeouts().implicitlyWait(timeoutInSeconds, TimeUnit.SECONDS);
-        log.info("Implicit wait set to " + timeoutInSeconds + " seconds.");
+        // Set timeouts
+        long implicitWait = Long.parseLong(config.getProperty("implicit.wait", "10"));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
+        log.info("⏳ Implicit wait set to " + implicitWait + " seconds.");
 
-        wait = new WebDriverWait(driver, Long.parseLong(config.getProperty("explicit.wait", "60")));
-        log.info("Explicit wait set to 60 seconds.");
+        // Initialize WebDriverWait (explicit waits)
+        wait = new WebDriverWait(driver, Duration.ofSeconds(Long.parseLong(config.getProperty("explicit.wait", "20"))));
 
-        if (!browser.equalsIgnoreCase("htmlunit")) {
-            driver.manage().window().setSize(new Dimension(1920, 1080));
+        if (!browser.equals("HTMLUNIT")) {
+            driver.manage().window().maximize();
         }
     }
+
 
     public static void quitDriver() {
         if (driver != null) {
@@ -108,14 +126,8 @@ public abstract class BasePage {
         }
     }
 
-    public WebElement waitForElement(By by) {
-        return waitForElement(by, DEFAULT_TIMEOUT);
-    }
 
-    public WebElement waitForElement(By by, int timeoutInSeconds) {
-        WebDriverWait wait = new WebDriverWait(driver, timeoutInSeconds);
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
-    }
+
 
     protected void clickWithJavaScript(WebElement webElement) {
         JavascriptExecutor js = (JavascriptExecutor) driver;
@@ -159,14 +171,7 @@ public abstract class BasePage {
         driver.switchTo().alert().accept();
     }
 
-    // Additional Utility Functions
-    protected void moveSlider(WebElement slider, double number, double max, double min) {
-        int pixelsToMove = getPixelsToMove(slider, number, max, min);
-        Actions sliderAction = new Actions(driver);
-        sliderAction.clickAndHold(slider)
-                .moveByOffset((-(int) slider.getSize().getWidth() / 2), 0)
-                .moveByOffset(pixelsToMove, 0).release().perform();
-    }
+
 
     protected static int getPixelsToMove(WebElement slider, double amount, double sliderMax, double sliderMin) {
         int pixels = 0;

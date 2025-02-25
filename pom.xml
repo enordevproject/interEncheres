@@ -1,395 +1,103 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>com.shirish.web-test-framework</groupId>
 	<artifactId>MyWebApp</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
 	<name>WebTestFramework</name>
-	<description>Web testing framework using Java + Selenium Web driver + TestNG ...created by Shirish Kawatkar</description>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>16</source>
-                    <target>16</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<description>Web testing framework using Java, Selenium WebDriver, and TestNG</description>
 
-    <profiles>
+	<!-- ✅ Set Java Version -->
+	<properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+	</properties>
 
-		<!-- ################ Development Environment [dev]################ -->
-		<profile>
-			<id>dev</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${basedir}</directory>
-									<includes>
-										<include>log/*.log</include>
-										<include>target/**/*</include>
-										<include>screenshot/**/*</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<echo>Dev Environment</echo>
-										<delete file="${project.basedir}\config\config.properties" />
-										<delete file="${project.basedir}\config\data.properties" />
-										<copy file="${project.basedir}\config\config_dev.properties"
-											  tofile="${project.basedir}\config\config.properties" />
-										<copy file="${project.basedir}\config\data_dev.properties"
-											  tofile="${project.basedir}\config\data.properties" />
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
-						<configuration>
-							<environmentVariables>
-								<maven.project.basedir>${project.basedir}</maven.project.basedir>
-							</environmentVariables>
-							<!-- Suite file injection parameter from command line -->
-							<suiteXmlFiles>
-								<suiteXmlFile>${suiteFile}</suiteXmlFile>
-							</suiteXmlFiles>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<!-- ################ Local Environment [local]################ -->
-		<profile>
-			<id>local</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${basedir}</directory>
-									<includes>
-										<include>log/*.log</include>
-										<include>target/**/*</include>
-										<include>screenshot/**/*</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<echo>Local Environment</echo>
-										<delete file="${project.basedir}\config\config.properties" />
-										<delete file="${project.basedir}\config\data.properties" />
-										<copy file="${project.basedir}\config\config_local.properties"
-											  tofile="${project.basedir}\config\config.properties" />
-										<copy file="${project.basedir}\config\data_local.properties"
-											  tofile="${project.basedir}\config\data.properties" />
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
-						<configuration>
-							<environmentVariables>
-								<maven.project.basedir>${project.basedir}</maven.project.basedir>
-							</environmentVariables>
-							<!-- Suite file injection parameter from command line -->
-							<suiteXmlFiles>
-								<suiteXmlFile>${suiteFile}</suiteXmlFile>
-							</suiteXmlFiles>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<!-- ################ Staging Environment [stage]################ -->
-		<profile>
-			<id>stage</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${basedir}</directory>
-									<includes>
-										<include>log/*.log</include>
-										<include>target/**/*</include>
-										<include>screenshot/**/*</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<echo>Staging Environment</echo>
-										<delete file="${project.basedir}\config\config.properties" />
-										<delete file="${project.basedir}\config\data.properties" />
-										<copy file="${project.basedir}\config\config_stage.properties"
-											  tofile="${project.basedir}\config\config.properties" />
-										<copy file="${project.basedir}\config\data_stage.properties"
-											  tofile="${project.basedir}\config\data.properties" />
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
-						<configuration>
-							<environmentVariables>
-								<maven.project.basedir>${project.basedir}</maven.project.basedir>
-							</environmentVariables>
-							<!-- Suite file injection parameter from command line -->
-							<suiteXmlFiles>
-								<suiteXmlFile>${suiteFile}</suiteXmlFile>
-							</suiteXmlFiles>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<!-- ################ Testing Environment [QA]################ -->
-		<profile>
-			<id>qa</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${basedir}</directory>
-									<includes>
-										<include>log/*.log</include>
-										<include>target/**/*</include>
-										<include>screenshot/**/*</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<target>
-										<echo>QA Environment</echo>
-										<delete file="${project.basedir}\config\config.properties" />
-										<delete file="${project.basedir}\config\data.properties" />
-										<copy file="${project.basedir}\config\config_qa.properties"
-											  tofile="${project.basedir}\config\config.properties" />
-										<copy file="${project.basedir}\config\data_qa.properties"
-											  tofile="${project.basedir}\config\data.properties" />
-									</target>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
-						<configuration>
-							<environmentVariables>
-								<maven.project.basedir>${project.basedir}</maven.project.basedir>
-							</environmentVariables>
-							<!-- Suite file injection parameter from command line -->
-							<suiteXmlFiles>
-								<suiteXmlFile>${suiteFile}</suiteXmlFile>
-							</suiteXmlFiles>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<!-- ################ Production Environment [prod]################ -->
-		<profile>
-			<id>prod</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>prod</value>
-				</property>
-			</activation>
-			<build>
-				<resources>
-					<resource>
-						<directory>src/main/resources</directory>
-					</resource>
-				</resources>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-clean-plugin</artifactId>
-						<version>3.0.0</version>
-						<configuration>
-							<filesets>
-								<fileset>
-									<directory>${basedir}</directory>
-									<includes>
-										<include>log/*.log</include>
-										<include>target/**/*</include>
-										<include>screenshot/**/*</include>
-									</includes>
-									<followSymlinks>false</followSymlinks>
-								</fileset>
-							</filesets>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-antrun-plugin</artifactId>
-						<version>1.8</version>
-						<executions>
-							<execution>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>run</goal>
-								</goals>
-								<configuration>
-									<tasks>
-										<echo>Production Environment</echo>
-										<delete file="${project.basedir}\config\config.properties" />
-										<delete file="${project.basedir}\config\data.properties" />
-										<copy file="${project.basedir}\config\config_prod.properties"
-											  tofile="${project.basedir}\config\config.properties" />
-										<copy file="${project.basedir}\config\data_prod.properties"
-											  tofile="${project.basedir}\config\data.properties" />
-									</tasks>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
-						<configuration>
-							<environmentVariables>
-								<maven.project.basedir>${project.basedir}</maven.project.basedir>
-							</environmentVariables>
-							<!-- Suite file injection parameter from command line -->
-							<suiteXmlFiles>
-								<suiteXmlFile>${suiteFile}</suiteXmlFile>
-							</suiteXmlFiles>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-	</profiles>
-
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.2.2</version> <!-- Updated to the latest Spring Boot version -->
+		<relativePath/>
+	</parent>
 
 	<dependencies>
+
+		<!-- ✅ Spring Boot Web (For API Endpoints) -->
 		<dependency>
-			<groupId>jakarta.servlet</groupId>
-			<artifactId>jakarta.servlet-api</artifactId>
-			<version>5.0.0</version>
-			<scope>provided</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<!-- ✅ Spring Boot JPA (For Hibernate) -->
 		<dependency>
-			<groupId>org.apache.httpcomponents.client5</groupId>
-			<artifactId>httpclient5</artifactId>
-			<version>5.2.1</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+
+		<!-- ✅ MySQL Driver (For Database Connection) -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.33</version> <!-- ✅ Older stable version -->
+		</dependency>
+
+
+
+		<!-- ✅ Hibernate Core (ORM for MySQL) -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-ehcache</artifactId>
-			<version>5.6.15.Final</version> <!-- Match your Hibernate version -->
+			<artifactId>hibernate-core</artifactId>
+			<version>6.3.1.Final</version>
 		</dependency>
 
-		<!-- JSON Parsing avec Jackson -->
+		<!-- ✅ Selenium (Latest Stable Version) -->
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>4.16.1</version>
+		</dependency>
+
+		<!-- ✅ WebDriver Manager (Automatically Downloads Latest WebDrivers) -->
+		<dependency>
+			<groupId>io.github.bonigarcia</groupId>
+			<artifactId>webdrivermanager</artifactId>
+			<version>5.9.3</version>
+		</dependency>
+
+		<!-- ✅ TestNG (For Running Automated Tests) -->
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>7.7.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- ✅ JUnit 5 (Optional, for Unit Testing) -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.9.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- ✅ SLF4J Logging -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.9</version>
+		</dependency>
+
+		<!-- ✅ Jackson (For JSON Parsing in REST APIs) -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.15.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-firefox-driver</artifactId>
-			<version>3.4.0</version>
-		</dependency>
+
+		<!-- ✅ Log4J (For Logging) -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -397,99 +105,44 @@
 		</dependency>
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-api</artifactId>
-			<version>3.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
-			<version>3.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-		</dependency>
-		<dependency>
-			<groupId>org.testng</groupId>
-			<artifactId>testng</artifactId>
-			<version>6.11</version>
-		</dependency>
-		<dependency>
-			<groupId>com.codeborne</groupId>
-			<artifactId>phantomjsdriver</artifactId>
-			<version>1.2.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-htmlunit-driver</artifactId>
-			<version>2.52.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.bonigarcia</groupId>
-			<artifactId>webdrivermanager</artifactId>
-			<version>5.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>2.0.9</version>
-		</dependency>
-		<!-- Hibernate Core -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>6.3.1.Final</version>
-		</dependency>
-
-		<!-- MySQL Driver -->
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.33</version>
-		</dependency>
-
-		<!-- JPA API -->
-		<dependency>
-			<groupId>jakarta.persistence</groupId>
-			<artifactId>jakarta.persistence-api</artifactId>
-			<version>3.1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>RELEASE</version>
-			<scope>test</scope>
+			<artifactId>htmlunit-driver</artifactId>
+			<version>4.8.0</version> <!-- Latest version -->
 		</dependency>
 
 	</dependencies>
 
-	<properties>
+	<!-- ✅ Build Configuration -->
+	<build>
+		<plugins>
+			<!-- ✅ Maven Compiler Plugin (Java 17) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>17</source>
+					<target>17</target>
+				</configuration>
+			</plugin>
 
-		<src.dir>src/main/java</src.dir>
+			<!-- ✅ Surefire Plugin (For Running TestNG Tests) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M7</version>
+				<configuration>
+					<suiteXmlFiles>
+						<!--suppress UnresolvedMavenProperty -->
+						<suiteXmlFile>${suiteFile}</suiteXmlFile>
+					</suiteXmlFiles>
+				</configuration>
+			</plugin>
 
-		<!-- Maven Compiler -->
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+			<!-- ✅ Spring Boot Maven Plugin -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
 
-		<!-- Default suites -->
-		<sanitySuiteFile>${project.basedir}/test_suites/sanity_testcases.xml</sanitySuiteFile>
-		<regressionSuiteFile>${project.basedir}/test_suites/regression_testcases.xml</regressionSuiteFile>
-
-		<!-- Default suite files if not being specified from mvn command line -->
-		<defaultSuiteFiles>${sanitySuiteFile}</defaultSuiteFiles>
-		<suiteFile>${defaultSuiteFiles}</suiteFile>
-
-
-	</properties>
-
-
-	<url>https://github.com/shirishk/Java-Selenium-TestNG-Automation-Framework</url>
-	<organization>
-		<name>Shirish Kawatkar</name>
-		<url>http://shirish.com/</url>
-	</organization>
-	<ciManagement>
-		<system>Travis CI</system>
-	</ciManagement>
 </project>

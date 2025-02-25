@@ -71,7 +71,7 @@ public class Search extends BasePage {
 
 
     public List<Lot> getLotsOnCurrentPage() {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(LOT_ITEMS_XPATH));
 
         List<WebElement> lotElements = driver.findElements(LOT_ITEMS_XPATH);
@@ -215,7 +215,7 @@ public class Search extends BasePage {
     // Method to check if there are no results
     public boolean isNoResultsPresent() {
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 2);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
             // Check for the no-results message using the 'noResultsMessage' By variable
             WebElement noResultsMessageElement = wait.until(ExpectedConditions.presenceOfElementLocated(noResultsMessage));
             return noResultsMessageElement != null;
@@ -228,7 +228,7 @@ public class Search extends BasePage {
     // Method to check if pagination is present
     public boolean isPaginationPresent() {
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 2);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
             // Try to find the pagination element
             wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".v-pagination")));
             return true;
@@ -240,7 +240,7 @@ public class Search extends BasePage {
 
     // Method to get the last page number from the pagination
     public int getLastPageNumber() {
-        WebDriverWait wait = new WebDriverWait(driver, 2);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
 
         // Find the last page number in the pagination (not disabled)
         WebElement lastPageButton = wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -255,7 +255,7 @@ public class Search extends BasePage {
 
     // Modified goToNextPage method to directly click the next button
     public void goToNextPage() {
-        WebDriverWait wait = new WebDriverWait(driver, 2);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
         WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(NEXT_PAGE_BUTTON_XPATH));
         nextButton.click();
         waitForPageContent();
@@ -263,7 +263,7 @@ public class Search extends BasePage {
 
     // Explicit wait for page content to load
     public void waitForPageContent() {
-        WebDriverWait wait = new WebDriverWait(driver, 2);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
         wait.until(ExpectedConditions.presenceOfElementLocated(LOT_ITEMS_XPATH));
     }
 

@@ -5,6 +5,8 @@ import base.BasePage;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
+import java.time.Duration;
+
 /*******************************************************************************************
  * Page Factory class for Interencheres Home Page
  * @author Your Name
@@ -34,7 +36,7 @@ public class Home extends BasePage {
      *******************************************************************************************/
 
     private void clickWhenReady(By locator) {
-        WebDriverWait wait = new WebDriverWait(driver, 10);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
     }
 
@@ -162,5 +164,10 @@ public class Home extends BasePage {
             log.error("Failed to perform login: " + e.getMessage());
             throw e; // Re-throw the exception to fail the test
         }
+    }
+
+    public WebElement waitForElement(By locator) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // Set timeout to 10 sec
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 }
