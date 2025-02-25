@@ -183,3 +183,14 @@ button:hover {
     overflow-y: auto;
     font-size: 14px;
 }
+.details-row {
+    display: none;
+    background: #f9f9f9;
+}
+
+.details-content {
+    padding: 10px;
+    font-size: 14px;
+    text-align: left;
+    border: 1px solid #ccc;
+}

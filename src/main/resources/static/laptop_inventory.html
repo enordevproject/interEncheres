@@ -94,7 +94,7 @@
 
     async function fetchLaptops(filters = {}) {
         let filteredParams = Object.fromEntries(
-            Object.entries(filters).filter(([_, value]) => value.trim() !== "")
+            Object.entries(filters).filter(([_, value]) => value !== "")
         );
         let query = new URLSearchParams(filteredParams).toString();
         let endpoint = query
@@ -117,26 +117,64 @@
 
             let tableBody = document.getElementById("laptopTable");
             tableBody.innerHTML = laptops.length
-                ? laptops.map(laptop => `
-                <tr>
-                    <td><img src="${laptop.img_url || ''}" style="max-width: 80px;"></td>
-                    <td><a href="${laptop.lot_url || '#'}" target="_blank">${laptop.lot_number || 'N/A'}</a></td>
-                    <td>${laptop.brand || 'N/A'}</td>
-                    <td>${laptop.model || 'N/A'}</td>
-                    <td>${laptop.processor_brand || 'N/A'} ${laptop.processor_model || ''}</td>
-                    <td>${laptop.ram_size ? laptop.ram_size + 'GB' : 'N/A'}</td>
-                    <td>${laptop.storage_type || 'N/A'} ${laptop.storage_capacity ? laptop.storage_capacity + 'GB' : ''}</td>
-                    <td>${laptop.screen_size ? laptop.screen_size + ' inches' : 'N/A'}</td>
-                    <td><b>${laptop.bon_coin_estimation || 'N/A'}</b></td>
-                    <td>${laptop.maison_enchere || 'N/A'}</td>
-                    <td>${laptop.recommended_to_buy ? '✅ Yes' : '❌ No'}</td>
-                </tr>`).join("")
+                ? laptops.map((laptop, index) => {
+                    // **Filter out bad data**
+                    let brand = (laptop.brand && !["N/A", "Unknown", ""].includes(laptop.brand)) ? laptop.brand : "";
+                    let model = (laptop.model && !["N/A", "Unknown", ""].includes(laptop.model)) ? laptop.model : "";
+                    let processorBrand = (laptop.processorBrand && !["N/A", "Unknown", ""].includes(laptop.processorBrand)) ? laptop.processorBrand : "";
+                    let processorModel = (laptop.processorModel && !["N/A", "Unknown", ""].includes(laptop.processorModel)) ? laptop.processorModel : "";
+
+                    // If essential details are missing, don't show the row
+                    if (!brand && !model && !processorBrand && !processorModel) return "";
+
+                    return `
+                    <tr class="laptop-row" onclick="toggleDetails(${index})">
+                        <td><img src="${laptop.img_url}" style="max-width: 80px;"></td>
+                        <td><a href="${laptop.lot_url}" target="_blank">${laptop.lot_number}</a></td>
+                        <td>${brand}</td>
+                        <td>${model}</td>
+                        <td>${processorBrand} ${processorModel}</td>
+                        <td>${laptop.ram_size ? laptop.ram_size + 'GB' : ''}</td>
+                        <td>${laptop.storage_type || ''} ${laptop.storage_capacity ? laptop.storage_capacity + 'GB' : ''}</td>
+                        <td>${laptop.screen_size ? laptop.screen_size + ' inches' : ''}</td>
+                        <td><b>${laptop.bon_coin_estimation || ''}</b></td>
+                        <td>${laptop.maison_enchere || ''}</td>
+                        <td>${laptop.recommended_to_buy ? '✅ Yes' : '❌ No'}</td>
+                    </tr>
+                    <tr class="details-row" id="details-${index}">
+                        <td colspan="11" class="details-content">
+                            <b>📋 Description:</b> ${laptop.description || "No description available"} <br>
+                            <b>💻 Full Specifications:</b> <br>
+                            ${processorBrand ? `🔎 Processor: ${processorBrand} ${processorModel} (${laptop.processor_cores} Cores, ${laptop.processor_clock_speed} GHz) <br>` : ""}
+                            ${laptop.ram_size ? `💾 RAM: ${laptop.ram_size}GB ${laptop.ram_type} <br>` : ""}
+                            ${laptop.storage_type ? `💽 Storage: ${laptop.storage_type} ${laptop.storage_capacity}GB (${laptop.storage_speed} MB/s) <br>` : ""}
+                            ${laptop.gpu_type ? `🎮 GPU: ${laptop.gpu_type} ${laptop.gpu_model} (${laptop.gpu_vram}GB VRAM) <br>` : ""}
+                            ${laptop.screen_size ? `🖥️ Screen: ${laptop.screen_size}" (${laptop.screen_resolution})<br>` : ""}
+                            ${laptop.battery_life ? `🔋 Battery Life: ${laptop.battery_life} <br>` : ""}
+                            ${laptop.weight ? `⚡ Weight: ${laptop.weight}kg <br>` : ""}
+                            ${laptop.operating_system ? `💻 OS: ${laptop.operating_system} <br>` : ""}
+                            ${laptop.chassis_material ? `🏗️ Chassis Material: ${laptop.chassis_material} <br>` : ""}
+                            ${laptop.fingerprint_sensor ? `🔒 Security: Fingerprint ✅<br>` : ""}
+                            ${laptop.face_recognition ? `🔒 Security: Face Recognition ✅<br>` : ""}
+                            ${laptop.connectivity ? `📡 Connectivity: ${laptop.connectivity} <br>` : ""}
+                            🖼️ AI Review Image: ${laptop.image ? `<img src="${laptop.image}" style="max-width: 150px;">` : "No additional images"} <br>
+                            ⭐ Score: ${laptop.note_sur_10}/10 <br>
+                            ✅ Recommended to Buy: ${laptop.recommended_to_buy ? "Yes ✅" : "No ❌"}
+                        </td>
+                    </tr>
+                `;
+                }).join("")
                 : "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";
         } catch (error) {
             console.error("❌ Fetch error:", error);
             document.getElementById("laptopTable").innerHTML =
                 "<tr><td colspan='11' class='text-center text-danger'>❌ Error loading data.</td></tr>";
         }
+    }
+
+    function toggleDetails(index) {
+        let detailsRow = document.getElementById(`details-${index}`);
+        detailsRow.style.display = detailsRow.style.display === "none" ? "table-row" : "none";
     }
 
 
