@@ -1,7 +1,7 @@
-package Models;
+package webApp.Models;
 
-import  Utils.ConfigLoader;
-import Utils.ImageUtils;
+import webApp.Utils.ConfigLoader;
+import webApp.Utils.ImageUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

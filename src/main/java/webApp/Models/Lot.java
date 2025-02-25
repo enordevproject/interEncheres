@@ -1,13 +1,11 @@
-package Models;
+package webApp.Models;
 
-import Utils.ImageUtils;
+import webApp.Utils.ImageUtils;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 

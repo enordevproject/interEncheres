@@ -1,8 +1,7 @@
 package pages;
 
 import java.util.concurrent.*;
-import Models.Lot;
-import Models.Results;
+import webApp.Models.Lot;
 import org.openqa.selenium.*;
 import base.BasePage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -11,14 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sanitySuite.FirstTest;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class Search extends BasePage {
     private static final Logger log = LoggerFactory.getLogger(FirstTest.class);

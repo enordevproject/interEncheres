@@ -138,10 +138,16 @@
 			</plugin>
 
 			<!-- ✅ Spring Boot Maven Plugin -->
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>3.2.2</version>
+				<configuration>
+					<mainClass>webApp.Application</mainClass>
+				</configuration>
 			</plugin>
+
 		</plugins>
 	</build>
 

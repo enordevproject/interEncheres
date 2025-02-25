@@ -1,4 +1,4 @@
-package Models;
+package webApp.Models;
 
 public class Coordonnees {
 

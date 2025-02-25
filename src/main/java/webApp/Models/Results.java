@@ -1,15 +1,12 @@
-package Models;
+package webApp.Models;
 
 import com.google.gson.Gson;
-import hibernate.HibernateUtil;
+import webApp.hibernate.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import java.awt.*;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 

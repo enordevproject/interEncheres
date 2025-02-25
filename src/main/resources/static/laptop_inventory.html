@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Inventory</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css">
+</head>
+<body>
+<button id="filterToggle">Filters</button>
+<div class="sidebar" id="filterPanel">
+    <h3 class="filter-title">Filters</h3>
+    <button id="closeSidebar" onclick="toggleSidebar()">✖ Close</button>
+    <div class="filter-section">
+        <label>📅 Auction Date</label>
+        <input type="date" id="dateFilter">
+    </div>
+    <div class="filter-section">
+        <label>🏢 Brand</label>
+        <input type="text" id="brandFilter" placeholder="Brand">
+    </div>
+    <div class="filter-section">
+        <label>🔖 Model</label>
+        <input type="text" id="modelFilter" placeholder="Model">
+    </div>
+    <div class="filter-section">
+        <label>💾 RAM (GB)</label>
+        <input type="number" id="ramFilter" placeholder="Min">
+    </div>
+    <div class="filter-section">
+        <label>🔎 Processor</label>
+        <input type="text" id="processorFilter" placeholder="Processor">
+    </div>
+    <div class="filter-section">
+        <label>💽 Storage</label>
+        <input type="text" id="storageFilter" placeholder="SSD/HDD">
+    </div>
+    <div class="filter-section">
+        <label>📏 Screen Size (inches)</label>
+        <input type="number" id="screenSizeFilter" placeholder="Min">
+    </div>
+    <div class="filter-section">
+        <label>⭐ Rating (0-10)</label>
+        <input type="number" id="ratingFilter" min="0" max="10" step="0.1">
+    </div>
+    <div class="filter-section">
+        <label>💰 Price (€)</label>
+        <input type="number" id="priceFilter" placeholder="Max">
+    </div>
+    <div class="filter-section">
+        <label>✅ Recommended</label>
+        <select id="recommendedFilter">
+            <option value="">Any</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select>
+    </div>
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="resetFilters()">Reset</button>
+</div>
+
+<div class="scrollable-table-container">
+    <table class="scrollable-table">
+        <thead>
+        <tr>
+            <th>🖼 Image</th>
+            <th>📌 Lot</th>
+            <th>🏢 Brand</th>
+            <th>🔖 Model</th>
+            <th>🔎 Processor</th>
+            <th>💾 RAM</th>
+            <th>💽 Storage</th>
+            <th>📏 Screen Size</th>
+            <th>💰 Price (€)</th>
+            <th>🏢 Seller</th>
+            <th>✅ Recommended</th>
+        </tr>
+        </thead>
+        <tbody id="laptopTable"></tbody>
+    </table>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById("filterPanel").classList.toggle("active");
+        document.getElementById("filterToggle").style.display =
+            document.getElementById("filterPanel").classList.contains("active") ? "none" : "block";
+    }
+
+    document.getElementById("filterToggle").addEventListener("click", toggleSidebar);
+
+    async function fetchLaptops(filters = {}) {
+        let query = new URLSearchParams(filters).toString();
+        let response = await fetch(`http://localhost:9090/api/laptops?${query}`);
+        let laptops = await response.json();
+
+        if (!laptops.length) {
+            document.getElementById("laptopTable").innerHTML = "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";
+            return;
+        }
+
+        let rows = laptops.map(laptop => `
+                <tr>
+                    <td><img src="${laptop.imgUrl}" style="max-width: 80px;"></td>
+                    <td><a href="${laptop.lotUrl}" target="_blank">${laptop.lotNumber}</a></td>
+                    <td>${laptop.brand}</td>
+                    <td>${laptop.model}</td>
+                    <td>${laptop.processorBrand} ${laptop.processorModel}</td>
+                    <td>${laptop.ramSize}GB</td>
+                    <td>${laptop.storageType} ${laptop.storageCapacity}GB</td>
+                    <td>${laptop.screenSize} inches</td>
+                    <td><b>${laptop.bonCoinEstimation}€</b></td>
+                    <td>${laptop.maisonEnchere}</td>
+                    <td>${laptop.recommendedToBuy ? '✅ Yes' : '❌ No'}</td>
+                </tr>`).join("");
+
+        document.getElementById("laptopTable").innerHTML = rows;
+    }
+
+    function applyFilters() {
+        let filters = {
+            date: document.getElementById("dateFilter").value,
+            brand: document.getElementById("brandFilter").value,
+            model: document.getElementById("modelFilter").value,
+            ramSize: document.getElementById("ramFilter").value,
+            processorBrand: document.getElementById("processorFilter").value,
+            storageType: document.getElementById("storageFilter").value,
+            screenSize: document.getElementById("screenSizeFilter").value,
+            noteSur10: document.getElementById("ratingFilter").value,
+            bonCoinEstimation: document.getElementById("priceFilter").value,
+            recommendedToBuy: document.getElementById("recommendedFilter").value
+        };
+        fetchLaptops(filters);
+    }
+
+    function resetFilters() {
+        document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => el.value = "");
+        fetchLaptops();
+    }
+
+    async function loadAutocompleteData() {
+        let response = await fetch("http://localhost:9090/api/laptops");
+        let laptops = await response.json();
+
+        let brands = [...new Set(laptops.map(l => l.brand))];
+        let models = [...new Set(laptops.map(l => l.model))];
+        let processors = [...new Set(laptops.map(l => l.processorBrand + " " + l.processorModel))];
+        let storages = [...new Set(laptops.map(l => l.storageType))];
+
+        $("#brandFilter").autocomplete({ source: brands });
+        $("#modelFilter").autocomplete({ source: models });
+        $("#processorFilter").autocomplete({ source: processors });
+        $("#storageFilter").autocomplete({ source: storages });
+    }
+
+    $(document).ready(() => {
+        fetchLaptops();
+        loadAutocompleteData();
+    });
+</script>
+</body>
+</html>

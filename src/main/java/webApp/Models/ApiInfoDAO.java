@@ -1,11 +1,11 @@
-package Models;
+package webApp.Models;
 
-import hibernate.HibernateUtil;
+import webApp.hibernate.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sanitySuite.FirstTest;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +13,8 @@ import java.util.Map;
 
 public class ApiInfoDAO {
     private static final Map<String, ApiInfo> cache = new HashMap<>();
-    private static final Logger log = LoggerFactory.getLogger(FirstTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiInfoDAO.class); // ✅ Use ApiInfoDAO instead
+
     /**
      * Saves API info to the database.
      */

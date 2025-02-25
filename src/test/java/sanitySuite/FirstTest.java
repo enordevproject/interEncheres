@@ -1,14 +1,9 @@
 package sanitySuite;
 
-import Models.Laptop;
-import Models.Lot;
-import Models.Results;
-import Models.GPTService;
+import webApp.Models.Lot;
+import webApp.Models.Results;
 
 import base.BasePage;
-import hibernate.HibernateUtil;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;

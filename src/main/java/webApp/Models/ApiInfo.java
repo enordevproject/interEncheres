@@ -1,4 +1,4 @@
-package Models;
+package webApp.Models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
