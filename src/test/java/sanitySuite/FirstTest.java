@@ -43,7 +43,7 @@ public class FirstTest extends BasePage {
                 "i7", "i7 6th", "i7 7th", "i7 8th", "i7 9th",
                 "i7 10th", "i7 11th", "i7 12th", "i7 13th", "i7 14th",
                 "i5", "i5 8th", "i5 10th", "i5 12th", "i5 13th",
-                "vpro", "elitebook", "thinkpad", "latitude", "precision"
+                "vpro", "elitebook", "thinkpad", "latitude", "dell precision"
         );
 
 // Use Arrays.asList()
@@ -131,53 +131,5 @@ public class FirstTest extends BasePage {
 
 
 
-    @Test(priority = 3, description = "Generate a JSON report of laptops from the database and open it in browser")
-    public void generateLaptopJSONReport() {
-        System.out.println("🔄 Generating laptops JSON report...");
 
-        // Generate JSON report
-        Results.generateJsonReport();
-
-        // File path where JSON is generated
-        String filePath = "src/test/java/Front/laptops_report.json";
-
-        File jsonFile = new File(filePath);
-
-        // Open file in browser
-        if (jsonFile.exists()) {
-            try {
-                Desktop.getDesktop().browse(jsonFile.toURI());
-                System.out.println("✅ Laptops JSON report opened in browser!");
-            } catch (IOException e) {
-                System.err.println("❌ Error opening JSON report: " + e.getMessage());
-            }
-        } else {
-            System.err.println("❌ JSON report file not found!");
-        }
-    }
-
-    @AfterSuite
-    public void tearDown() {
-        if (driver != null) {
-            try {
-                BasePage.quitDriver();
-                log.info("🚪 Driver successfully closed.");
-            } catch (Exception e) {
-                log.error("❌ Error closing driver: {}", e.getMessage());
-            }
-        }
-
-        try {
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) {
-                Runtime.getRuntime().exec("taskkill /F /IM chromedriver.exe");
-                log.info("🛑 ChromeDriver terminated on Windows.");
-            } else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
-                Runtime.getRuntime().exec("pkill chromedriver");
-                log.info("🛑 ChromeDriver terminated on Unix-like OS.");
-            }
-        } catch (IOException e) {
-            log.error("❌ Error terminating ChromeDriver process: {}", e.getMessage());
-        }
-    }
 }

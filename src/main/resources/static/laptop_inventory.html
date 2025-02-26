@@ -65,6 +65,15 @@
     <button id="filterToggle">Filters</button>
     Laptops Found: <span id="resultsCount">0</span>
 </div>
+<!-- ⭐ Add the favorites panel here -->
+<div class="favorites-panel">
+    <h3>
+        ⭐ Favorite Laptops (<span id="favoriteCount">0</span>)
+        <button class="icon-btn delete-btn" onclick="clearFavorites()" title="Delete All Favorites">🗑️</button>
+        <button class="icon-btn open-btn" onclick="openAllFavorites()" title="Open All URLs">🌍</button>
+    </h3>
+    <div id="favoriteList" class="favorite-grid"></div>
+</div>
 
 
 <div class="scrollable-table-container">
@@ -124,17 +133,20 @@
             let tableBody = document.getElementById("laptopTable");
             tableBody.innerHTML = laptops.length
                 ? laptops.map((laptop, index) => {
+                    let isFavorite = checkIfFavorite(laptop.id);
                     // **Filter out bad data**
                     let brand = (laptop.brand && !["N/A", "Unknown", ""].includes(laptop.brand)) ? laptop.brand : "";
                     let model = (laptop.model && !["N/A", "Unknown", ""].includes(laptop.model)) ? laptop.model : "";
-                    let processorBrand = (laptop.processorBrand && !["N/A", "Unknown", ""].includes(laptop.processorBrand)) ? laptop.processorBrand : "";
-                    let processorModel = (laptop.processorModel && !["N/A", "Unknown", ""].includes(laptop.processorModel)) ? laptop.processorModel : "";
+                    let processorBrand = (laptop.processor_brand && !["N/A", "Unknown", ""].includes(laptop.processor_brand)) ? laptop.processor_brand : "";
+                    let processorModel = (laptop.processor_model && !["N/A", "Unknown", ""].includes(laptop.processor_model)) ? laptop.processor_model : "";
 
                     // If essential details are missing, don't show the row
                     if (!brand && !model && !processorBrand && !processorModel) return "";
 
                     return `
-                    <tr class="laptop-row" onclick="toggleDetails(${index})">
+
+                    <tr class="laptop-row" onclick="toggleDetails(${index}, event)">
+
                         <td><img src="${laptop.img_url}" style="max-width: 80px;"></td>
                         <td><a href="${laptop.lot_url}" target="_blank">${laptop.lot_number}</a></td>
                         <td>${brand}</td>
@@ -146,6 +158,11 @@
                         <td><b>${laptop.bon_coin_estimation || ''}</b></td>
                         <td>${laptop.maison_enchere || ''}</td>
                         <td>${laptop.recommended_to_buy ? '✅ Yes' : '❌ No'}</td>
+                         <td>
+                    <button class="favorite-btn" onclick="toggleFavorite(${laptop.id})">
+                        ${isFavorite ? '❤️' : '🤍'}
+                    </button>
+                </td>
                     </tr>
                     <tr class="details-row" id="details-${index}">
                         <td colspan="11" class="details-content">
@@ -163,7 +180,7 @@
                             ${laptop.fingerprint_sensor ? `🔒 Security: Fingerprint ✅<br>` : ""}
                             ${laptop.face_recognition ? `🔒 Security: Face Recognition ✅<br>` : ""}
                             ${laptop.connectivity ? `📡 Connectivity: ${laptop.connectivity} <br>` : ""}
-                            🖼️ AI Review Image: ${laptop.image ? `<img src="${laptop.image}" style="max-width: 150px;">` : "No additional images"} <br>
+                            ${laptop.etat_produit_image ? `<p>${laptop.etat_produit_image}</p>` : "No additional images"} <br>
                             ⭐ Score: ${laptop.note_sur_10}/10 <br>
                             ✅ Recommended to Buy: ${laptop.recommended_to_buy ? "Yes ✅" : "No ❌"}
                         </td>
@@ -179,10 +196,16 @@
         }
     }
 
-    function toggleDetails(index) {
+    function toggleDetails(index, event) {
+        // Prevent toggling if the click event originates from the favorite button
+        if (event.target.classList.contains("favorite-btn")) {
+            return;
+        }
+
         let detailsRow = document.getElementById(`details-${index}`);
         detailsRow.style.display = detailsRow.style.display === "none" ? "table-row" : "none";
     }
+
 
 
     function applyFilters() {
@@ -230,6 +253,148 @@
         document.querySelector("button[onclick='applyFilters()']").addEventListener("click", applyFilters);
         fetchLaptops(); // Load initial laptops
     });
+
+    function checkIfFavorite(laptopId) {
+        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+        return favorites.includes(laptopId);
+    }
+
+    async function toggleFavorite(laptopId) {
+        try {
+            // Get the button element
+            let button = document.querySelector(`button[onclick="toggleFavorite(${laptopId})"]`);
+
+            // Determine current state and toggle it
+            let isFavorite = button.innerHTML.trim() === "❤️"; // Check if currently favorited
+
+            // Send API request to toggle favorite
+            let response = await fetch(`http://localhost:9090/api/laptops/favorite/${laptopId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ favorite: !isFavorite }) // Toggle favorite status
+            });
+
+            if (!response.ok) {
+                throw new Error(`❌ API request failed: ${response.status} ${response.statusText}`);
+            }
+
+            console.log("✅ Favorite updated successfully.");
+
+            // ✅ Toggle icon instantly without reloading
+            button.innerHTML = !isFavorite ? "❤️" : "🤍";
+
+            updateFavoritePanel(); // Refresh the favorite list panel
+        } catch (error) {
+            console.error("❌ Error updating favorite:", error);
+        }
+    }
+
+
+
+
+    // ✅ Open All Favorite Laptop URLs in New Tabs
+    function openAllFavorites() {
+        fetch("http://localhost:9090/api/laptops/favorites")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch favorites");
+                }
+                return response.json();
+            })
+            .then(favorites => {
+                if (favorites.length === 0) {
+                    alert("No favorite laptops to open.");
+                    return;
+                }
+
+                // ✅ Open all URLs in a new background tab
+                for (let i = 0; i < favorites.length; i++) {
+                    let laptop = favorites[i];
+
+                    if (laptop.lot_url && laptop.lot_url.trim()) {
+                        let newTab = window.open("", "_blank"); // Open empty tab first
+                        newTab.location.href = laptop.lot_url; // Set URL to avoid blocking
+                    }
+                }
+            })
+            .catch(error => console.error("❌ Error opening favorite URLs:", error));
+    }
+
+
+
+
+    async function clearFavorites() {
+        try {
+            let response = await fetch("http://localhost:9090/api/laptops/favorites", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!response.ok) {
+                console.error("❌ Failed to delete favorites:", response.status);
+                alert("Failed to clear favorites. Please try again.");
+                return;
+            }
+
+            let message = await response.text();
+            console.log("✅ Favorites cleared successfully:", message);
+            alert(message);
+
+            // ✅ Clear UI: Reset favorite panel
+            updateFavoritePanel();
+
+            // ✅ Clear favorite icons in the table
+            document.querySelectorAll(".favorite-btn").forEach(btn => {
+                btn.innerHTML = "🤍"; // Reset all favorite icons to unselected
+            });
+
+        } catch (error) {
+            console.error("❌ Error clearing favorites:", error);
+        }
+    }
+
+
+
+
+    async function updateFavoritePanel() {
+        try {
+            let response = await fetch("http://localhost:9090/api/laptops/favorites");
+            if (!response.ok) throw new Error("Failed to fetch favorites");
+
+            let favorites = await response.json();
+            console.log("✅ Loaded favorites:", favorites);
+
+            let favoriteList = document.getElementById("favoriteList");
+            let favoriteCount = document.getElementById("favoriteCount");
+
+            favoriteCount.textContent = favorites.length;
+
+            if (favorites.length === 0) {
+                favoriteList.innerHTML = "<p class='no-favorites'>No favorites yet.</p>";
+            } else {
+                favoriteList.innerHTML = favorites.map(laptop => `
+                <div class="favorite-item">
+                    <img src="${laptop.img_url || 'default-image.png'}" alt="Laptop" class="favorite-img">
+                    <p>${laptop.brand || 'Unknown'} ${laptop.model || 'Unknown'} (${laptop.maison_enchere || 'Unknown Seller'})</p>
+                    <a href="${laptop.lot_url || '#'}" target="_blank">🔗 Open</a>
+                </div>
+            `).join("");
+            }
+        } catch (error) {
+            console.error("❌ Error loading favorites:", error);
+        }
+    }
+
+
+
+    // ✅ Call this function when page loads
+    document.addEventListener("DOMContentLoaded", updateFavoritePanel);
+
+
+
+    // Initialize favorite panel on load
+    updateFavoritePanel();
+
 </script>
 </body>
 </html>

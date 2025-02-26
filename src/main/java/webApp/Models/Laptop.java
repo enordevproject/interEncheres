@@ -172,6 +172,10 @@ public class Laptop {
 
     @Column(name = "note_sur_10")
     private int noteSur10;
+    @Column(nullable = true)
+    private Boolean favorite; // ✅ Favorite column
+
+    // ✅ Getters & Setters
 
     @Column(name = "reason_for_score", columnDefinition = "TEXT")
     private String reasonForScore;
@@ -614,6 +618,13 @@ public class Laptop {
 
     public String getImage() {
         return image;
+    }
+    public Boolean getFavorite() {
+        return favorite != null ? favorite : false; // Return false if NULL
+    }
+
+    public void setFavorite(Boolean favorite) {
+        this.favorite = (favorite != null) ? favorite : false; // Avoid null values
     }
 
     public void setImage(String image) {
