@@ -1,5 +1,7 @@
 package pages;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 import webApp.Models.Lot;
 import org.openqa.selenium.*;
@@ -72,56 +74,41 @@ public class Search extends BasePage {
         List<WebElement> lotElements = driver.findElements(LOT_ITEMS_XPATH);
         List<Lot> lots = new ArrayList<>();
 
-        log.info("Starting to extract lots on the current page. Found " + lotElements.size() + " lot elements.");
-
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        List<Future<Lot>> futures = new ArrayList<>();
+        log.info("🔍 Extracting lots on the current page. Found {} lot elements.", lotElements.size());
 
         for (WebElement lotElement : lotElements) {
-            futures.add(executorService.submit(() -> {
-                try {
-                    // Extract URL first
-                    String url = extractUrl(lotElement);
-                    if (url == null) return null; // Skip if no URL
-
-                    // Extract data synchronously within the same thread
-                    Lot lot = new Lot();
-                    synchronized (lotElement) { // Ensures the correct image is assigned
-                        lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
-                        lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
-                        lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
-                        lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
-                        lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
-                        lot.setImgUrl(extractImgData(lotElement, IMG_URL_XPATH, "No image available")); // ✅ Corrected assignment
-                        lot.setUrl(url);
-                    }
-
-                    lot.setInsertionDate(LocalDateTime.now());
-
-                    return lot;
-                } catch (Exception e) {
-                    log.error("Error processing lot: ", e);
-                    return null;
-                }
-            }));
-        }
-
-        // Collect results
-        for (Future<Lot> future : futures) {
             try {
-                Lot lot = future.get();
-                if (lot != null) {
-                    lots.add(lot);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error executing parallel tasks: ", e);
+                String url = extractUrl(lotElement);
+                if (url == null) continue; // Skip if no URL
+
+                Lot lot = new Lot();
+                lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
+                lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
+                lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
+                lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
+                lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
+
+                // ✅ Extract the correct image for this lot inside the loop
+                lot.setImgUrl(extractImgData(lotElement));
+
+                lot.setUrl(url);
+                lot.setInsertionDate(LocalDateTime.now());
+
+                lots.add(lot);
+
+                log.info("✅ Lot extracted: {} | Image URL: {}", url, lot.getImgUrl()); // Debugging logs
+            } catch (Exception e) {
+                log.error("❌ Error processing lot: ", e);
             }
         }
 
-        executorService.shutdown();
-        log.info("Finished extracting lots. Total lots extracted: " + lots.size());
+        log.info("✅ Finished extracting lots. Total lots extracted: {}", lots.size());
         return lots;
     }
+
+
+
+
 
 
     // Helper method to extract a URL from a lot element
@@ -148,22 +135,34 @@ public class Search extends BasePage {
             return defaultValue; // Return the default value if extraction fails
         }
     }
-    private String extractImgData(WebElement lotElement, By xpath, String defaultValue) {
+    private String extractImgData(WebElement lotElement) {
         try {
-            // Ensure image extraction is limited to the current lot element
-            WebElement imgElement = lotElement.findElement(xpath);
+            // 🔴 Locate the image inside the specific `lotElement`
+            WebElement imgElement = lotElement.findElement(By.xpath(".//div[@class='v-responsive__content d-flex align-center justify-center']/img"));
+
+            // Extract the image URL
             String imgUrl = imgElement.getAttribute("src");
 
-            // Convert relative URL to absolute if needed
+            // Convert relative URL to absolute
             if (imgUrl != null && imgUrl.startsWith("//")) {
                 imgUrl = "https:" + imgUrl;
             }
 
             return imgUrl;
+        } catch (NoSuchElementException e) {
+            log.warn("⚠️ No image found for lot.");
+            return "No image available";
+        } catch (StaleElementReferenceException e) {
+            log.warn("⚠️ StaleElementReferenceException: Retrying image extraction...");
+            return extractImgData(lotElement);
         } catch (Exception e) {
-            return defaultValue; // Return default if no image found
+            log.warn("⚠️ Image extraction failed.");
+            return "No image available";
         }
     }
+
+
+
 
 
 

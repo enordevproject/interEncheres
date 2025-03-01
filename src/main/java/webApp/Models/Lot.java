@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Entity
 @Table(name = "Lot")
@@ -103,14 +105,15 @@ public class Lot {
 
 
 
+
     public Date getDate() {
         if (date == null || date.trim().isEmpty()) return null;
 
         date = date.trim().toLowerCase();
         Calendar calendar = Calendar.getInstance();
 
-        // 🔹 Gestion des expressions relatives
-        if (date.contains("aujourd")) {
+        // Handle standard relative terms
+        if (date.contains("aujourd'hui")) {
             return calendar.getTime();
         } else if (date.contains("demain")) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
@@ -120,7 +123,18 @@ public class Lot {
             return calendar.getTime();
         }
 
-        // 🔹 Formats possibles avec et sans heure
+        // Handle custom format '2j 20h'
+        Pattern pattern = Pattern.compile("(\\d+)j (\\d+)h");
+        Matcher matcher = pattern.matcher(date);
+        if (matcher.find()) {
+            int days = Integer.parseInt(matcher.group(1));
+            int hours = Integer.parseInt(matcher.group(2));
+            calendar.add(Calendar.DAY_OF_MONTH, days);
+            calendar.add(Calendar.HOUR_OF_DAY, hours);
+            return calendar.getTime();
+        }
+
+        // Handle standard date formats
         SimpleDateFormat[] formats = {
                 new SimpleDateFormat("yyyy-MM-dd HH:mm"),
                 new SimpleDateFormat("dd/MM/yyyy HH:mm"),
@@ -137,6 +151,7 @@ public class Lot {
         System.out.println("❌ Format de date invalide : " + date);
         return null;
     }
+
 
 
     public void setDate(String date) {

@@ -91,26 +91,8 @@ public class Results {
     }
     public static boolean isValidLaptop(Laptop laptop) {
         if (laptop == null) return false;
-
-        // Check for invalid or missing critical fields
-        List<String> invalidValues = Arrays.asList("N/A", "Unknown", "Non précisé", "Sans garantie", "Non fonctionnel");
-
-        if (laptop.getBrand() == null || invalidValues.contains(laptop.getBrand())) return false;
-        if (laptop.getModel() == null || invalidValues.contains(laptop.getModel())) return false;
-        if (laptop.getProcessorModel() == null || invalidValues.contains(laptop.getProcessorModel())) return false;
-        if (laptop.getRamSize() <= 0) return false;
-        if (laptop.getStorageCapacity() <= 0) return false;
-        if (laptop.getScreenSize() <= 0) return false;
-
-        // Exclude non-laptop descriptions
-        String description = laptop.getDescription().toLowerCase();
-        List<String> nonLaptopKeywords = Arrays.asList("microphone", "ecran", "tablette", "imprimante", "pc fixe", "tour", "scanner");
-
-        for (String keyword : nonLaptopKeywords) {
-            if (description.contains(keyword)) return false;
-        }
-
-        return true;
+        // Vérifie simplement que isLaptop est à true
+        return laptop.isLaptop();
     }
 
     public static void insertLaptopIntoDatabase(Laptop laptop) {
@@ -195,16 +177,15 @@ public class Results {
         if (generatedLaptop != null) {
             log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
 
-            // 🚨 Validate the laptop before insertion
             if (!isValidLaptop(generatedLaptop)) {
                 log.warn("❌ Laptop validation failed for lot {}. Skipping insertion.", lot.getUrl());
                 return;
             }
 
-            // ✅ Insert into database only if valid
+            // 🚀 ✅ **Store the laptop in DB immediately** to prevent image mixing
             try (Session session = HibernateUtil.getSessionFactory().openSession()) {
                 Transaction transaction = session.beginTransaction();
-                session.persist(generatedLaptop);
+                session.merge(generatedLaptop);
                 transaction.commit();
                 log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
             } catch (Exception e) {
@@ -220,6 +201,49 @@ public class Results {
 
 
 
+
+// Exemples de méthodes supplémentaires utiles :
+
+    // 1) Récupérer un seul Laptop via son ID
+    public static Laptop getLaptopById(Long id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.get(Laptop.class, id);
+        } catch (Exception e) {
+            log.error("❌ Error fetching laptop by ID {}: {}", id, e.getMessage());
+            return null;
+        }
+    }
+
+    // 2) Mettre à jour un Laptop existant (merge)
+    public static void updateLaptop(Laptop laptop) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            session.merge(laptop);
+            transaction.commit();
+            log.info("✅ Laptop (ID: {}) updated successfully.", laptop.getId());
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            log.error("❌ Failed to update laptop: {}", e.getMessage());
+        }
+    }
+
+    // 3) Supprimer un Laptop via son ID
+    public static void deleteLaptopById(Long id) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            Laptop laptop = session.get(Laptop.class, id);
+            if (laptop != null) {
+                session.remove(laptop);
+                log.info("🗑️ Laptop (ID: {}) deleted.", id);
+            }
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            log.error("❌ Failed to delete laptop: {}", e.getMessage());
+        }
+    }
 
 
 

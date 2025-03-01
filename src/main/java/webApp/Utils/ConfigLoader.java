@@ -2,34 +2,28 @@ package webApp.Utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
+import java.io.IOException;
 
 public class ConfigLoader {
-    private static final String CONFIG_FILE = "config/chatgpt.properties";
+    private static final String CONFIG_PATH = "/config/chatgpt.properties";
     private static Map<String, Object> gptProperties;
 
-    /**
-     * Loads GPT properties from a JSON file (`chatgpt.properties`).
-     */
+    @SuppressWarnings("unchecked")
     public static void loadProperties() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            File file = new File(CONFIG_FILE);
-            if (!file.exists()) {
-                throw new RuntimeException("❌ Le fichier de configuration est introuvable: " + CONFIG_FILE);
+        try (InputStream is = ConfigLoader.class.getResourceAsStream(CONFIG_PATH)) {
+            if (is == null) {
+                throw new RuntimeException("❌ Fichier de config introuvable dans resources : " + CONFIG_PATH);
             }
-            gptProperties = objectMapper.readValue(file, Map.class);
+            ObjectMapper mapper = new ObjectMapper();
+            gptProperties = mapper.readValue(is, Map.class);
         } catch (IOException e) {
-            System.err.println("❌ Erreur lors du chargement des propriétés: " + e.getMessage());
+            System.err.println("❌ Erreur lors du chargement de " + CONFIG_PATH + " : " + e.getMessage());
             gptProperties = null;
         }
     }
 
-    /**
-     * Returns the GPT properties as a Map.
-     */
     public static Map<String, Object> getGptProperties() {
         if (gptProperties == null) {
             loadProperties();

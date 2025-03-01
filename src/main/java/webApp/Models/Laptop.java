@@ -191,6 +191,17 @@ public class Laptop {
 
     @Column(name = "recommended_to_buy")
     private boolean recommendedToBuy;
+    @Column (name = "is_laptop")
+    private boolean isLaptop;
+
+    @Column(name = "ville", length = 100)
+    private String ville;
+
+    @Column(name = "code_postal", length = 20)
+    private String codePostal;
+
+    @Column(name = "prix_neuf")
+    private double prixNeuf;
 
     @Column(name = "image", columnDefinition = "TEXT")
     private String image;
@@ -242,7 +253,12 @@ public class Laptop {
             @JsonProperty("facebook_estimation") String facebookEstimation,
             @JsonProperty("internet_estimation") String internetEstimation,
             @JsonProperty("recommended_to_buy") boolean recommendedToBuy,
-            @JsonProperty("image") String image
+            @JsonProperty("image") String image,
+
+            @JsonProperty("is_laptop") boolean isLaptop, // Only one definition
+            @JsonProperty("ville") String ville,
+            @JsonProperty("code_postal") String codePostal,
+            @JsonProperty("prix_neuf") double prixNeuf
     ) {
         this.lotNumber = lotNumber;
         this.description = description;
@@ -295,6 +311,10 @@ public class Laptop {
         this.internetEstimation = internetEstimation;
         this.recommendedToBuy = recommendedToBuy;
         this.image = image;
+        this.isLaptop = isLaptop;
+        this.ville = ville;
+        this.codePostal = codePostal;
+        this.prixNeuf = prixNeuf;
     }
 
     public String getLotUrl() {
@@ -626,6 +646,31 @@ public class Laptop {
     public void setFavorite(Boolean favorite) {
         this.favorite = (favorite != null) ? favorite : false; // Avoid null values
     }
+    // ----- GETTERS & SETTERS (ajoutez-les après les getters/setters existants) -----
+    public boolean isLaptop() {
+        return isLaptop;
+    }
+
+    public void setLaptop(boolean isLaptop) {
+        this.isLaptop = isLaptop;
+    }
+
+    public String getVille() {
+        return ville;
+    }
+
+    public void setVille(String ville) {
+        this.ville = ville;
+    }
+
+    public String getCodePostal() {
+        return codePostal;
+    }
+
+    public void setCodePostal(String codePostal) {
+        this.codePostal = codePostal;
+    }
+
 
     public void setImage(String image) {
         this.image = image;
