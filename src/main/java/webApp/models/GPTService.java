@@ -1,4 +1,4 @@
-package webApp.Models;
+package webApp.models;
 
 import webApp.Utils.ConfigLoader;
 import webApp.Utils.ImageUtils;

@@ -227,7 +227,93 @@ button:hover {
     align-items: center;
     justify-content: center; /* Ensures count stays in center */
     position: relative;
+
 }
+.input-container {
+    border: 1px solid #ccc;
+    padding: 5px;
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    align-items: flex-start; /* Align children to the start */
+}
+
+.input-container input {
+    width: 100%; /* Full width to utilize the space */
+    border: none;
+    height: 28px; /* Adjust as needed */
+    padding: 5px;
+    margin-bottom: 5px; /* Space between input and word buttons */
+    outline: none; /* Removes the default focus outline */
+}
+
+
+
+.word-btn {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.keyword-panel {
+    margin-top: 10px; /* Space from the search panel */
+    padding: 5px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa; /* Light background for distinction */
+    display: flex;
+    flex-wrap: wrap; /* Wrap tags to new lines */
+    gap: 5px; /* Space between tags */
+}
+
+
+
+#filterInput {
+
+    padding: 10px; /* Comfortable padding for typing */
+    margin: 5px 0; /* Space above and below the input */
+    border: 2px solid #ccc; /* Subtle border, not too bold */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    font-size: 16px; /* Adequate font size for easy reading */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Slight inner shadow for depth */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Smooth transition for focus effects */
+    outline: none; /* Remove default focus outline */
+}
+
+#filterInput:focus {
+    border-color: #0056b3; /* Highlight color when focused */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15); /* Deeper shadow to enhance focus */
+}
+#clearKeywords {
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: none; /* Make sure the button is not visible initially */
+}
+
+#clearKeywords:hover {
+    background-color: #c82333;
+}
+
+
+
+#searchButton {
+    display: inline-block; /* Always show the button */
+    padding: 5px 10px;
+    margin-left: 5px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+
 
 .favorite-row {
     display: flex;
@@ -284,12 +370,23 @@ favorites-panel {
 }
 /* ✅ Favorite Title */
 .favorites-panel h3 {
+    text-align: center;
     display: flex;
     align-items: center;
     font-size: 18px;
     margin: 0;
     gap: 10px;
 }
+
+.favorites-panel .laptops-found {
+    margin: 0 auto; /* Centering the element */
+    flex-grow: 1; /* Allows the div to take up any extra space */
+    text-align: center; /* Ensures text inside the div is centered */
+    position: absolute;
+    left: 50%; /* Center based on the parent element */
+    transform: translateX(-52%); /* Adjust this value to shift it to the left */
+}
+
 
 /* ✅ Buttons (Delete & Open All) */
 .icon-btn {

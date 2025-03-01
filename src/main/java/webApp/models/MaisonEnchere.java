@@ -1,4 +1,4 @@
-package webApp.Models;
+package webApp.models;
 
 public class MaisonEnchere {
 

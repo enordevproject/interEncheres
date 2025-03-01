@@ -3,7 +3,7 @@ package webApp.services;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import webApp.Models.Laptop;
+import webApp.models.Laptop;
 import webApp.repositories.LaptopRepository;
 import webApp.specifications.LaptopSpecifications;
 import org.slf4j.Logger;

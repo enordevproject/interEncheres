@@ -1,12 +1,13 @@
-package pages;
+package selenium.pages;
 
-import webApp.models.Lot;
+import selenium.base.BasePage;
 import org.openqa.selenium.*;
-import base.BasePage;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import webApp.models.Lot;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Search extends BasePage {
-    private static final Logger log = LoggerFactory.getLogger(BasePage.class);
+
     public Search(WebDriver driver) {
         super(driver);
     }
@@ -70,7 +71,7 @@ public class Search extends BasePage {
         List<WebElement> lotElements = driver.findElements(LOT_ITEMS_XPATH);
         List<Lot> lots = new ArrayList<>();
 
-        log.info("🔍 Extracting lots on the current page. Found {} lot elements.", lotElements.size());
+      //  log.info("🔍 Extracting lots on the current page. Found {} lot elements.", lotElements.size());
 
         for (WebElement lotElement : lotElements) {
             try {
@@ -92,13 +93,13 @@ public class Search extends BasePage {
 
                 lots.add(lot);
 
-                log.info("✅ Lot extracted: {} | Image URL: {}", url, lot.getImgUrl()); // Debugging logs
+              //  log.info("✅ Lot extracted: {} | Image URL: {}", url, lot.getImgUrl()); // Debugging logs
             } catch (Exception e) {
                 log.error("❌ Error processing lot: ", e);
             }
         }
 
-        log.info("✅ Finished extracting lots. Total lots extracted: {}", lots.size());
+       // log.info("✅ Finished extracting lots. Total lots extracted: {}", lots.size());
         return lots;
     }
 
@@ -158,49 +159,6 @@ public class Search extends BasePage {
     }
 
 
-
-
-
-
-      /*  public List<Lot> getAllLots() {
-            List<Lot> allLots = new ArrayList<>();
-
-            // Check if no results are present
-            if (isNoResultsPresent()) {
-                log.info("No lots found matching the search criteria.");
-                return allLots; // Return empty list if no results
-            }
-
-            // Initialize Results for the first page
-            // Store results for the current page
-            Results currentPageResults = new Results();
-
-            // Process the first page
-            currentPageResults.setLots(getLotsOnCurrentPage()); // Store lots on the first page
-            allLots.addAll(currentPageResults.getLots()); // Add the first page lots to the total
-
-            // Check if pagination exists
-            if (isPaginationPresent()) {
-                // Get the last page number to determine how many pages to loop through
-                int lastPageNumber = getLastPageNumber();
-
-                for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
-                    // Go to the next page
-                    goToNextPage();
-                    // Wait for the next page's content to load
-                    waitForPageContent();
-
-                    // Clear the current page's Results and fetch new lots
-                    currentPageResults = new Results(); // Clear previous results
-                    currentPageResults.setLots(getLotsOnCurrentPage()); // Add new page results
-
-                    // Add new lots from the current page
-                    allLots.addAll(currentPageResults.getLots());
-                }
-            }
-
-            return allLots;
-        }*/
 
     // Method to check if there are no results
     public boolean isNoResultsPresent() {

@@ -1,4 +1,4 @@
-package webApp.Models;
+package webApp.models;
 
 import webApp.hibernate.HibernateUtil;
 import org.hibernate.Session;

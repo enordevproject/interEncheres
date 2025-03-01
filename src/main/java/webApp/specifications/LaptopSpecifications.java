@@ -1,7 +1,7 @@
 package webApp.specifications;
 
 import org.springframework.data.jpa.domain.Specification;
-import webApp.Models.Laptop;
+import webApp.models.Laptop;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

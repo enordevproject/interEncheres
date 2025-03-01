@@ -61,16 +61,38 @@
     <button onclick="applyFilters()">Apply Filters</button>
     <button onclick="resetFilters()">Reset</button>
 </div>
+
+
+
 <div class="results-panel" id="resultsPanel">
     <button id="filterToggle">Filters</button>
-    Laptops Found: <span id="resultsCount">0</span>
+    <input type="text" id="filterInput" placeholder="Type here...">
+    <button id="searchButton" onclick="search()">Search</button>
 </div>
-<!-- ⭐ Add the favorites panel here -->
+<div id="keywordPanel" class="keyword-panel">
+    <button id="clearKeywords" title="Clear all keywords">🗑️ Clear All</button> <!-- Emoji button for clearing keywords -->
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="favorites-panel">
     <h3>
         ⭐ Favorite Laptops (<span id="favoriteCount">0</span>)
         <button class="icon-btn delete-btn" onclick="clearFavorites()" title="Delete All Favorites">🗑️</button>
         <button class="icon-btn open-btn" onclick="openAllFavorites()" title="Open All URLs">🌍</button>
+        <div class="laptops-found">
+            Laptops Found: <span id="resultsCount">0</span>
+        </div>
     </h3>
     <div id="favoriteList" class="favorite-grid"></div>
 </div>

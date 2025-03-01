@@ -1,4 +1,4 @@
-package webApp.Models;
+package webApp.models;
 
 import com.google.gson.Gson;
 import webApp.hibernate.HibernateUtil;
