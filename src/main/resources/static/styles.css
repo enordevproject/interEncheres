@@ -256,6 +256,12 @@ button:hover {
     border-radius: 5px;
     cursor: pointer;
 }
+#searchLogsContainer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
 
 .keyword-panel {
     margin-top: 10px; /* Space from the search panel */

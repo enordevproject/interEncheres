@@ -356,7 +356,29 @@ updateFavoritePanel();
 
 
 
-let searchActive = false; // ✅ Track search status
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("searchLogsContainer").style.display = "none"; // ✅ Hide logs by default
+    document.getElementById("searchLogs").innerHTML = ""; // ✅ Ensure logs are empty on load
+    document.getElementById("toggleLogsButton").style.display = "none"; // ✅ Hide toggle button initially
+});
+
+let searchActive = false;
+
+/**
+ * ✅ Show/Hide logs with smooth transition
+ */
+function toggleLogs() {
+    let logContainer = document.getElementById("searchLogsContainer");
+    let toggleButton = document.getElementById("toggleLogsButton");
+
+    if (logContainer.style.maxHeight === "0px" || logContainer.style.maxHeight === "") {
+        logContainer.style.maxHeight = "250px";
+        toggleButton.textContent = "🔼 Hide Logs";
+    } else {
+        logContainer.style.maxHeight = "0px";
+        toggleButton.textContent = "🔽 Show Logs";
+    }
+}
 
 
 
@@ -366,22 +388,50 @@ let searchActive = false; // ✅ Track search status
 /**
  * ✅ Function to add log entries with timestamps
  */
+
+
 function addLogEntry(message) {
     let logContainer = document.getElementById("searchLogs");
-    if (!logContainer) {
+    let logSection = document.getElementById("searchLogsContainer");
+    let toggleButton = document.getElementById("toggleLogsButton");
+
+    if (!logContainer || !logSection) {
         console.error("❌ Log container not found.");
         return;
     }
 
-    let timestamp = new Date().toLocaleTimeString(); // ✅ Get current time
+    let timestamp = new Date().toLocaleTimeString(); // ✅ Format time
     let logEntry = document.createElement("li");
     logEntry.textContent = `[${timestamp}] ${message}`;
     logContainer.appendChild(logEntry);
 
-    // ✅ Auto-scroll to the bottom for latest logs
-    let logsContainer = document.getElementById("searchLogsContainer");
-    if (logsContainer) logsContainer.scrollTop = logsContainer.scrollHeight;
+    // ✅ Show logs when search starts
+    if (logSection.style.display === "none") {
+        logSection.style.display = "block";
+        logSection.style.maxHeight = "250px";
+        toggleButton.style.display = "inline-block"; // ✅ Show toggle button
+    }
+
+    // ✅ Auto-scroll only if there are more than 8 logs
+    if (logContainer.children.length > 8) {
+        logSection.scrollTop = logSection.scrollHeight;
+    }
 }
+
+/**
+ * ✅ Start search process with real-time logs
+ */
+/**
+ * ✅ Clears logs on new search
+ */
+function clearLogs() {
+    let logContainer = document.getElementById("searchLogs");
+    logContainer.innerHTML = ""; // ✅ Clear UI logs
+}
+
+/**
+ * ✅ Fetch logs from backend every 2 seconds
+ */
 /**
  * ✅ Fetch logs from backend every 2 seconds
  */
@@ -401,31 +451,48 @@ async function fetchLogs() {
  */
 function updateLogs(logs) {
     let logContainer = document.getElementById("searchLogs");
-    if (!logContainer) {
-        console.error("❌ Log container not found.");
+    let logSection = document.getElementById("searchLogsContainer");
+
+    if (!logContainer || !logSection) {
+        console.error("❌ Missing UI elements for logs.");
         return;
     }
 
-    logContainer.innerHTML = ""; // Clear previous logs
-    logs.forEach(log => {
-        let logEntry = document.createElement("li");
-        logEntry.textContent = log;
-        logContainer.appendChild(logEntry);
-    });
+    logContainer.innerHTML = logs.map(log => `<li>${log}</li>`).join("");
+    logContainer.scrollTop = logContainer.scrollHeight;
 
-    let logsContainer = document.getElementById("searchLogsContainer");
-    logsContainer.scrollTop = logsContainer.scrollHeight;
+    // ✅ Update label if GPT processing starts
+    if (logs.some(log => log.includes("🔄 [Start] Processing lots with GPT-4..."))) {
+        updateSearchStatus("⚙️ Processing with GPT...");
+    }
+
+    // ✅ Hide logs when processing is done & refresh page
+    if (logs.some(log => log.includes("✅ [Finish] GPT Processing complete"))) {
+        updateSearchStatus("✅ Process Complete");
+
+        setTimeout(() => {
+            logSection.style.display = "none";
+            logContainer.innerHTML = ""; // ✅ Clear logs
+            location.reload(); // ✅ Refresh the page after completion
+        }, 3000);
+    }
 }
 
-// ✅ Fetch logs every 2 seconds
-setInterval(fetchLogs, 2000);
 
 /**
- * ✅ Start search process with detailed logging
+ * ✅ Start fetching logs on search
+ */
+function startFetchingLogs() {
+    clearLogs();
+    fetchLogs(); // ✅ Initial fetch
+    setInterval(fetchLogs, 2000); // ✅ Fetch logs every 2 seconds
+}
+
+/**
+ * ✅ Start search process
  */
 async function search() {
     console.log("🔎 Initiating search with keywords:", keywordList);
-    addLogEntry("🔎 Initiating search...");
 
     if (keywordList.length === 0) {
         alert("Please enter at least one keyword.");
@@ -433,22 +500,17 @@ async function search() {
     }
 
     const searchEndpoint = "http://localhost:9090/api/search/execute";
-    let resultsPanel = document.getElementById("resultsPanel");
     let stopButton = document.getElementById("stopSearchButton");
-    let statusLabel = document.getElementById("searchStatusLabel");
+    let logSection = document.getElementById("searchLogsContainer");
+
+    if (searchActive) {
+        return;
+    }
 
     try {
-        if (searchActive) {
-            alert("⚠️ A search is already running. Please wait.");
-            return;
-        }
-
-        addLogEntry("🚀 Sending search request to backend...");
-        if (statusLabel) statusLabel.textContent = "🔍 Searching...";
-        stopButton.style.display = "inline-block"; // ✅ Show "Stop Search" button
-        searchActive = true;
-
-        let startTime = Date.now(); // ✅ Start time tracking
+        updateSearchStatus("🔄 Searching...");
+        stopButton.style.display = "inline-block";
+        logSection.style.display = "block"; // ✅ Show logs when search starts
 
         let response = await fetch(searchEndpoint, {
             method: "POST",
@@ -456,69 +518,92 @@ async function search() {
             body: JSON.stringify(keywordList),
         });
 
-        let endTime = Date.now(); // ✅ End time tracking
-        let elapsedTime = ((endTime - startTime) / 1000).toFixed(2); // ✅ Calculate response time
+        if (!response.ok) throw new Error(await response.text());
 
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
-
-        console.log("✅ Search request completed in", elapsedTime, "seconds.");
-        addLogEntry(`✅ Search request completed in ${elapsedTime} seconds.`);
-        addLogEntry("📊 Fetching search results...");
-
-        if (resultsPanel) resultsPanel.innerHTML = "✅ Searching...";
+        console.log("✅ Search started.");
+        startFetchingLogs(); // ✅ Start fetching backend logs
 
     } catch (error) {
         console.error("❌ Search execution failed:", error);
-        addLogEntry(`❌ Search Failed: ${error.message}`);
-
-        if (statusLabel) statusLabel.textContent = "❌ Search Failed";
-
-        if (resultsPanel) {
-            resultsPanel.innerHTML = `<span style="color: red;">❌ Search Failed: ${error.message}</span>`;
-        }
-
+        updateSearchStatus(`<span style="color: red;">❌ Search Failed: ${error.message}</span>`);
         alert("Error starting search: " + error.message);
     }
 }
+
+
+
+
+
+/**
+ * ✅ Stop search when the page is closed or refreshed
+ */
+window.addEventListener("beforeunload", async function () {
+    if (searchActive) {
+        console.log("🚨 Page closing: Stopping active search...");
+        await stopSearch();
+    }
+});
+
+/**
+ * ✅ Stop search when the user switches tabs or navigates away
+ */
+document.addEventListener("visibilitychange", async function () {
+    if (document.hidden && searchActive) {
+        console.log("🚨 Tab hidden: Stopping active search...");
+        await stopSearch();
+    }
+});
+
+
+/**
+ * ✅ Start processing lots after search ends
+ */
+async function processLots() {
+    updateSearchStatus("⚙️ Processing with GPT...");
+
+    let response = await fetch("http://localhost:9090/api/lots/process", { method: "POST" });
+    let result = await response.json();
+
+    console.log(result.message);
+    fetchLogs(); // ✅ Ensure logs are updated
+}
+
 
 /**
  * ✅ Stop the running search with logging
  */
 async function stopSearch() {
+    if (!searchActive) return;
+
     console.log("⏹️ Stopping search...");
-    addLogEntry("⏹️ Stopping search...");
     searchActive = false;
 
     const stopEndpoint = "http://localhost:9090/api/search/stop";
     let stopButton = document.getElementById("stopSearchButton");
-    let statusLabel = document.getElementById("searchStatusLabel");
+    let logSection = document.getElementById("searchLogsContainer");
 
     try {
-        let startTime = Date.now(); // ✅ Track stop request time
-
         let response = await fetch(stopEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
         });
 
-        let endTime = Date.now();
-        let elapsedTime = ((endTime - startTime) / 1000).toFixed(2); // ✅ Calculate response time
-
         if (!response.ok) throw new Error("Failed to stop search.");
 
-        console.log("✅ Search stopped in", elapsedTime, "seconds.");
-        addLogEntry(`✅ Search stopped successfully in ${elapsedTime} seconds.`);
-        if (statusLabel) statusLabel.textContent = "⏹️ Search Stopped";
+        console.log("✅ Search stopped.");
+        updateSearchStatus("⏹️ Search Stopped");
+        processLots(); // ✅ Start processing lots automatically after stopping
 
     } catch (error) {
         console.error("❌ Error stopping search:", error);
-        addLogEntry(`❌ Failed to stop search: ${error.message}`);
     } finally {
-        stopButton.style.display = "none"; // ✅ Hide "Stop Search" button
+        stopButton.style.display = "none";
+        setTimeout(() => {
+            logSection.style.display = "none";
+        }, 3000);
     }
 }
+
 
 
 
@@ -572,13 +657,14 @@ function hideProgress() {
     }
 }
 
-function updateProgress(value) {
-    let progressBar = document.getElementById("progressBar");
-    if (progressBar) {
-        progressBar.value = value;
+function updateSearchStatus(message) {
+    let resultsPanel = document.getElementById("resultsPanel");
+    if (!resultsPanel) {
+        console.error("❌ resultsPanel not found.");
+        return;
     }
+    resultsPanel.innerHTML = message;
 }
-
 function sortTable(columnIndex) {
     let table = document.querySelector(".scrollable-table");
     let tbody = table.querySelector("tbody");
