@@ -1,6 +1,6 @@
 package webApp.models;
 
-import webApp.Utils.ImageUtils;
+import webApp.utils.ImageUtils;
 import jakarta.persistence.*;
 
 import java.text.ParseException;

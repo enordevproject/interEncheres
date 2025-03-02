@@ -1,7 +1,7 @@
 package webApp.models;
 
-import webApp.Utils.ConfigLoader;
-import webApp.Utils.ImageUtils;
+import webApp.utils.ConfigLoader;
+import webApp.utils.ImageUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.methods.HttpPost;

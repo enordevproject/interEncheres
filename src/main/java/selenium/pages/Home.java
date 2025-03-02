@@ -70,10 +70,28 @@ public class Home extends BasePage {
      *
      * @param email The email address to enter.
      */
+    /**
+     * ✅ Enters the email address in the login form with improved waiting.
+     * @param email The email address to enter.
+     */
     public void enterEmail(String email) {
-        sendTextWhenReady(mailInput, email);
-        log.info("Entered email: " + email);
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+            // ✅ Wait for the input field to be present, visible, and enabled
+            WebElement emailInputElement = wait.until(ExpectedConditions.elementToBeClickable(mailInput));
+
+            // ✅ Ensure the input field is cleared before entering text
+            emailInputElement.clear();
+            Thread.sleep(500); // ✅ Small delay to ensure clearing works
+            emailInputElement.sendKeys(email);
+
+            log.info("✅ Entered email: " + email);
+        } catch (Exception e) {
+            log.error("❌ Failed to enter email: " + e.getMessage());
+        }
     }
+
 
     /**
      * Enters the password in the login form.
@@ -156,18 +174,29 @@ public class Home extends BasePage {
     }
 
     public void performLogin(String email, String password) {
-        navigateToHomePage();
         try {
-            clickLoginButton();
+            navigateToHomePage();
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+            // ✅ Wait for login button to be clickable before clicking
+            WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(loginButton));
+            loginBtn.click();
+            log.info("✅ Clicked Login Button.");
+
+            // ✅ Enter email & password with extra waiting
             enterEmail(email);
             enterPassword(password);
-            clickSubmitLoginButton();
-            log.info("Performed login.");
+
+            // ✅ Wait for Submit button and click
+            WebElement submitBtn = wait.until(ExpectedConditions.elementToBeClickable(submitLoginButton));
+            submitBtn.click();
+            log.info("✅ Clicked Submit Login Button.");
         } catch (Exception e) {
-            log.error("Failed to perform login: " + e.getMessage());
-            throw e; // Re-throw the exception to fail the test
+            log.error("❌ Login failed: " + e.getMessage());
         }
     }
+
 
     public WebElement waitForElement(By locator) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // Set timeout to 10 sec

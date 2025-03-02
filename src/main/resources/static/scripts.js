@@ -312,9 +312,17 @@ async function updateFavoritePanel() {
                 <div class="favorite-item">
                     <img src="${laptop.img_url || 'default-image.png'}" alt="Laptop" class="favorite-img">
                     <p>${laptop.brand || 'Unknown'} ${laptop.model || 'Unknown'} (${laptop.maison_enchere || 'Unknown Seller'})</p>
-                    <a href="${laptop.lot_url || '#'}" target="_blank">🔗 Open</a>
+                    
+                    <!-- 🔗 Open Lot URL -->
+                    <a href="${laptop.lot_url || '#'}" target="_blank" class="favorite-link">🔗 Open</a>
 
-                    <!-- 🗑️ Remove Button (Small and inside the favorite item) -->
+                    <!-- ⭐ Add to Interencheres Favorites -->
+                    <a href="#" onclick="addToInterencheresFavorites('${laptop.lot_url}')" 
+                        title="Add" class="favorite-link">
+                        ⭐ Add to Favorites
+                    </a>
+
+                    <!-- 🗑️ Remove from Favorites -->
                     <button class="remove-favorite-btn" onclick="removeFavorite(${laptop.id})">🗑️</button>
                 </div>
             `).join("");
@@ -323,6 +331,10 @@ async function updateFavoritePanel() {
         console.error("❌ Error loading favorites:", error);
     }
 }
+
+
+
+
 async function removeFavorite(laptopId) {
     try {
         let response = await fetch(`http://localhost:9090/api/laptops/favorite/${laptopId}`, {
@@ -749,6 +761,29 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+
+
+async function addToInterencheresFavorites(lotUrl) {
+    try {
+        console.log(`🔄 Sending request to add ${lotUrl} to favorites...`);
+
+        let response = await fetch("http://localhost:9090/api/interencheres/favorite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lotUrl: lotUrl }) // Ensure correct payload format
+        });
+
+        let result = await response.text(); // Get response text
+
+        if (!response.ok) throw new Error(result);
+
+        console.log("✅ Lot added successfully:", result);
+        alert("✅ Lot added to Interencheres favorites!");
+    } catch (error) {
+        console.error("❌ Error adding to favorites:", error);
+        alert("❌ Could not add lot to favorites. " + error.message);
+    }
+}
 
 
 

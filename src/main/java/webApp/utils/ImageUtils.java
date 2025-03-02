@@ -1,4 +1,4 @@
-package webApp.Utils;
+package webApp.utils;
 
 import org.apache.commons.io.IOUtils;
 import java.io.InputStream;
