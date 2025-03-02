@@ -31,7 +31,7 @@ public abstract class BasePage {
         if (!isInitialized) {
             initLogs();
             initConfig();
-            initDriver();
+          //  initDriver();
         }
     }
 
@@ -69,50 +69,7 @@ public abstract class BasePage {
         }
     }
 
-    protected static void initDriver() {
-        if (driver != null) return; // Avoid initializing multiple times
 
-        String browser = config.getProperty("browser", "CHROME").toUpperCase(); // Default to Chrome
-
-        switch (browser) {
-            case "CHROME":
-                String chromeDriverPath = System.getProperty("user.dir") + File.separator + "drivers" + File.separator + "chromedriver.exe";
-                System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-
-                ChromeOptions options = new ChromeOptions();
-                options.addArguments("--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage");
-
-                // Check if headless mode is enabled in config
-                if (config.getProperty("headless", "false").equalsIgnoreCase("true")) {
-                    options.addArguments("--headless");
-                    log.info("Running Chrome in headless mode.");
-                }
-
-                driver = new ChromeDriver(options);
-                log.info("✅ ChromeDriver initialized successfully.");
-                break;
-
-            case "HTMLUNIT":
-                driver = new HtmlUnitDriver(true);
-                log.info("✅ HtmlUnitDriver initialized.");
-                break;
-
-            default:
-                throw new IllegalArgumentException("❌ Unsupported browser: " + browser);
-        }
-
-        // Set timeouts
-        long implicitWait = Long.parseLong(config.getProperty("implicit.wait", "10"));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
-        log.info("⏳ Implicit wait set to " + implicitWait + " seconds.");
-
-        // Initialize WebDriverWait (explicit waits)
-        wait = new WebDriverWait(driver, Duration.ofSeconds(Long.parseLong(config.getProperty("explicit.wait", "20"))));
-
-        if (!browser.equals("HTMLUNIT")) {
-            driver.manage().window().maximize();
-        }
-    }
 
 
     public static void quitDriver() {

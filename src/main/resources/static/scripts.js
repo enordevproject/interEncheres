@@ -357,55 +357,118 @@ updateFavoritePanel();
 
 
 async function search() {
-    console.log("🔎 Initiating search with keywords:", keywordList);
+    console.log('🔎 Initiating search with keywords:', keywordList);
 
     if (keywordList.length === 0) {
-        alert("Please enter at least one keyword.");
+        alert('Please enter at least one keyword.');
         return;
     }
 
-    const endpoint = "http://localhost:9090/api/search/execute";
+    const endpoint = 'http://localhost:9090/api/search/execute';
     let resultsPanel = document.getElementById("resultsPanel");
-    let filterToggle = document.getElementById("filterToggle");
-
-    if (!resultsPanel) {
-        console.error("❌ Error: #resultsPanel not found in the DOM.");
-        return;
-    }
-
-    if (!filterToggle) {
-        console.error("❌ Error: #filterToggle not found in the DOM.");
-        return;
-    }
+    let processButton = document.getElementById("processLotsButton");
 
     try {
-        resultsPanel.innerHTML = "🔄 Searching...";
+        if (resultsPanel) resultsPanel.innerHTML = "🔄 Searching...";
 
         let response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(keywordList),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', // ✅ Fake human user-agent
+                'Accept-Language': 'en-US,en;q=0.9' // ✅ Mimic browser headers
+            },
+            body: JSON.stringify(keywordList)
         });
 
-        let responseBody = await response.text();
+        // ✅ If response is not OK, throw an error
         if (!response.ok) {
-            throw new Error(`❌ API Error: ${response.status} - ${response.statusText}\n${responseBody}`);
+            let errorMessage = await response.text();
+            throw new Error(errorMessage);
         }
 
-        console.log("✅ Search request sent successfully:", responseBody);
-        resultsPanel.innerHTML = "✅ Lots Found!";
+        let responseBody = await response.text();
+        console.log('✅ Search request sent successfully:', responseBody);
 
-        // ✅ Ensure the filter button is always visible
-        filterToggle.style.display = "block";
+        if (resultsPanel) resultsPanel.innerHTML = "✅ Lots Found!";
+
+        // ✅ Run GPT processing only if search was successful
+        if (processButton) {
+            processButton.style.display = "block"; // Show button
+        }
+
+        // ✅ Now execute GPT processing
+        await processLotsWithGPT();
 
     } catch (error) {
-        console.error("❌ Search execution failed:", error);
-        resultsPanel.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
-        alert("Error starting search: " + error.message);
+        console.error('❌ Search execution failed:', error.message);
+
+        if (resultsPanel) {
+            resultsPanel.innerHTML = `<span style="color: red;">❌ Search Failed: ${error.message}</span>`;
+        }
+
+        alert('Error starting search: ' + error.message);
     }
 }
 
 
+
+async function processLotsWithGPT() {
+    const processEndpoint = 'http://localhost:9090/api/lots/process';
+    let resultsPanel = document.getElementById("resultsPanel");
+
+    if (resultsPanel) resultsPanel.innerHTML = "🔄 Processing Lots with GPT...";
+
+    // ✅ Show progress bar
+    showProgress();
+
+    try {
+        let response = await fetch(processEndpoint, { method: 'POST' });
+        let result = await response.json();
+
+        if (!response.ok) throw new Error(result.message);
+
+        console.log('✅ GPT processing completed:', result.message);
+
+        if (resultsPanel) resultsPanel.innerHTML = "✅ Lots Processed Successfully!";
+        await fetchLaptops(); // ✅ Refresh data
+
+    } catch (error) {
+        console.error('❌ GPT Processing failed:', error);
+        if (resultsPanel) {
+            resultsPanel.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+        }
+        alert('Error processing lots: ' + error.message);
+    } finally {
+        // ✅ Hide progress bar when done
+        hideProgress();
+    }
+}
+
+
+
+
+function showProgress() {
+    let progressPanel = document.getElementById("progressPanel");
+    if (progressPanel) {
+        progressPanel.style.display = "block"; // ✅ Show progress bar
+        document.getElementById("progressBar").value = 0; // Reset progress
+    }
+}
+
+function hideProgress() {
+    let progressPanel = document.getElementById("progressPanel");
+    if (progressPanel) {
+        progressPanel.style.display = "none"; // ✅ Hide progress bar
+    }
+}
+
+function updateProgress(value) {
+    let progressBar = document.getElementById("progressBar");
+    if (progressBar) {
+        progressBar.value = value;
+    }
+}
 
 
 

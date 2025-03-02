@@ -203,11 +203,22 @@ public class Search extends BasePage {
 
     // Modified goToNextPage method to directly click the next button
     public void goToNextPage() {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
-        WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(NEXT_PAGE_BUTTON_XPATH));
-        nextButton.click();
-        waitForPageContent();
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+            // ✅ Wait until the "Next" button is clickable
+            WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@aria-label='Page suivante']")));
+
+            log.info("🖱️ Clicking the 'Next Page' button...");
+            nextButton.click();
+
+            // ✅ Wait for the page to fully load before proceeding
+            waitForPageContent();
+        } catch (Exception e) {
+            log.warn("⚠️ Failed to click 'Next Page' button: {}");
+        }
     }
+
 
     // Explicit wait for page content to load
     public void waitForPageContent() {

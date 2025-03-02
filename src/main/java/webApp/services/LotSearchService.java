@@ -1,35 +1,30 @@
 package webApp.services;
 
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import selenium.pages.Home;
 import selenium.pages.Search;
-import webApp.models.Lot;
-
+import webApp.models.Results;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 public class LotSearchService {
+    private static final Logger log = LoggerFactory.getLogger(LotSearchService.class);
 
     @Autowired
-    private SeleniumConfigService seleniumConfigService;
+    private SeleniumConfigService seleniumConfigService; // ✅ Singleton WebDriver
 
     @Autowired
     private ResultsService resultsService;
 
     /**
-     * Asynchronously performs searches and processes lots based on the given search terms.
-     *
-     * @param searchTerms List of keywords for which to perform searches.
+     * ✅ Ensures searches are executed **one at a time**.
      */
-    @Async
-    public CompletableFuture<Void> performSearchesAndProcessLots(List<String> searchTerms) {
-        WebDriver driver = seleniumConfigService.getDriver();
+    public synchronized void performSearchesAndProcessLots(List<String> searchTerms) {
+        WebDriver driver = seleniumConfigService.getDriver(); // ✅ Singleton WebDriver
 
         try {
             Home homePage = new Home(driver);
@@ -38,41 +33,52 @@ public class LotSearchService {
             homePage.navigateToHomePage();
 
             for (String searchTerm : searchTerms) {
-                homePage.performSearch(searchTerm); // Perform the search for the current term
+                log.info("🔍 Performing search for term: {}", searchTerm);
 
+                // ✅ Clear the search input before starting a new search
+              //  homePage.clearSearchField();
+                homePage.performSearch(searchTerm);
+
+                // ✅ Check if no results are found
                 if (searchPage.isNoResultsPresent()) {
-                    System.out.println("No results found for search term: " + searchTerm);
-                    continue; // Skip further processing if no results are found
+                    log.info("⚠️ No results found for search term: {}", searchTerm);
+                    continue; // ✅ Skip further processing if no results
                 }
 
-                processCurrentAndSubsequentPages(searchPage, driver);
+                int numberOfLots = searchPage.getNumberOfLots();
+                log.info("✅ Number of lots found for search term '{}': {}", searchTerm, numberOfLots);
+
+                Results resultsOnCurrentPage = new Results();
+
+                // ✅ Process first page
+                resultsOnCurrentPage.setLots(searchPage.getLotsOnCurrentPage());
+                resultsOnCurrentPage.pushLotsToDatabase(resultsOnCurrentPage.getLots());
+                resultsOnCurrentPage.getLots().clear();
+
+                // ✅ Process pagination if available
+                if (searchPage.isPaginationPresent()) {
+                    int lastPageNumber = searchPage.getLastPageNumber();
+                    log.info("➡️ Pagination detected. Last page number: {}", lastPageNumber);
+
+                    for (int currentPage = 2; currentPage <= lastPageNumber; currentPage++) {
+                        log.info("➡️ Navigating to page {}.", currentPage);
+
+                        searchPage.goToNextPage();
+                        searchPage.waitForPageContent();
+
+                        // ✅ Process current page
+                        resultsOnCurrentPage.setLots(searchPage.getLotsOnCurrentPage());
+                        resultsOnCurrentPage.pushLotsToDatabase(resultsOnCurrentPage.getLots());
+                        resultsOnCurrentPage.getLots().clear();
+                    }
+                }
+
+                log.info("✅ Finished processing '{}' and all its pages. Moving to next keyword...", searchTerm);
             }
+        } catch (Exception e) {
+            log.error("❌ Error during search execution: {}", e.getMessage(), e);
         } finally {
-            seleniumConfigService.closeDriver(); // Properly manage the WebDriver lifecycle
+            seleniumConfigService.closeDriver(); // ✅ Ensures WebDriver closes after execution
         }
-
-        return CompletableFuture.completedFuture(null);
-    }
-
-    /**
-     * Processes the current and all subsequent pages if pagination is present.
-     *
-     * @param searchPage The search page handler.
-     * @param driver The WebDriver instance for page navigation.
-     */
-    private void processCurrentAndSubsequentPages(Search searchPage, WebDriver driver) {
-        do {
-            List<Lot> lots = searchPage.getLotsOnCurrentPage();
-            if (!lots.isEmpty()) {
-                resultsService.processAndStoreLots(lots);
-            }
-
-            if (searchPage.isPaginationPresent()) {
-                searchPage.goToNextPage();
-                searchPage.waitForPageContent(); // Ensure the new page has loaded before continuing
-            } else {
-                break; // Exit the loop if no more pages are present
-            }
-        } while (true);
     }
 }

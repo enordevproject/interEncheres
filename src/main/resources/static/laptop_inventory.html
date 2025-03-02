@@ -66,15 +66,27 @@
 <!-- ✅ Move filterToggle OUTSIDE resultsPanel -->
 
 
-<div class="results-panel" id="resultsPanel">
-    <input type="text" id="filterInput" placeholder="Type here...">
-    <button id="searchButton" onclick="search()">Search</button>
+<div id="resultsContainer">
+    <div class="results-panel" id="resultsPanel">
+        <input type="text" id="filterInput" placeholder="Type here...">
+        <button id="searchButton" onclick="search()">Search</button>
+        <button id="processLotsButton" onclick="processLotsWithGPT()" style="display: none;">
+            🚀 Process Lots with GPT
+        </button>
+    </div>
+
+    <!-- ✅ Keyword Panel (Corrected Position) -->
+    <div id="keywordPanel" class="keyword-panel">
+        <button id="clearKeywords" title="Clear all keywords" style="display: none;">🗑️ Clear All</button>
+    </div>
 </div>
 
-<div id="keywordPanel" class="keyword-panel">
-    <button id="clearKeywords" title="Clear all keywords">🗑️ Clear All</button> <!-- Emoji button for clearing keywords -->
-</div>
 
+
+<!-- ✅ Progress Panel (Hidden by Default) -->
+<div id="progressPanel" style="display: none; text-align: center; margin-top: 10px;">
+    <progress id="progressBar" max="100" value="0"></progress>
+</div>
 
 
 
