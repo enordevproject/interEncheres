@@ -1,8 +1,22 @@
 function toggleSidebar() {
-    document.getElementById("filterPanel").classList.toggle("active");
-    document.getElementById("filterToggle").style.display =
-        document.getElementById("filterPanel").classList.contains("active") ? "none" : "block";
+    let filterPanel = document.getElementById("filterPanel");
+    let filterToggle = document.getElementById("filterToggle");
+
+    if (filterPanel) {
+        filterPanel.classList.toggle("active");
+    }
+
+    if (filterToggle) {
+        // Instead of hiding the button, adjust its visibility carefully
+        if (filterPanel.classList.contains("active")) {
+            filterToggle.style.opacity = "0"; // Hide visually but keep the space
+        } else {
+            filterToggle.style.opacity = "1"; // Make it visible again
+        }
+    }
 }
+
+
 
 document.getElementById("filterToggle").addEventListener("click", toggleSidebar);
 
@@ -342,38 +356,57 @@ updateFavoritePanel();
 
 
 
-function search() {
-    console.log('Initiating search with keywords:', keywordList);
+async function search() {
+    console.log("🔎 Initiating search with keywords:", keywordList);
 
     if (keywordList.length === 0) {
-        alert('Please enter at least one keyword.');
+        alert("Please enter at least one keyword.");
         return;
     }
 
-    const endpoint = 'http://localhost:9090/api/search/execute';
+    const endpoint = "http://localhost:9090/api/search/execute";
+    let resultsPanel = document.getElementById("resultsPanel");
+    let filterToggle = document.getElementById("filterToggle");
 
-    fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(keywordList) // Send collected keywords as an array
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to initiate search');
-            }
-            return response.text(); // Backend might return a success message
-        })
-        .then(message => {
-            console.log('Search request sent successfully:', message);
-            alert('Search is running. Lots will be processed and stored in the database.');
-        })
-        .catch(error => {
-            console.error('Search execution failed:', error);
-            alert('Error starting search: ' + error.message);
+    if (!resultsPanel) {
+        console.error("❌ Error: #resultsPanel not found in the DOM.");
+        return;
+    }
+
+    if (!filterToggle) {
+        console.error("❌ Error: #filterToggle not found in the DOM.");
+        return;
+    }
+
+    try {
+        resultsPanel.innerHTML = "🔄 Searching...";
+
+        let response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(keywordList),
         });
+
+        let responseBody = await response.text();
+        if (!response.ok) {
+            throw new Error(`❌ API Error: ${response.status} - ${response.statusText}\n${responseBody}`);
+        }
+
+        console.log("✅ Search request sent successfully:", responseBody);
+        resultsPanel.innerHTML = "✅ Lots Found!";
+
+        // ✅ Ensure the filter button is always visible
+        filterToggle.style.display = "block";
+
+    } catch (error) {
+        console.error("❌ Search execution failed:", error);
+        resultsPanel.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+        alert("Error starting search: " + error.message);
+    }
 }
+
+
+
 
 
 
@@ -417,6 +450,18 @@ document.getElementById('clearKeywords').addEventListener('click', function() {
     keywordList = []; // Reset keyword list
     this.style.display = 'none'; // Hide the clear button
 });
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    let searchButton = document.getElementById("searchButton");
+    if (searchButton) {
+        searchButton.addEventListener("click", search);
+    } else {
+        console.error("❌ Search button not found in the DOM.");
+    }
+});
+
+
 
 
 

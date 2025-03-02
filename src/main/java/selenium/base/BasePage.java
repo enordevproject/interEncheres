@@ -11,10 +11,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
@@ -49,27 +46,26 @@ public abstract class BasePage {
         }
     }
 
-    private static void initConfig() {
-        if (config == null) {
-            try {
-                config = new Properties();
-                String config_fileName = "config.properties";
-                String config_path = System.getProperty("user.dir") + File.separator + "config" + File.separator + config_fileName;
-                FileInputStream config_ip = new FileInputStream(config_path);
-                config.load(config_ip);
-                log.info("Config file initialized.");
+    public void initConfig() {
+        config = new Properties();
+        data = new Properties();
 
-                data = new Properties();
-                String data_fileName = "data.properties";
-                String data_path = System.getProperty("user.dir") + File.separator + "config" + File.separator + data_fileName;
-                FileInputStream data_ip = new FileInputStream(data_path);
-                data.load(data_ip);
-                log.info("Data file initialized.");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+        try (InputStream configStream = getClass().getClassLoader().getResourceAsStream("config/config.properties");
+             InputStream dataStream = getClass().getClassLoader().getResourceAsStream("config/data.properties")) {
+
+            if (configStream == null) {
+                throw new IOException("❌ config.properties file not found in resources/config/");
             }
+            if (dataStream == null) {
+                throw new IOException("❌ data.properties file not found in resources/config/");
+            }
+
+            config.load(configStream);
+            data.load(dataStream);
+            log.info("✅ Config and data files initialized successfully.");
+
+        } catch (IOException e) {
+           // log.error("❌ Error loading properties files: {}", e.getMessage(), e);
         }
     }
 
