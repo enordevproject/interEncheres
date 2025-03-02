@@ -69,7 +69,7 @@
 <div id="resultsContainer">
     <div class="results-panel" id="resultsPanel">
         <input type="text" id="filterInput" placeholder="Type here...">
-        <button id="searchButton" onclick="search()">Search</button>
+
         <button id="processLotsButton" onclick="processLotsWithGPT()" style="display: none;">
             🚀 Process Lots with GPT
         </button>
@@ -77,6 +77,7 @@
 
     <!-- ✅ Keyword Panel (Corrected Position) -->
     <div id="keywordPanel" class="keyword-panel">
+        <button id="searchButton"  onclick="search()" >Search</button>
         <button id="clearKeywords" title="Clear all keywords" style="display: none;">🗑️ Clear All</button>
     </div>
 </div>
@@ -118,19 +119,20 @@
         <thead>
         <tr>
             <th>🖼 Image</th>
-            <th>📌 Lot</th>
-            <th>📅 Date</th>
-            <th>🏢 Brand</th>
-            <th>🔖 Model</th>
-            <th>🔎 Processor</th>
-            <th>💾 RAM</th>
-            <th>💽 Storage</th>
-            <th>📏 Screen Size</th>
-            <th>💰 Boncoin Price (€)</th>
-            <th>🏢 Seller</th>
-            <th>✅ Recommended</th>
+            <th onclick="sortTable(1)">📌 Lot</th>
+            <th onclick="sortTable(2)">📅 Date</th>
+            <th onclick="sortTable(3)">🏢 Brand</th>
+            <th onclick="sortTable(4)">🔖 Model</th>
+            <th onclick="sortTable(5)">🔎 Processor</th>
+            <th onclick="sortTable(6)">💾 RAM</th>
+            <th onclick="sortTable(7)">💽 Storage</th>
+            <th onclick="sortTable(8)">📏 Screen Size</th>
+            <th onclick="sortTable(9)">💰 Boncoin Price (€)</th>
+            <th onclick="sortTable(10)">🏢 Seller</th>
+            <th onclick="sortTable(11)">✅ Recommended</th>
         </tr>
         </thead>
+
         <tbody id="laptopTable"></tbody>
     </table>
 </div>

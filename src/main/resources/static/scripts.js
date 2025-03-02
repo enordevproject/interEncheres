@@ -470,6 +470,35 @@ function updateProgress(value) {
     }
 }
 
+function sortTable(columnIndex) {
+    let table = document.querySelector(".scrollable-table");
+    let tbody = table.querySelector("tbody");
+    let rows = Array.from(tbody.querySelectorAll("tr"))
+        .filter(row => row.children.length > columnIndex && !row.classList.contains("details-row")); // ✅ Ignore hidden or details rows
+
+    let isAscending = table.getAttribute(`data-sort-${columnIndex}`) !== "asc";
+    table.setAttribute(`data-sort-${columnIndex}`, isAscending ? "asc" : "desc");
+
+    rows.sort((rowA, rowB) => {
+        let cellA = rowA.children[columnIndex]?.textContent?.trim() || "";
+        let cellB = rowB.children[columnIndex]?.textContent?.trim() || "";
+
+        // ✅ Convert numbers for proper sorting
+        let numA = parseFloat(cellA.replace(/[^0-9.-]+/g, ""));
+        let numB = parseFloat(cellB.replace(/[^0-9.-]+/g, ""));
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return isAscending ? numA - numB : numB - numA;
+        }
+
+        return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+    });
+
+    // ✅ Clear and append sorted rows
+    tbody.innerHTML = "";
+    rows.forEach(row => tbody.appendChild(row));
+}
+
 
 
 
