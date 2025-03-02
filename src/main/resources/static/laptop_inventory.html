@@ -75,16 +75,26 @@
         </button>
     </div>
 
-    <!-- ✅ Keyword Panel (Corrected Position) -->
+    <!-- ✅ Keyword Panel with Search, Stop, and Clear Buttons -->
     <div id="keywordPanel" class="keyword-panel">
-        <button id="searchButton"  onclick="search()" >Search</button>
-        <button id="clearKeywords" title="Clear all keywords" style="display: none;">🗑️ Clear All</button>
+        <button id="searchButton" onclick="search()">🔍 Search</button>
+        <button id="stopSearchButton" onclick="stopSearch()"
+                style="display: none; background: red; color: white; padding: 5px 10px; border: none; cursor: pointer;">
+            ⏹️ Stop
+        </button>
+        <button id="clearKeywords" title="Clear all keywords" style="display: none;">🗑️ Clear</button>
     </div>
-</div>
+
+    <!-- ✅ Search Logs (Live Updates) -->
+    <div id="searchLogsContainer" style="max-height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; background: #f9f9f9; margin-top: 10px;">
+        <p style="font-weight: bold; color: blue;">Search Logs:</p>
+        <ul id="searchLogs" style="list-style-type: none; padding: 0; margin: 0;"></ul>
+    </div>
 
 
 
-<!-- ✅ Progress Panel (Hidden by Default) -->
+
+    <!-- ✅ Progress Panel (Hidden by Default) -->
 <div id="progressPanel" style="display: none; text-align: center; margin-top: 10px;">
     <progress id="progressBar" max="100" value="0"></progress>
 </div>

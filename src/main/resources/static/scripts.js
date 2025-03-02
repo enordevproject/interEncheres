@@ -356,58 +356,167 @@ updateFavoritePanel();
 
 
 
-async function search() {
-    console.log('🔎 Initiating search with keywords:', keywordList);
+let searchActive = false; // ✅ Track search status
 
-    if (keywordList.length === 0) {
-        alert('Please enter at least one keyword.');
+
+
+/**
+ * ✅ Append logs to search status
+ */
+/**
+ * ✅ Function to add log entries with timestamps
+ */
+function addLogEntry(message) {
+    let logContainer = document.getElementById("searchLogs");
+    if (!logContainer) {
+        console.error("❌ Log container not found.");
         return;
     }
 
-    const endpoint = 'http://localhost:9090/api/search/execute';
+    let timestamp = new Date().toLocaleTimeString(); // ✅ Get current time
+    let logEntry = document.createElement("li");
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    logContainer.appendChild(logEntry);
+
+    // ✅ Auto-scroll to the bottom for latest logs
+    let logsContainer = document.getElementById("searchLogsContainer");
+    if (logsContainer) logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+/**
+ * ✅ Fetch logs from backend every 2 seconds
+ */
+async function fetchLogs() {
+    try {
+        let response = await fetch("http://localhost:9090/api/search/logs");
+        if (!response.ok) throw new Error("Failed to fetch logs.");
+        let logs = await response.json();
+        updateLogs(logs);
+    } catch (error) {
+        console.error("❌ Error fetching logs:", error);
+    }
+}
+
+/**
+ * ✅ Update logs in UI
+ */
+function updateLogs(logs) {
+    let logContainer = document.getElementById("searchLogs");
+    if (!logContainer) {
+        console.error("❌ Log container not found.");
+        return;
+    }
+
+    logContainer.innerHTML = ""; // Clear previous logs
+    logs.forEach(log => {
+        let logEntry = document.createElement("li");
+        logEntry.textContent = log;
+        logContainer.appendChild(logEntry);
+    });
+
+    let logsContainer = document.getElementById("searchLogsContainer");
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+
+// ✅ Fetch logs every 2 seconds
+setInterval(fetchLogs, 2000);
+
+/**
+ * ✅ Start search process with detailed logging
+ */
+async function search() {
+    console.log("🔎 Initiating search with keywords:", keywordList);
+    addLogEntry("🔎 Initiating search...");
+
+    if (keywordList.length === 0) {
+        alert("Please enter at least one keyword.");
+        return;
+    }
+
+    const searchEndpoint = "http://localhost:9090/api/search/execute";
     let resultsPanel = document.getElementById("resultsPanel");
-    let processButton = document.getElementById("processLotsButton");
+    let stopButton = document.getElementById("stopSearchButton");
+    let statusLabel = document.getElementById("searchStatusLabel");
 
     try {
-        if (resultsPanel) resultsPanel.innerHTML = "🔄 Searching...";
+        if (searchActive) {
+            alert("⚠️ A search is already running. Please wait.");
+            return;
+        }
 
-        let response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', // ✅ Fake human user-agent
-                'Accept-Language': 'en-US,en;q=0.9' // ✅ Mimic browser headers
-            },
-            body: JSON.stringify(keywordList)
+        addLogEntry("🚀 Sending search request to backend...");
+        if (statusLabel) statusLabel.textContent = "🔍 Searching...";
+        stopButton.style.display = "inline-block"; // ✅ Show "Stop Search" button
+        searchActive = true;
+
+        let startTime = Date.now(); // ✅ Start time tracking
+
+        let response = await fetch(searchEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(keywordList),
         });
 
-        // ✅ If response is not OK, throw an error
+        let endTime = Date.now(); // ✅ End time tracking
+        let elapsedTime = ((endTime - startTime) / 1000).toFixed(2); // ✅ Calculate response time
+
         if (!response.ok) {
-            let errorMessage = await response.text();
-            throw new Error(errorMessage);
+            throw new Error(await response.text());
         }
 
-        let responseBody = await response.text();
-        console.log('✅ Search request sent successfully:', responseBody);
+        console.log("✅ Search request completed in", elapsedTime, "seconds.");
+        addLogEntry(`✅ Search request completed in ${elapsedTime} seconds.`);
+        addLogEntry("📊 Fetching search results...");
 
-        if (resultsPanel) resultsPanel.innerHTML = "✅ Lots Found!";
-
-        // ✅ Run GPT processing only if search was successful
-        if (processButton) {
-            processButton.style.display = "block"; // Show button
-        }
-
-        // ✅ Now execute GPT processing
-        await processLotsWithGPT();
+        if (resultsPanel) resultsPanel.innerHTML = "✅ Searching...";
 
     } catch (error) {
-        console.error('❌ Search execution failed:', error.message);
+        console.error("❌ Search execution failed:", error);
+        addLogEntry(`❌ Search Failed: ${error.message}`);
+
+        if (statusLabel) statusLabel.textContent = "❌ Search Failed";
 
         if (resultsPanel) {
             resultsPanel.innerHTML = `<span style="color: red;">❌ Search Failed: ${error.message}</span>`;
         }
 
-        alert('Error starting search: ' + error.message);
+        alert("Error starting search: " + error.message);
+    }
+}
+
+/**
+ * ✅ Stop the running search with logging
+ */
+async function stopSearch() {
+    console.log("⏹️ Stopping search...");
+    addLogEntry("⏹️ Stopping search...");
+    searchActive = false;
+
+    const stopEndpoint = "http://localhost:9090/api/search/stop";
+    let stopButton = document.getElementById("stopSearchButton");
+    let statusLabel = document.getElementById("searchStatusLabel");
+
+    try {
+        let startTime = Date.now(); // ✅ Track stop request time
+
+        let response = await fetch(stopEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        let endTime = Date.now();
+        let elapsedTime = ((endTime - startTime) / 1000).toFixed(2); // ✅ Calculate response time
+
+        if (!response.ok) throw new Error("Failed to stop search.");
+
+        console.log("✅ Search stopped in", elapsedTime, "seconds.");
+        addLogEntry(`✅ Search stopped successfully in ${elapsedTime} seconds.`);
+        if (statusLabel) statusLabel.textContent = "⏹️ Search Stopped";
+
+    } catch (error) {
+        console.error("❌ Error stopping search:", error);
+        addLogEntry(`❌ Failed to stop search: ${error.message}`);
+    } finally {
+        stopButton.style.display = "none"; // ✅ Hide "Stop Search" button
     }
 }
 
@@ -420,7 +529,7 @@ async function processLotsWithGPT() {
     if (resultsPanel) resultsPanel.innerHTML = "🔄 Processing Lots with GPT...";
 
     // ✅ Show progress bar
-    showProgress();
+    //showProgress();
 
     try {
         let response = await fetch(processEndpoint, { method: 'POST' });
@@ -441,7 +550,7 @@ async function processLotsWithGPT() {
         alert('Error processing lots: ' + error.message);
     } finally {
         // ✅ Hide progress bar when done
-        hideProgress();
+      //  hideProgress();
     }
 }
 
