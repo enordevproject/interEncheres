@@ -156,7 +156,7 @@ public class Laptop {
     private String operatingSystem;
 
     @Column(name = "product_condition", length = 50)
-    private String condition;
+    private String productCondition;
 
     @Column(name = "warranty", length = 50)
     private String warranty;
@@ -242,7 +242,7 @@ public class Laptop {
             @JsonProperty("battery_life") String batteryLife,
             @JsonProperty("weight") double weight,
             @JsonProperty("operating_system") String operatingSystem,
-            @JsonProperty("product_condition") String condition,
+            @JsonProperty("product_condition") String productCondition,
             @JsonProperty("warranty") String warranty,
             @JsonProperty("release_year") int releaseYear,
             @JsonProperty("etat_produit_image") String etatProduitImage,
@@ -299,7 +299,7 @@ public class Laptop {
         this.batteryLife = batteryLife;
         this.weight = weight;
         this.operatingSystem = operatingSystem;
-        this.condition = condition;
+        this.productCondition = productCondition;
         this.warranty = warranty;
         this.releaseYear = releaseYear;
         this.etatProduitImage = etatProduitImage;
@@ -548,12 +548,12 @@ public class Laptop {
         this.operatingSystem = operatingSystem;
     }
 
-    public String getCondition() {
-        return condition;
+    public String getProductCondition() {
+        return productCondition;
     }
 
-    public void setCondition(String condition) {
-        this.condition = condition;
+    public void setProductCondition(String condition) {
+        this.productCondition = condition;
     }
 
     public String getWarranty() {

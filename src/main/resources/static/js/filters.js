@@ -1,19 +1,65 @@
 function applyFilters() {
-    let filters = Object.fromEntries(
-        [...document.querySelectorAll(".filter-section input, .filter-section select")]
-            .map(el => [el.id.replace("Filter", ""), el.value.trim()])
-            .filter(([_, value]) => value !== "") // Remove empty filters
-    );
+    let filters = {};
 
-    fetchLaptops(filters);
+    // ✅ Ensure collapsible filters are expanded before fetching values
+    document.querySelectorAll(".collapsible").forEach(button => {
+        let content = button.nextElementSibling;
+
+        // Open all collapsed sections temporarily to collect filter values
+        if (content.style.display === "none" || content.style.display === "") {
+            content.style.display = "block";
+        }
+    });
+
+    // ✅ Collect filter values
+    document.querySelectorAll(".content input, .content select").forEach(el => {
+        let value = el.value.trim();
+        console.log(`📌 Checking: ${el.id}, Type: ${el.type}, Value: "${value}"`);
+
+        if (value !== "") {
+            let key = el.id.replace("Filter", ""); // ✅ Ensure key matches backend field names
+            filters[key] = value;
+        }
+    });
+
+    console.log("🔍 Captured Filters (Before Sending to API):", filters);
+
+    if (Object.keys(filters).length === 0) {
+        console.warn("⚠️ No filters selected. API will fetch all laptops.");
+    } else {
+        fetchLaptops(filters);
+    }
+
+    // ✅ Close collapsible sections after fetching values
+    setTimeout(() => {
+        document.querySelectorAll(".collapsible").forEach(button => {
+            let content = button.nextElementSibling;
+            content.style.display = "none";
+        });
+    }, 300); // Close after a short delay
+
     toggleSidebar();
 }
 
 
+
+
+
 function resetFilters() {
-    document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => el.value = "");
-    fetchLaptops();
+    document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => {
+        el.value = "";
+    });
+
+    console.log("🔄 Reset all filters"); // ✅ Debugging Reset Action
+
+    fetchLaptops(); // Reload with no filters
 }
+
+
+
+
+
+
 
 
 
@@ -49,19 +95,73 @@ function sortTable(columnIndex) {
 
 
 async function loadAutocompleteData() {
-    let response = await fetch("http://localhost:9090/api/laptops");
-    let laptops = await response.json();
+    try {
+        let response = await fetch("http://localhost:9090/api/laptops");
+        let laptops = await response.json();
 
-    let brands = [...new Set(laptops.map(l => l.brand))];
-    let models = [...new Set(laptops.map(l => l.model))];
-    let processors = [...new Set(laptops.map(l => l.processorBrand + " " + l.processorModel))];
-    let storages = [...new Set(laptops.map(l => l.storageType))];
+        let sellers = [...new Set(laptops.map(l => l.maisonEnchere).filter(s => s))].sort();
+        let conditions = [...new Set(laptops.map(l => l.etatProduitImage).filter(c => c))].sort();
 
-    $("#brandFilter").autocomplete({ source: brands });
-    $("#modelFilter").autocomplete({ source: models });
-    $("#processorFilter").autocomplete({ source: processors });
-    $("#storageFilter").autocomplete({ source: storages });
+        // ✅ Enable autocomplete for Trusted Seller (Maison Enchère)
+        $("#maisonEnchere").autocomplete({ source: sellers });
+
+        // ✅ Enable autocomplete for Condition AI Scanned
+        $("#etatProduitImage").autocomplete({ source: conditions });
+
+    } catch (error) {
+        console.error("❌ Error loading autocomplete data:", error);
+    }
 }
+
+document.addEventListener("DOMContentLoaded", loadAutocompleteData);
+
+
+// ✅ Helper function to populate dropdowns dynamically
+function populateDropdown(elementId, values) {
+    let select = document.getElementById(elementId);
+    if (select) {
+        select.innerHTML = `<option value="">Any</option>` + values.map(value => `<option value="${value}">${value}</option>`).join("");
+    }
+}
+
+// ✅ Load data on page load
+document.addEventListener("DOMContentLoaded", loadAutocompleteData);
+
 
 
 document.getElementById("filterToggle").addEventListener("click", toggleSidebar);
+
+
+
+document.querySelectorAll(".collapsible").forEach(button => {
+    button.addEventListener("click", function () {
+        this.classList.toggle("active");
+        let content = this.nextElementSibling;
+
+        // ✅ Use computedStyle to check if already visible
+        if (window.getComputedStyle(content).display === "none") {
+            content.style.display = "block";
+            content.style.maxHeight = content.scrollHeight + "px"; // Smooth expand
+        } else {
+            content.style.maxHeight = "0px"; // Collapse smoothly
+            setTimeout(() => content.style.display = "none", 300); // Hide after animation
+        }
+    });
+});
+
+
+function applyPreset(type) {
+    resetFilters(); // Clear all previous filters
+
+    if (type === "gaming") {
+        document.getElementById("processorBrand").value = "Intel";
+        document.getElementById("minNoteSur10").value = "8";
+    } else if (type === "budget") {
+        document.getElementById("maxBonCoinEstimation").value = "500";
+    } else if (type === "premium") {
+        document.getElementById("minNoteSur10").value = "9";
+        document.getElementById("processorBrand").value = "Apple";
+    }
+
+    applyFilters(); // Apply filters after setting the values
+}

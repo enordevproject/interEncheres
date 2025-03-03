@@ -12,55 +12,137 @@
 <body>
 
 <div class="sidebar" id="filterPanel">
-    <h3 class="filter-title">Filters</h3>
-    <button id="closeSidebar" onclick="toggleSidebar()">✖ Close</button>
-    <div class="filter-section">
-        <label>📅 Auction Date</label>
-        <input type="date" id="dateFilter">
+    <h3 class="filter-title">🔍 Advanced Laptop Filters</h3>
+
+    <!-- 🔥 Quick Presets -->
+    <div class="preset-filters">
+        <button onclick="applyPreset('gaming')">🎮 Gaming</button>
+        <button onclick="applyPreset('budget')">💰 Budget</button>
+        <button onclick="applyPreset('premium')">🚀 Premium</button>
+        <button onclick="resetFilters()">🔄 Reset</button>
     </div>
-    <div class="filter-section">
-        <label>🏢 Brand</label>
-        <input type="text" id="brandFilter" placeholder="Brand">
+
+    <hr>
+
+    <!-- 📅 Auction Date -->
+    <button class="collapsible">📅 Auction Date</button>
+    <div class="content">
+        <label>From:</label>
+        <input type="date" id="minDate">
+        <label>To:</label>
+        <input type="date" id="maxDate">
     </div>
-    <div class="filter-section">
-        <label>🔖 Model</label>
-        <input type="text" id="modelFilter" placeholder="Model">
+
+    <!-- 🏢 Trusted Seller -->
+    <button class="collapsible">🏢 Trusted Seller</button>
+    <div class="content">
+        <input type="text" id="maisonEnchere" placeholder="Enter auction house">
     </div>
-    <div class="filter-section">
-        <label>💾 RAM (GB)</label>
-        <input type="number" id="ramFilter" placeholder="Min">
-    </div>
-    <div class="filter-section">
-        <label>🔎 Processor</label>
-        <input type="text" id="processorFilter" placeholder="Processor">
-    </div>
-    <div class="filter-section">
-        <label>💽 Storage</label>
-        <input type="text" id="storageFilter" placeholder="SSD/HDD">
-    </div>
-    <div class="filter-section">
-        <label>📏 Screen Size (inches)</label>
-        <input type="number" id="screenSizeFilter" placeholder="Min">
-    </div>
-    <div class="filter-section">
-        <label>⭐ Rating (0-10)</label>
-        <input type="number" id="ratingFilter" min="0" max="10" step="0.1">
-    </div>
-    <div class="filter-section">
-        <label>💰 Boncoin Price (€)</label>
-        <input type="number" id="priceFilter" placeholder="Max">
-    </div>
-    <div class="filter-section">
-        <label>✅ Recommended</label>
-        <select id="recommendedFilter">
+
+    <!-- 🔎 Processor -->
+    <button class="collapsible">🔎 Processor</button>
+    <div class="content">
+        <label>Brand:</label>
+        <select id="processorBrand">
             <option value="">Any</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
+            <option value="Intel">Intel</option>
+            <option value="AMD">AMD</option>
+            <option value="Apple">Apple</option>
+        </select>
+        <label>Model:</label>
+        <select id="processorModel">
+            <option value="">Any</option>
+            <option value="i3">Intel i3</option>
+            <option value="i5">Intel i5</option>
+            <option value="i7">Intel i7</option>
+            <option value="i9">Intel i9</option>
+            <option value="Ryzen 3">AMD Ryzen 3</option>
+            <option value="Ryzen 5">AMD Ryzen 5</option>
+            <option value="Ryzen 7">AMD Ryzen 7</option>
         </select>
     </div>
-    <button onclick="applyFilters()">Apply Filters</button>
-    <button onclick="resetFilters()">Reset</button>
+
+    <!-- 📆 Release Year -->
+    <button class="collapsible">📆 Release Year</button>
+    <div class="content">
+        <label>Min Year:</label>
+        <select id="minReleaseYear">
+            <option value="">Any</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+        <label>Max Year:</label>
+        <select id="maxReleaseYear">
+            <option value="">Any</option>
+            <option value="2018">2018</option>
+            <option value="2019">2019</option>
+            <option value="2020">2020</option>
+            <option value="2021">2021</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+        </select>
+    </div>
+
+    <!-- 💰 Price -->
+    <button class="collapsible">💰 Price</button>
+    <div class="content">
+        <label>Min BonCoin Price:</label>
+        <input type="number" id="minBonCoinEstimation" placeholder="Min Price">
+        <label>Max BonCoin Price:</label>
+        <input type="number" id="maxBonCoinEstimation" placeholder="Max Price">
+    </div>
+
+    <!-- 🚀 Performance Score -->
+    <button class="collapsible">🚀 Performance Score</button>
+    <div class="content">
+        <label>Min:</label>
+        <select id="minNoteSur10">
+            <option value="">Any</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+        <label>Max:</label>
+        <select id="maxNoteSur10">
+            <option value="">Any</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+    </div>
+
+    <!-- 🛠️ Product Condition -->
+
+
+    <button onclick="applyFilters()">🔎 Apply Filters</button>
 </div>
+
+
+
+
+
+
+
 
 
 <!-- ✅ Move filterToggle OUTSIDE resultsPanel -->

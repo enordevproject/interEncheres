@@ -33,6 +33,18 @@ public class LaptopSpecifications {
                 spec = spec.and((root, query, criteriaBuilder) ->
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), "%" + filters.get("model").toLowerCase() + "%"));
             }
+            // ✅ Fix: Allow filtering by Min and Max Release Year
+            if (filters.containsKey("minReleaseYear")) {
+                int minYear = Integer.parseInt(filters.get("minReleaseYear"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("releaseYear"), minYear));
+            }
+
+            if (filters.containsKey("maxReleaseYear")) {
+                int maxYear = Integer.parseInt(filters.get("maxReleaseYear"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("releaseYear"), maxYear));
+            }
 
             // ✅ Filter by RAM Size (GB)
             if (filters.containsKey("ramSize")) {
@@ -71,6 +83,14 @@ public class LaptopSpecifications {
                 spec = spec.and((root, query, criteriaBuilder) ->
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("gpuType")), "%" + filters.get("gpuType").toLowerCase() + "%"));
             }
+            if (filters.containsKey("maisonEnchere")) {
+                String seller = filters.get("maisonEnchere").toLowerCase();
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("maisonEnchere")), "%" + seller + "%")
+                );
+            }
+
+
 
             // ✅ Filter by GPU VRAM (GB)
             if (filters.containsKey("gpuVram")) {
@@ -133,26 +153,57 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("releaseYear"), releaseYear));
             }
 
-            // ✅ Filter by BonCoin Price
-            if (filters.containsKey("bonCoinEstimation")) {
-                double price = Double.parseDouble(filters.get("bonCoinEstimation"));
+            // ✅ Fix: Allow filtering by Min and Max BonCoin Price
+            if (filters.containsKey("minBonCoinEstimation")) {
+                double minPrice = Double.parseDouble(filters.get("minBonCoinEstimation"));
                 spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.lessThanOrEqualTo(root.get("bonCoinEstimation"), price));
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("bonCoinEstimation"), minPrice));
             }
 
-            // ✅ Filter by Facebook Price
-            if (filters.containsKey("facebookEstimation")) {
-                double price = Double.parseDouble(filters.get("facebookEstimation"));
+            if (filters.containsKey("maxBonCoinEstimation")) {
+                double maxPrice = Double.parseDouble(filters.get("maxBonCoinEstimation"));
                 spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.lessThanOrEqualTo(root.get("facebookEstimation"), price));
+                        criteriaBuilder.lessThanOrEqualTo(root.get("bonCoinEstimation"), maxPrice));
             }
 
-            // ✅ Filter by Internet Estimated Price
-            if (filters.containsKey("internetEstimation")) {
-                double price = Double.parseDouble(filters.get("internetEstimation"));
+// ✅ Fix: Allow filtering by Min and Max Facebook Price
+            if (filters.containsKey("minFacebookEstimation")) {
+                double minPrice = Double.parseDouble(filters.get("minFacebookEstimation"));
                 spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.lessThanOrEqualTo(root.get("internetEstimation"), price));
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("facebookEstimation"), minPrice));
             }
+
+            if (filters.containsKey("maxFacebookEstimation")) {
+                double maxPrice = Double.parseDouble(filters.get("maxFacebookEstimation"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("facebookEstimation"), maxPrice));
+            }
+
+// ✅ Fix: Allow filtering by Min and Max Internet Price
+            if (filters.containsKey("minInternetEstimation")) {
+                double minPrice = Double.parseDouble(filters.get("minInternetEstimation"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("internetEstimation"), minPrice));
+            }
+
+            if (filters.containsKey("maxInternetEstimation")) {
+                double maxPrice = Double.parseDouble(filters.get("maxInternetEstimation"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("internetEstimation"), maxPrice));
+            }
+            // ✅ Fix: Allow filtering by Min and Max Performance Score
+            if (filters.containsKey("minNoteSur10")) {
+                int minScore = Integer.parseInt(filters.get("minNoteSur10"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("noteSur10"), minScore));
+            }
+
+            if (filters.containsKey("maxNoteSur10")) {
+                int maxScore = Integer.parseInt(filters.get("maxNoteSur10"));
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.lessThanOrEqualTo(root.get("noteSur10"), maxScore));
+            }
+
 
             // ✅ Filter by Condition Rating (0-10)
             if (filters.containsKey("noteSur10")) {
@@ -176,13 +227,42 @@ public class LaptopSpecifications {
                             criteriaBuilder.equal(root.get("date"), auctionDate));
                 }
             }
+            if (filters.containsKey("minDate")) {
+                Date minAuctionDate = parseDate(filters.get("minDate"));
+                if (minAuctionDate != null) {
+                    spec = spec.and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.greaterThanOrEqualTo(root.get("date"), minAuctionDate));
+                }
+            }
+
+            if (filters.containsKey("maxDate")) {
+                Date maxAuctionDate = parseDate(filters.get("maxDate"));
+                if (maxAuctionDate != null) {
+                    spec = spec.and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.lessThanOrEqualTo(root.get("date"), maxAuctionDate));
+                }
+            }
+
+
             // ✅ Filter by Product Condition Image
             if (filters.containsKey("etatProduitImage")) {
                 spec = spec.and((root, query, criteriaBuilder) ->
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("etatProduitImage")), "%" + filters.get("etatProduitImage").toLowerCase() + "%"));
             }
+            // ✅ Fix: Ensure filtering for `product_condition`
+            if (filters.containsKey("product_condition")) {
+                String condition = filters.get("product_condition").trim();
 
-              // ✅ Filter by Reason for Condition
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(criteriaBuilder.lower(root.get("productCondition")), condition.toLowerCase()));
+
+                System.out.println("✅ Filtering by product_condition: " + condition);
+            }
+
+
+
+
+            // ✅ Filter by Reason for Condition
             if (filters.containsKey("reasonForCondition")) {
                 spec = spec.and((root, query, criteriaBuilder) ->
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("reasonForCondition")), "%" + filters.get("reasonForCondition").toLowerCase() + "%"));

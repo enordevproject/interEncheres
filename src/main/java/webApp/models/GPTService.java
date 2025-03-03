@@ -165,6 +165,8 @@ public class GPTService {
                 System.out.println("✅ Laptop generated: " + generatedLaptop.getModel());
                 generatedLaptop.setImgUrl(lot.getImgUrl());
                 generatedLaptop.setDate(lot.getDate());
+                generatedLaptop.setMaisonEnchere(lot.getMaisonEnchere()); // ✅ Fix: Set correct auction house
+
 
                 // Insert into database
                 Results.insertLaptopIntoDatabase(generatedLaptop);
