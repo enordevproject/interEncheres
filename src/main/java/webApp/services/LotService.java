@@ -86,11 +86,13 @@ public class LotService {
 
         for (Lot lot : lotsFromDatabase) {
             futures.add(executorService.submit(() -> {
-                try {
-                    Results.processLot(lot);
-                    logMessage("📊 Processed lot " + lot.getNumber());
-                } catch (Exception e) {
-                    logMessage("❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
+                synchronized (lot) { // ✅ Ensures thread safety for each lot
+                    try {
+                        Results.processLot(lot);
+                        logMessage("📊 Processed lot " + lot.getNumber() + " | Date: " + lot.getDate() + " | Maison Enchere: " + lot.getMaisonEnchere());
+                    } catch (Exception e) {
+                        logMessage("❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
+                    }
                 }
                 return null;
             }));
@@ -98,7 +100,7 @@ public class LotService {
 
         for (Future<Void> future : futures) {
             try {
-                future.get();
+                future.get(); // ✅ Ensure all tasks finish
             } catch (Exception e) {
                 logMessage("❌ Error waiting for task completion: " + e.getMessage());
             }
@@ -111,6 +113,7 @@ public class LotService {
 
         return "✅ Processing complete and lots deleted.";
     }
+
 
     /**
      * ✅ Deletes all lots from the database after processing

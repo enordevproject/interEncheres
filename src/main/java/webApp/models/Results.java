@@ -56,29 +56,26 @@ public class Results {
     }
 
     public void pushLotsToDatabase(List<Lot> lots) {
-        // Open session and begin transaction
         Session session = HibernateUtil.getSessionFactory().openSession();
         Transaction tx = session.beginTransaction();
 
-        // Iterate over the lots and insert them into the database
         long addedCount = lots.stream()
-                .filter(lot -> !checkIfUrlExists(lot.getUrl())) // Filter out existing URLs
+                .filter(lot -> !checkIfUrlExists(lot.getUrl()))
                 .peek(lot -> {
-                    session.merge(lot); // Save or update the lot in the database
-                    System.out.println("Lot with URL: " + lot.getUrl() + " has been successfully added to the database.");
-                    System.out.println("📸 Image URL: " + lot.getImgUrl()); // Debugging line
+                    synchronized (lot) { // ✅ Ensures each entry is unique
+                        session.merge(lot);
+                        log.info("📌 Lot Added - URL: {} | Date: {} | Maison Enchere: {}",
+                                lot.getUrl(), lot.getDate(), lot.getMaisonEnchere());
+                    }
                 })
-                .count(); // Count the added lots
+                .count();
 
-        // Log the total number of added lots
-        log.info("Total lots added: " + addedCount);
-        System.out.println("Total lots added: " + addedCount);
-
-        // Commit the transaction and close the session
+        log.info("✅ Total lots added: " + addedCount);
         session.flush();
         tx.commit();
         session.close();
     }
+
 
     // ✅ Use HibernateUtil to get session
     public static List<Lot> getAllLotsFromDatabase() {
@@ -164,37 +161,41 @@ public class Results {
 
     // ✅ This method is executed in parallel for each lot
     public static void processLot(Lot lot) throws IOException {
-        log.info("🔍 Processing lot: {}", lot.getUrl());
+        synchronized (lot) { // ✅ Ensures each lot is handled separately
+            log.info("🔍 Processing lot: {}", lot.getUrl());
 
-        if (Results.checkIfLaptopExists(lot.getUrl())) {
-            log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
-            return;
-        }
-
-        log.info("🧠 Sending lot to GPT-4...");
-        Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
-
-        if (generatedLaptop != null) {
-            log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
-
-            if (!isValidLaptop(generatedLaptop)) {
-                log.warn("❌ Laptop validation failed for lot {}. Skipping insertion.", lot.getUrl());
+            if (checkIfLaptopExists(lot.getUrl())) {
+                log.info("⏭️ Laptop already exists for lot {}. Skipping...", lot.getUrl());
                 return;
             }
 
-            // 🚀 ✅ **Store the laptop in DB immediately** to prevent image mixing
-            try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-                Transaction transaction = session.beginTransaction();
-                session.merge(generatedLaptop);
-                transaction.commit();
-                log.info("💾 Laptop inserted into the database for lot: {}", lot.getUrl());
-            } catch (Exception e) {
-                log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
+            log.info("🧠 Sending lot to GPT-4...");
+            Laptop generatedLaptop = GPTService.generateLaptopFromLot(lot);
+
+            if (generatedLaptop != null) {
+                log.info("✅ Laptop generated successfully for lot: {}", lot.getUrl());
+
+                if (!isValidLaptop(generatedLaptop)) {
+                    log.warn("❌ Laptop validation failed for lot {}. Skipping insertion.", lot.getUrl());
+                    return;
+                }
+
+                // 🚀 ✅ **Store the laptop in DB immediately** to prevent image and info mixing
+                try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+                    Transaction transaction = session.beginTransaction();
+                    session.merge(generatedLaptop);
+                    transaction.commit();
+                    log.info("💾 Laptop inserted into the database for lot: {} | Date: {} | Maison Enchere: {}",
+                            lot.getUrl(), lot.getDate(), lot.getMaisonEnchere());
+                } catch (Exception e) {
+                    log.error("❌ Error inserting laptop for lot {}: {}", lot.getUrl(), e.getMessage(), e);
+                }
+            } else {
+                log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
             }
-        } else {
-            log.warn("⚠️ Failed to generate Laptop for {}", lot.getUrl());
         }
     }
+
 
 
 

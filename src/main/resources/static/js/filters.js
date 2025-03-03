@@ -1,28 +1,37 @@
 function applyFilters() {
     let filters = {};
 
-    // ✅ Ensure collapsible filters are expanded before fetching values
-    document.querySelectorAll(".collapsible").forEach(button => {
-        let content = button.nextElementSibling;
-
-        // Open all collapsed sections temporarily to collect filter values
-        if (content.style.display === "none" || content.style.display === "") {
-            content.style.display = "block";
-        }
-    });
-
-    // ✅ Collect filter values
+    // ✅ Select all visible & hidden inputs and selects
     document.querySelectorAll(".content input, .content select").forEach(el => {
         let value = el.value.trim();
-        console.log(`📌 Checking: ${el.id}, Type: ${el.type}, Value: "${value}"`);
-
-        if (value !== "") {
-            let key = el.id.replace("Filter", ""); // ✅ Ensure key matches backend field names
+        if (el.type === "checkbox") {
+            if (el.checked) filters[el.id.replace("Filter", "")] = "true";
+        } else if (value !== "") {
+            let key = el.id.replace("Filter", "");
             filters[key] = value;
         }
     });
 
-    console.log("🔍 Captured Filters (Before Sending to API):", filters);
+    // ✅ Handle "Today" and "This Week" filters
+    let todayCheckbox = document.getElementById("filterToday")?.checked;
+    let thisWeekCheckbox = document.getElementById("filterThisWeek")?.checked;
+
+    if (todayCheckbox) {
+        let today = new Date().toISOString().split("T")[0]; // Get YYYY-MM-DD
+        filters["minDate"] = today;
+        filters["maxDate"] = today;
+    }
+
+    if (thisWeekCheckbox) {
+        let today = new Date();
+        let startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1)).toISOString().split("T")[0]; // Monday
+        let endOfWeek = new Date(today.setDate(today.getDate() + 6)).toISOString().split("T")[0]; // Sunday
+
+        filters["minDate"] = startOfWeek;
+        filters["maxDate"] = endOfWeek;
+    }
+
+    console.log("🔍 Filters Before Sending to API:", filters);
 
     if (Object.keys(filters).length === 0) {
         console.warn("⚠️ No filters selected. API will fetch all laptops.");
@@ -30,30 +39,76 @@ function applyFilters() {
         fetchLaptops(filters);
     }
 
-    // ✅ Close collapsible sections after fetching values
-    setTimeout(() => {
-        document.querySelectorAll(".collapsible").forEach(button => {
-            let content = button.nextElementSibling;
-            content.style.display = "none";
-        });
-    }, 300); // Close after a short delay
-
     toggleSidebar();
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => {
+        el.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // ✅ Prevent unintended behavior
+                console.log("⏎ Enter pressed - Clicking Apply Filters...");
+                document.getElementById("applyFiltersButton").click(); // ✅ Click "Apply Filters" button
+            }
+        });
+    });
+
+    // ✅ Fix: Prevent "Enter" from toggling collapsibles or sidebar
+    document.getElementById("filterPanel").addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            event.stopPropagation(); // ✅ Stops unwanted toggles
+        }
+    });
+});
+
 
 
 
 
 
 function resetFilters() {
-    document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => {
-        el.value = "";
+    console.log("🔄 Resetting all filters...");
+
+    // ✅ Reset all input fields (text, date, number)
+    document.querySelectorAll(".filter-section input").forEach(el => {
+        if (el.type === "checkbox") {
+            el.checked = false; // ❌ Uncheck all checkboxes
+        } else {
+            el.value = ""; // Clear text inputs, including date fields
+        }
     });
 
-    console.log("🔄 Reset all filters"); // ✅ Debugging Reset Action
+    // ✅ Reset all select dropdowns properly
+    document.querySelectorAll(".filter-section select").forEach(el => {
+        el.selectedIndex = 0; // Set to first option (usually "Any")
+    });
 
-    fetchLaptops(); // Reload with no filters
+    // ✅ Reset autocomplete fields safely (check if initialized first)
+    ["#brand", "#model", "#maisonEnchere", "#gpuModel"].forEach(selector => {
+        let field = $(selector);
+        if (field.hasClass("ui-autocomplete-input")) {
+            field.val("").autocomplete("close");
+        }
+    });
+
+    // ✅ Collapse all open filter sections
+    document.querySelectorAll(".collapsible").forEach(button => {
+        let content = button.nextElementSibling;
+        content.style.display = "none";
+        content.style.maxHeight = "0px";
+        button.classList.remove("active"); // Ensure button does not appear active
+    });
+
+    // ✅ Log reset action and re-fetch laptops without filters
+    console.log("✅ Filters reset. Reloading laptops...");
+    fetchLaptops({}); // Fetch all laptops with no filters
+
+    // ✅ Close the filters panel
+  //  toggleSidebar();
 }
+
+
+
 
 
 
@@ -93,27 +148,54 @@ function sortTable(columnIndex) {
 }
 
 
-
 async function loadAutocompleteData() {
     try {
         let response = await fetch("http://localhost:9090/api/laptops");
         let laptops = await response.json();
 
-        let sellers = [...new Set(laptops.map(l => l.maisonEnchere).filter(s => s))].sort();
-        let conditions = [...new Set(laptops.map(l => l.etatProduitImage).filter(c => c))].sort();
+        // ✅ Ensure correct property key (Fixing "maison_enchere")
+        let sellers = [...new Set(laptops.map(l => l.maison_enchere || l.maisonEnchere).filter(s => s))].sort();
+        let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
+        let gpuVramOptions = [...new Set(laptops.map(l => l.gpu_vram).filter(v => v))].sort((a, b) => a - b);
 
-        // ✅ Enable autocomplete for Trusted Seller (Maison Enchère)
-        $("#maisonEnchere").autocomplete({ source: sellers });
+        // ✅ Debugging logs to verify data
+        console.log("✅ Loaded Sellers:", sellers.length ? sellers : "⚠️ No sellers found!");
+        console.log("✅ Loaded GPU Models:", gpuModels.length ? gpuModels : "⚠️ No GPU models found!");
+        console.log("✅ Loaded GPU VRAM Options:", gpuVramOptions.length ? gpuVramOptions : "⚠️ No GPU VRAM options found!");
 
-        // ✅ Enable autocomplete for Condition AI Scanned
-        $("#etatProduitImage").autocomplete({ source: conditions });
+        // ✅ Enable jQuery UI Autocomplete for Sellers
+        if (sellers.length > 0) {
+            $("#maisonEnchere").autocomplete({ source: sellers });
+        } else {
+            console.warn("⚠️ Seller list is empty! Check API response.");
+        }
+
+        // ✅ Enable jQuery UI Autocomplete for GPU Model
+        if (gpuModels.length > 0) {
+            $("#gpuModel").autocomplete({ source: gpuModels });
+        } else {
+            console.warn("⚠️ GPU model list is empty!");
+        }
+
+        // ✅ Populate GPU VRAM Dropdown
+        let gpuVramSelect = document.getElementById("gpuVram");
+        if (gpuVramOptions.length > 0) {
+            gpuVramSelect.innerHTML = `<option value="">Any</option>` +
+                gpuVramOptions.map(v => `<option value="${v}">${v}GB</option>`).join("");
+        }
 
     } catch (error) {
         console.error("❌ Error loading autocomplete data:", error);
     }
 }
 
+// ✅ Run on page load
 document.addEventListener("DOMContentLoaded", loadAutocompleteData);
+
+
+
+
+
 
 
 // ✅ Helper function to populate dropdowns dynamically
