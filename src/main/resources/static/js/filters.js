@@ -161,13 +161,15 @@ async function loadAutocompleteData() {
         let response = await fetch(`${BASE_URL}/api/laptops`);
         let laptops = await response.json();
 
-        // ✅ Ensure correct property key (Fixing "maison_enchere")
+        // ✅ Extract unique values from the API response
         let sellers = [...new Set(laptops.map(l => l.maison_enchere || l.maisonEnchere).filter(s => s))].sort();
         let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
         let gpuVramOptions = [...new Set(laptops.map(l => l.gpu_vram).filter(v => v))].sort((a, b) => a - b);
+        let laptopModels = [...new Set(laptops.map(l => l.model).filter(m => m))].sort(); // ✅ Extract Laptop Models
 
         console.log("✅ Loaded Sellers:", sellers.length ? sellers : "⚠️ No sellers found!");
         console.log("✅ Loaded GPU Models:", gpuModels.length ? gpuModels : "⚠️ No GPU models found!");
+        console.log("✅ Loaded Laptop Models:", laptopModels.length ? laptopModels : "⚠️ No laptop models found!");
         console.log("✅ Loaded GPU VRAM Options:", gpuVramOptions.length ? gpuVramOptions : "⚠️ No GPU VRAM options found!");
 
         // ✅ Enable jQuery UI Autocomplete for Sellers
@@ -184,20 +186,35 @@ async function loadAutocompleteData() {
             console.warn("⚠️ GPU model list is empty!");
         }
 
+        // ✅ Enable Select2 Multi-Select for Model
+        if (laptopModels.length > 0) {
+            $("#model").select2({
+                placeholder: "Select or search models...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                tags: false, // ✅ Only allow selecting models from database
+                data: laptopModels.map(model => ({ id: model, text: model })) // ✅ Convert to Select2 format
+            });
+        } else {
+            console.warn("⚠️ Laptop model list is empty!");
+        }
+
         // ✅ Populate GPU VRAM Dropdown
         let gpuVramSelect = document.getElementById("gpuVram");
         if (gpuVramOptions.length > 0) {
             gpuVramSelect.innerHTML = `<option value="">Any</option>` +
                 gpuVramOptions.map(v => `<option value="${v}">${v}GB</option>`).join("");
         }
+
     } catch (error) {
         console.error("❌ Error loading autocomplete data:", error);
     }
 }
 
-
 // ✅ Run on page load
 document.addEventListener("DOMContentLoaded", loadAutocompleteData);
+
 
 
 // EXISTING: Check if a laptop is in favorites from localStorage
@@ -262,32 +279,43 @@ function applyPreset(type) {
 
 
 $(document).ready(function () {
-    // ✅ Fetch laptop models dynamically for auto-complete
-    async function fetchModels() {
+    // ✅ Initialize Select2 for all multi-select fields
+    $(".multi-select").each(function () {
+        let $select = $(this);
+        if (!$select.hasClass("select2-hidden-accessible")) {
+            $select.select2({
+                placeholder: "Select options...",
+                allowClear: true,
+                width: "100%"
+            });
+        }
+    });
+
+    // ✅ Dynamically fetch laptop models
+    async function loadLaptopModels() {
         try {
-            let response = await fetch("http://localhost:9090/api/models"); // ✅ Adjust API endpoint
-            let models = await response.json();
-            return models.map(model => ({ id: model, text: model })); // Convert to Select2 format
+            let response = await fetch(`${BASE_URL}/api/laptops`);
+            let laptops = await response.json();
+
+            let laptopModels = [...new Set(laptops.map(l => l.model).filter(m => m))].sort();
+            console.log("✅ Loaded Laptop Models:", laptopModels.length ? laptopModels : "⚠️ No models found!");
+
+            // ✅ Apply Select2 after data is loaded
+            $("#model").empty().select2({
+                placeholder: "Search and select models...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: laptopModels.map(model => ({ id: model, text: model }))
+            });
+
         } catch (error) {
-            console.error("❌ Error fetching models:", error);
-            return [];
+            console.error("❌ Error loading laptop models:", error);
         }
     }
 
-    // ✅ Initialize Select2 for Models (Auto-Complete)
-    $("#model").select2({
-        placeholder: "Select or type model...",
-        allowClear: true,
-        multiple: true,
-        width: "100%",
-        tags: true, // ✅ Allows users to type new models
-        ajax: {
-            delay: 250, // Prevents too many requests
-            transport: async function (params, success, failure) {
-                let data = await fetchModels();
-                success({ results: data });
-            }
-        }
-    });
+    loadLaptopModels();
 });
+
+
 
