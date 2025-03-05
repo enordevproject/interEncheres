@@ -87,11 +87,13 @@
 
 
 
-    <!-- 🏢 Trusted Seller -->
-    <button class="collapsible">🏢 Trusted Seller</button>
-    <div class="content">
-        <input type="text" id="maisonEnchere" placeholder="Enter auction house">
-    </div>
+        <!-- 🏢 Trusted Seller -->
+        <button class="collapsible">🏢 Trusted Seller</button>
+        <div class="content">
+            <label>Select Auction Houses:</label>
+            <select id="maisonEnchere" class="multi-select" multiple></select> <!-- ✅ Multi-Select -->
+        </div>
+
 
     <!-- 🔎 Processor -->
     <button class="collapsible">🔎 Processor</button>
@@ -146,6 +148,9 @@
             <option value="Other">Other (Dedicated)</option>
         </select>
 
+        <label>GPU Model:</label>
+        <select id="gpuModel" class="multi-select" multiple></select> <!-- ✅ Dynamic GPU Models -->
+
         <label>Minimum VRAM (GB):</label>
         <select id="gpuVram" class="multi-select" multiple>
             <option value="4">4GB</option>
@@ -154,7 +159,6 @@
             <option value="12">12GB</option>
         </select>
     </div>
-
 
 
 
@@ -346,6 +350,7 @@
     <script src="js/favorites.js"></script>
     <script src="js/search.js"></script>
     <script src="js/keywords.js"></script>
+    <script src="js/presets.js"></script>
 
 </div>
 </body>

@@ -20,6 +20,23 @@ function applyFilters() {
     // ✅ Handle "Today" and "This Week" filters
     let todayCheckbox = document.getElementById("filterToday")?.checked;
     let thisWeekCheckbox = document.getElementById("filterThisWeek")?.checked;
+    // ✅ Convert multi-select values to a comma-separated string
+    $(".multi-select").each(function () {
+        let id = $(this).attr("id");
+        let selectedValues = $(this).val(); // Get selected values as an array
+
+        if (selectedValues && selectedValues.length > 0) {
+            filters[id] = selectedValues.join(","); // ✅ Convert array to comma-separated string
+        }
+    });
+
+    // ✅ Ensure numeric values are correctly formatted (remove € symbols)
+    ["minBonCoinEstimation", "maxBonCoinEstimation"].forEach(id => {
+        let value = document.getElementById(id)?.value.trim();
+        if (value !== "" && !isNaN(value.replace(/[^0-9.]/g, ""))) {
+            filters[id] = value.replace(/[^0-9.]/g, ""); // ✅ Remove € and non-numeric characters
+        }
+    });
 
     if (todayCheckbox) {
         let today = new Date().toISOString().split("T")[0]; // Get YYYY-MM-DD
@@ -174,21 +191,33 @@ async function loadAutocompleteData() {
 
         // ✅ Enable jQuery UI Autocomplete for Sellers
         if (sellers.length > 0) {
-            $("#maisonEnchere").autocomplete({ source: sellers });
+            $("#maisonEnchere").empty().select2({
+                placeholder: "Select trusted sellers...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: sellers.map(seller => ({ id: seller, text: seller }))
+            });
         } else {
             console.warn("⚠️ Seller list is empty! Check API response.");
         }
 
-        // ✅ Enable jQuery UI Autocomplete for GPU Model
+        // ✅ Enable Select2 Multi-Select for GPU Models
         if (gpuModels.length > 0) {
-            $("#gpuModel").autocomplete({ source: gpuModels });
+            $("#gpuModel").empty().select2({
+                placeholder: "Select GPU models...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: gpuModels.map(model => ({ id: model, text: model })) // ✅ Convert to Select2 format
+            });
         } else {
             console.warn("⚠️ GPU model list is empty!");
         }
 
         // ✅ Enable Select2 Multi-Select for Model
         if (laptopModels.length > 0) {
-            $("#model").select2({
+            $("#model").empty().select2({
                 placeholder: "Select or search models...",
                 allowClear: true,
                 multiple: true,
@@ -211,6 +240,7 @@ async function loadAutocompleteData() {
         console.error("❌ Error loading autocomplete data:", error);
     }
 }
+
 
 // ✅ Run on page load
 document.addEventListener("DOMContentLoaded", loadAutocompleteData);

@@ -119,17 +119,42 @@ public class LaptopSpecifications {
             }
 
             // ✅ Filter by GPU Type
-            if (filters.containsKey("gpuType")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("gpuType")), "%" + filters.get("gpuType").toLowerCase() + "%"));
-            }
             if (filters.containsKey("maisonEnchere")) {
-                String seller = filters.get("maisonEnchere").toLowerCase();
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("maisonEnchere")), "%" + seller + "%")
-                );
+                String[] sellers = filters.get("maisonEnchere").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String seller : sellers) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("maisonEnchere")), "%" + seller.trim() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Combine all conditions using OR
+                });
             }
 
+
+            if (filters.containsKey("gpuBrand")) {
+                String[] gpuBrands = filters.get("gpuBrand").split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String brand : gpuBrands) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("gpuType")), "%" + brand.trim().toLowerCase() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ OR for multiple selections
+                });
+            }
+
+            if (filters.containsKey("gpuModel")) {
+                String[] gpuModels = filters.get("gpuModel").split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String model : gpuModels) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("gpuModel")), "%" + model.trim().toLowerCase() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Match any selected GPU models
+                });
+            }
 
 
             // ✅ Filter by GPU VRAM (GB)
@@ -139,12 +164,18 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("gpuVram"), gpuVram));
             }
 
-            // ✅ Filter by Screen Size (in inches)
             if (filters.containsKey("screenSize")) {
-                double screenSize = Double.parseDouble(filters.get("screenSize"));
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get("screenSize"), screenSize));
+                String[] screenSizes = filters.get("screenSize").split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String size : screenSizes) {
+                        predicates.add(criteriaBuilder.equal(root.get("screenSize"), Double.parseDouble(size.trim())));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Combine all conditions using OR
+                });
             }
+
 
             // ✅ Filter by Touchscreen (true / false)
             if (filters.containsKey("touchScreen")) {
@@ -193,20 +224,44 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("releaseYear"), releaseYear));
             }
 
-            // ✅ Fix: Allow filtering by Min and Max BonCoin Price
-            if (filters.containsKey("minBonCoinEstimation")) {
-                double minPrice = Double.parseDouble(filters.get("minBonCoinEstimation"));
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("bonCoinEstimation"), minPrice));
+            if (filters.containsKey("minBonCoinEstimation") || filters.containsKey("maxBonCoinEstimation")) {
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> pricePredicates = new ArrayList<>();
+
+                    if (filters.containsKey("minBonCoinEstimation")) {
+                        try {
+                            double minPrice = parsePrice(filters.get("minBonCoinEstimation"));
+                            pricePredicates.add(
+                                    criteriaBuilder.greaterThanOrEqualTo(
+                                            criteriaBuilder.toDouble(root.get("bonCoinEstimation")),
+                                            minPrice
+                                    )
+                            );
+                        } catch (NumberFormatException e) {
+                            System.err.println("❌ Invalid minBonCoinEstimation value: " + filters.get("minBonCoinEstimation"));
+                        }
+                    }
+
+                    if (filters.containsKey("maxBonCoinEstimation")) {
+                        try {
+                            double maxPrice = parsePrice(filters.get("maxBonCoinEstimation"));
+                            pricePredicates.add(
+                                    criteriaBuilder.lessThanOrEqualTo(
+                                            criteriaBuilder.toDouble(root.get("bonCoinEstimation")),
+                                            maxPrice
+                                    )
+                            );
+                        } catch (NumberFormatException e) {
+                            System.err.println("❌ Invalid maxBonCoinEstimation value: " + filters.get("maxBonCoinEstimation"));
+                        }
+                    }
+
+                    return criteriaBuilder.and(pricePredicates.toArray(new Predicate[0]));
+                });
             }
 
-            if (filters.containsKey("maxBonCoinEstimation")) {
-                double maxPrice = Double.parseDouble(filters.get("maxBonCoinEstimation"));
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.lessThanOrEqualTo(root.get("bonCoinEstimation"), maxPrice));
-            }
 
-// ✅ Fix: Allow filtering by Min and Max Facebook Price
+            // ✅ Fix: Allow filtering by Min and Max Facebook Price
             if (filters.containsKey("minFacebookEstimation")) {
                 double minPrice = Double.parseDouble(filters.get("minFacebookEstimation"));
                 spec = spec.and((root, query, criteriaBuilder) ->
@@ -219,7 +274,7 @@ public class LaptopSpecifications {
                         criteriaBuilder.lessThanOrEqualTo(root.get("facebookEstimation"), maxPrice));
             }
 
-// ✅ Fix: Allow filtering by Min and Max Internet Price
+            // ✅ Fix: Allow filtering by Min and Max Internet Price
             if (filters.containsKey("minInternetEstimation")) {
                 double minPrice = Double.parseDouble(filters.get("minInternetEstimation"));
                 spec = spec.and((root, query, criteriaBuilder) ->
@@ -325,6 +380,10 @@ public class LaptopSpecifications {
                 return null;
             }
         }
+    private static double parsePrice(String price) throws NumberFormatException {
+        return Double.parseDouble(price.replaceAll("[^0-9.]", "")); // ✅ Remove € and non-numeric characters
     }
 
+
+}
 
