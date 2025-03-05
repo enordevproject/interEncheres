@@ -1,3 +1,5 @@
+
+// EXISTING: Modified search function to use dynamic BASE_URL
 async function search() {
     console.log("🔎 Initiating search with keywords:", keywordList);
 
@@ -6,13 +8,11 @@ async function search() {
         return;
     }
 
-    const searchEndpoint = "http://localhost:9090/api/search/execute";
+    const searchEndpoint = `${BASE_URL}/api/search/execute`;
     let stopButton = document.getElementById("stopSearchButton");
     let logSection = document.getElementById("searchLogsContainer");
 
-    if (searchActive) {
-        return;
-    }
+    if (searchActive) return;
 
     try {
         updateSearchStatus("🔄 Searching...");
@@ -29,7 +29,6 @@ async function search() {
 
         console.log("✅ Search started.");
         startFetchingLogs(); // ✅ Start fetching backend logs
-
     } catch (error) {
         console.error("❌ Search execution failed:", error);
         updateSearchStatus(`<span style="color: red;">❌ Search Failed: ${error.message}</span>`);
@@ -177,7 +176,7 @@ async function stopSearch() {
     console.log("⏹️ Stopping search...");
     searchActive = false;
 
-    const stopEndpoint = "http://localhost:9090/api/search/stop";
+    const stopEndpoint = `${BASE_URL}/api/search/stop`;
     let stopButton = document.getElementById("stopSearchButton");
     let logSection = document.getElementById("searchLogsContainer");
 
@@ -186,13 +185,10 @@ async function stopSearch() {
             method: "POST",
             headers: { "Content-Type": "application/json" }
         });
-
         if (!response.ok) throw new Error("Failed to stop search.");
-
         console.log("✅ Search stopped.");
         updateSearchStatus("⏹️ Search Stopped");
         processLots(); // ✅ Start processing lots automatically after stopping
-
     } catch (error) {
         console.error("❌ Error stopping search:", error);
     } finally {

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class LotSearchService {
     private static final Logger log = LoggerFactory.getLogger(LotSearchService.class);
-    private final List<String> logMessages = new CopyOnWriteArrayList<>(); // ✅ Stores logs for frontend
+    private final List<String> logMessages = new CopyOnWriteArrayList<>();
     private final AtomicBoolean searchActive = new AtomicBoolean(false);
 
     private final SeleniumConfigService seleniumConfigService;
@@ -28,46 +28,40 @@ public class LotSearchService {
         this.resultsService = resultsService;
     }
 
-    /**
-     * ✅ Get formatted timestamp for logs (HH:mm:ss)
-     */
     private String getFormattedTimestamp() {
         return new SimpleDateFormat("HH:mm:ss").format(new Date());
     }
 
-    /**
-     * ✅ Logs messages & adds them to the log list
-     */
     private void logMessage(String message) {
-        String formattedMessage = "[" + getFormattedTimestamp() + "] " + message; // ✅ Format log message
+        String formattedMessage = "[" + getFormattedTimestamp() + "] " + message;
         log.info(formattedMessage);
         logMessages.add(formattedMessage);
     }
 
-    /**
-     * ✅ Fetch logs for frontend
-     */
     public List<String> getLogs() {
         return logMessages;
     }
 
-    /**
-     * ✅ Performs searches and processes lots. Allows stopping at any time.
-     */
     public synchronized boolean performSearchesAndProcessLots(List<String> searchTerms) {
         if (!searchActive.compareAndSet(false, true)) {
             logMessage("⚠️ A search is already running. Please wait.");
             return false;
         }
 
-        WebDriver driver = seleniumConfigService.getDriver();
+        WebDriver driver = initializeWebDriver();
+        if (driver == null) {
+            logMessage("❌ WebDriver failed to initialize! Aborting search.");
+            searchActive.set(false);
+            return false;
+        }
 
         try {
             Home homePage = new Home(driver);
             Search searchPage = new Search(driver);
 
+            logMessage("🏠 Navigating to home page...");
             homePage.navigateToHomePage();
-            logMessage("🏠 Navigated to home page.");
+            logMessage("✅ Successfully reached the home page.");
 
             for (String searchTerm : searchTerms) {
                 if (!searchActive.get()) {
@@ -114,7 +108,8 @@ public class LotSearchService {
                 logMessage("✅ Finished processing '" + searchTerm + "'.");
             }
         } catch (Exception e) {
-            logMessage("❌ Error: " + e.getMessage());
+            logMessage("❌ Error during search execution: " + e.getMessage());
+            e.printStackTrace();
             return false;
         } finally {
             searchActive.set(false);
@@ -126,8 +121,33 @@ public class LotSearchService {
     }
 
     /**
-     * ✅ Stops the active search process.
+     * ✅ Attempts to initialize WebDriver up to 3 times if it fails.
      */
+    private WebDriver initializeWebDriver() {
+        int retries = 3;
+        for (int attempt = 1; attempt <= retries; attempt++) {
+            logMessage("🔄 Attempt " + attempt + " to initialize WebDriver...");
+            WebDriver driver = seleniumConfigService.getDriver();
+
+            if (driver != null) {
+                logMessage("✅ WebDriver initialized successfully.");
+                return driver;
+            }
+
+            logMessage("❌ WebDriver initialization failed. Retrying...");
+
+
+
+            try {
+                Thread.sleep(2000); // ✅ Small delay before retrying
+            } catch (InterruptedException ignored) {
+            }
+        }
+
+        logMessage("❌ All attempts to initialize WebDriver failed.");
+        return null;
+    }
+
     public void stopSearch() {
         searchActive.set(false);
         seleniumConfigService.closeDriver();

@@ -1,17 +1,18 @@
+// NEW: Set dynamic base URL and print it
+const BASE_URL = window.location.origin;
+console.log("🔍 Using BASE_URL:", BASE_URL);
+
+// EXISTING: Modified fetchLaptops to use dynamic BASE_URL
 async function fetchLaptops(filters = {}) {
     let filteredParams = Object.fromEntries(
         Object.entries(filters).filter(([_, value]) => value !== "")
     );
-
     console.log("🔍 Filters Before API Call:", filteredParams);
-
     let query = new URLSearchParams(filteredParams).toString();
     let endpoint = query
-        ? `http://localhost:9090/api/laptops/filter?${query}`
-        : "http://localhost:9090/api/laptops";
-
-    console.log("🌍 FULL FILTERED URL:", endpoint); // ✅ LOG FULL URL
-
+        ? `${BASE_URL}/api/laptops/filter?${query}`
+        : `${BASE_URL}/api/laptops`;
+    console.log("🌍 FULL FILTERED URL:", endpoint);
     try {
         let response = await fetch(endpoint);
         if (!response.ok) {
@@ -20,10 +21,8 @@ async function fetchLaptops(filters = {}) {
                 "<tr><td colspan='11' class='text-center text-danger'>❌ API Error</td></tr>";
             return;
         }
-
         let laptops = await response.json();
         console.log("✅ Received laptops:", laptops.length, "items");
-
         document.getElementById("resultsCount").textContent = laptops.length;
         updateLaptopTable(laptops);
     } catch (error) {
@@ -31,12 +30,10 @@ async function fetchLaptops(filters = {}) {
     }
 }
 
-
-
-
+// EXISTING: Modified fetchLogs to use dynamic BASE_URL
 async function fetchLogs() {
     try {
-        let response = await fetch("http://localhost:9090/api/search/logs");
+        let response = await fetch(`${BASE_URL}/api/search/logs`);
         if (!response.ok) throw new Error("Failed to fetch logs.");
         let logs = await response.json();
         updateLogs(logs);
@@ -45,53 +42,38 @@ async function fetchLogs() {
     }
 }
 
-
+// EXISTING: Modified processLotsWithGPT to use dynamic BASE_URL
 async function processLotsWithGPT() {
-    const processEndpoint = 'http://localhost:9090/api/lots/process';
+    const processEndpoint = `${BASE_URL}/api/lots/process`;
     let resultsPanel = document.getElementById("resultsPanel");
-
     if (resultsPanel) resultsPanel.innerHTML = "🔄 Processing Lots with GPT...";
-
-    // ✅ Show progress bar
-    //showProgress();
-
     try {
         let response = await fetch(processEndpoint, { method: 'POST' });
         let result = await response.json();
-
         if (!response.ok) throw new Error(result.message);
-
         console.log('✅ GPT processing completed:', result.message);
-
         if (resultsPanel) resultsPanel.innerHTML = "✅ Lots Processed Successfully!";
-        await fetchLaptops(); // ✅ Refresh data
-
+        await fetchLaptops();
     } catch (error) {
         console.error('❌ GPT Processing failed:', error);
         if (resultsPanel) {
             resultsPanel.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
         }
         alert('Error processing lots: ' + error.message);
-    } finally {
-        // ✅ Hide progress bar when done
-        //  hideProgress();
     }
 }
 
+// EXISTING: Modified addToInterencheresFavorites to use dynamic BASE_URL
 async function addToInterencheresFavorites(lotUrl) {
     try {
         console.log(`🔄 Sending request to add ${lotUrl} to favorites...`);
-
-        let response = await fetch("http://localhost:9090/api/interencheres/favorite", {
+        let response = await fetch(`${BASE_URL}/api/interencheres/favorite`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lotUrl: lotUrl }) // Ensure correct payload format
+            body: JSON.stringify({ lotUrl: lotUrl })
         });
-
-        let result = await response.text(); // Get response text
-
+        let result = await response.text();
         if (!response.ok) throw new Error(result);
-
         console.log("✅ Lot added successfully:", result);
         alert("✅ Lot added to Interencheres favorites!");
     } catch (error) {
@@ -100,18 +82,14 @@ async function addToInterencheresFavorites(lotUrl) {
     }
 }
 
-
-
 $(document).ready(() => {
     fetchLaptops();
     loadAutocompleteData();
 });
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("button[onclick='applyFilters()']").addEventListener("click", applyFilters);
-    fetchLaptops(); // Load initial laptops
+    fetchLaptops();
 });
-
-
 
 function updateLaptopTable(laptops) {
     let tableBody = document.getElementById("laptopTable");
@@ -122,9 +100,7 @@ function updateLaptopTable(laptops) {
             let model = laptop.model && !["N/A", "Unknown", ""].includes(laptop.model) ? laptop.model : "";
             let processorBrand = laptop.processor_brand && !["N/A", "Unknown", ""].includes(laptop.processor_brand) ? laptop.processor_brand : "";
             let processorModel = laptop.processor_model && !["N/A", "Unknown", ""].includes(laptop.processor_model) ? laptop.processor_model : "";
-
             if (!brand && !model && !processorBrand && !processorModel) return "";
-
             return `
                 <tr class="laptop-row" onclick="toggleDetails(${index}, event)">
                     <td><img src="${laptop.img_url}" style="max-width: 80px;"></td>

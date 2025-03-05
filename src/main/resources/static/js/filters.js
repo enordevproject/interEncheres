@@ -148,9 +148,11 @@ function sortTable(columnIndex) {
 }
 
 
+
+// EXISTING: Modified loadAutocompleteData function to use dynamic BASE_URL
 async function loadAutocompleteData() {
     try {
-        let response = await fetch("http://localhost:9090/api/laptops");
+        let response = await fetch(`${BASE_URL}/api/laptops`);
         let laptops = await response.json();
 
         // ✅ Ensure correct property key (Fixing "maison_enchere")
@@ -158,7 +160,6 @@ async function loadAutocompleteData() {
         let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
         let gpuVramOptions = [...new Set(laptops.map(l => l.gpu_vram).filter(v => v))].sort((a, b) => a - b);
 
-        // ✅ Debugging logs to verify data
         console.log("✅ Loaded Sellers:", sellers.length ? sellers : "⚠️ No sellers found!");
         console.log("✅ Loaded GPU Models:", gpuModels.length ? gpuModels : "⚠️ No GPU models found!");
         console.log("✅ Loaded GPU VRAM Options:", gpuVramOptions.length ? gpuVramOptions : "⚠️ No GPU VRAM options found!");
@@ -183,17 +184,21 @@ async function loadAutocompleteData() {
             gpuVramSelect.innerHTML = `<option value="">Any</option>` +
                 gpuVramOptions.map(v => `<option value="${v}">${v}GB</option>`).join("");
         }
-
     } catch (error) {
         console.error("❌ Error loading autocomplete data:", error);
     }
 }
 
+
 // ✅ Run on page load
 document.addEventListener("DOMContentLoaded", loadAutocompleteData);
 
 
-
+// EXISTING: Check if a laptop is in favorites from localStorage
+function checkIfFavorite(laptopId) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    return favorites.includes(laptopId);
+}
 
 
 

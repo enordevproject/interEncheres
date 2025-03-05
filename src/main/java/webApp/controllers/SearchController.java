@@ -34,38 +34,47 @@ public class SearchController {
     public ResponseEntity<String> executeSearch(@RequestBody List<String> keywords) {
         log.info("🔍 Received search request with keywords: {}", keywords);
 
-        // ✅ If this is the first search, allow execution without checking searchActive
-        if (!searchActive.get()) {
-            searchActive.set(true); // ✅ Mark search as active
-
-            new Thread(() -> {
-                boolean success = searchService.performSearchesAndProcessLots(keywords);
-                searchActive.set(false);
-
-                if (success) {
-                    log.info("✅ Search completed. Checking if lot processing is needed...");
-
-                    // ✅ Ensure lots are only processed ONCE after search ends
-                    if (processingLots.compareAndSet(false, true)) {
-                        try {
-                            lotService.processLotsWithGPT();
-                        } catch (Exception e) {
-                            log.error("❌ Error processing lots: {}", e.getMessage());
-                        } finally {
-                            processingLots.set(false); // ✅ Reset processing flag
-                        }
-                    } else {
-                        log.warn("⚠️ Lot processing is already in progress. Skipping duplicate execution.");
-                    }
-                }
-            }).start();
-
-            return ResponseEntity.ok("✅ Search started.");
+        // ✅ If a search is already running, return a message instead of blocking
+        if (searchActive.get()) {
+            log.warn("⚠️ A search is already in progress.");
+            return ResponseEntity.ok("⚠️ A search is already running. Please wait.");
         }
 
-        // ✅ If search is already running, do NOT return a conflict
-        log.warn("⚠️ A search is already in progress.");
-        return ResponseEntity.ok("⚠️ A search is already running. Please wait.");
+        searchActive.set(true); // ✅ Mark search as active
+
+        new Thread(() -> {
+            try {
+                log.info("🚀 Starting Selenium search execution...");
+
+                boolean success = searchService.performSearchesAndProcessLots(keywords);
+
+                if (success) {
+                    log.info("✅ Search completed successfully.");
+                } else {
+                    log.warn("⚠️ Search completed, but no results were found.");
+                }
+
+                log.info("✅ Checking if lot processing is needed...");
+                if (processingLots.compareAndSet(false, true)) {
+                    try {
+                        lotService.processLotsWithGPT();
+                        log.info("✅ Lots processed successfully.");
+                    } catch (Exception e) {
+                        log.error("❌ Error processing lots: {}", e.getMessage());
+                    } finally {
+                        processingLots.set(false); // ✅ Reset processing flag
+                    }
+                } else {
+                    log.warn("⚠️ Lot processing is already in progress. Skipping duplicate execution.");
+                }
+            } catch (Exception e) {
+                log.error("❌ Search execution failed: {}", e.getMessage(), e);
+            } finally {
+                searchActive.set(false); // ✅ Ensure the search can be triggered again
+            }
+        }).start();
+
+        return ResponseEntity.ok("✅ Search started.");
     }
 
     /**
@@ -95,6 +104,7 @@ public class SearchController {
     /**
      * ✅ Fetch logs from both search and GPT processing
      */
+    @CrossOrigin(origins = "*")
     @GetMapping("/logs")
     public ResponseEntity<List<String>> getLogs() {
         List<String> logs = searchService.getLogs();
