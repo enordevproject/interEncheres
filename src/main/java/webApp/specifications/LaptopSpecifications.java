@@ -5,8 +5,14 @@ import webApp.models.Laptop;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import jakarta.persistence.criteria.Predicate; // ✅ Import This!
+
+import org.springframework.data.jpa.domain.Specification;
+import java.util.List;  // ✅ Fix for List issue
+import java.util.ArrayList;
 
 public class LaptopSpecifications {
 
@@ -22,17 +28,36 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("lotNumber"), lotNumber));
             }
 
-            // ✅ Filter by Brand
+            // ✅ Allow Multi-Value Search for Brand
             if (filters.containsKey("brand")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("brand")), "%" + filters.get("brand").toLowerCase() + "%"));
+                String[] brands = filters.get("brand").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String brand : brands) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("brand")), "%" + brand.trim() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                });
             }
 
-            // ✅ Filter by Model
-            if (filters.containsKey("model")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), "%" + filters.get("model").toLowerCase() + "%"));
+
+
+
+            // ✅ Allow Multi-Value Search for Model using OR conditions
+                        if (filters.containsKey("model")) {
+                            String[] models = filters.get("model").toLowerCase().split(",");
+
+                            spec = spec.and((root, query, criteriaBuilder) -> {
+                                   List<Predicate> predicates = new ArrayList<>(); // ✅ Use List<Predicate>
+                                for (String model : models) {
+                                    predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), "%" + model.trim() + "%"));
+                                }
+                                return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Correct Predicate Usage
+                            });
             }
+
+
             // ✅ Fix: Allow filtering by Min and Max Release Year
             if (filters.containsKey("minReleaseYear")) {
                 int minYear = Integer.parseInt(filters.get("minReleaseYear"));
@@ -46,12 +71,19 @@ public class LaptopSpecifications {
                         criteriaBuilder.lessThanOrEqualTo(root.get("releaseYear"), maxYear));
             }
 
-            // ✅ Filter by RAM Size (GB)
+            // ✅ Allow Multi-Value Search for RAM Size (GB) using OR conditions
             if (filters.containsKey("ramSize")) {
-                int ramSize = Integer.parseInt(filters.get("ramSize"));
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get("ramSize"), ramSize));
+                String[] ramSizes = filters.get("ramSize").split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String ramSize : ramSizes) {
+                        predicates.add(criteriaBuilder.equal(root.get("ramSize"), Integer.parseInt(ramSize.trim())));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                });
             }
+
 
             // ✅ Filter by Storage Type (SSD / HDD)
             if (filters.containsKey("storageType")) {
@@ -66,11 +98,19 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("storageCapacity"), storageCapacity));
             }
 
-            // ✅ Filter by Processor Brand
+            // ✅ Allow Multi-Value Search for Processor Brand using OR conditions
             if (filters.containsKey("processorBrand")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("processorBrand")), "%" + filters.get("processorBrand").toLowerCase() + "%"));
+                String[] processorBrands = filters.get("processorBrand").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String brand : processorBrands) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("processorBrand")), "%" + brand.trim() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+                });
             }
+
 
             // ✅ Filter by Processor Model
             if (filters.containsKey("processorModel")) {

@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laptop Inventory</title>
+
+    <!-- ✅ Load CSS First -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
+
+    <!-- ✅ Load jQuery FIRST (Before Other Scripts) -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist/jquery-ui.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <!-- ✅ Load Your Scripts LAST -->
+    <script defer src="api.js"></script>  <!-- Ensure this is AFTER jQuery -->
+    <script defer src="filters.js"></script>  <!-- Ensure this is AFTER jQuery -->
 </head>
+
 <body>
 
 <div class="sidebar" id="filterPanel">
@@ -25,16 +36,31 @@
 
     <hr>
     <!-- 🏢 Brand (Auto-complete) -->
+
     <button class="collapsible">🏢 Brand</button>
     <div class="content">
-        <input type="text" id="brand" placeholder="Enter brand">
+        <label>Select Brand:</label>
+        <select id="brand" class="multi-select" multiple>
+            <option value="Dell">Dell</option>
+            <option value="HP">HP</option>
+            <option value="Lenovo">Lenovo</option>
+            <option value="Apple">Apple</option>
+            <option value="Asus">Asus</option>
+            <option value="Acer">Acer</option>
+            <option value="MSI">MSI</option>
+            <option value="Razer">Razer</option>
+        </select>
     </div>
 
+
     <!-- 🔖 Model (Auto-complete) -->
+
     <button class="collapsible">🔖 Model</button>
     <div class="content">
-        <input type="text" id="model" placeholder="Enter model">
+        <label>Select Model:</label>
+        <select id="model" class="multi-select" multiple></select>
     </div>
+
 
     <!-- 📅 Auction Date -->
     <button class="collapsible">📅 Auction Date</button>
@@ -71,15 +97,14 @@
     <button class="collapsible">🔎 Processor</button>
     <div class="content">
         <label>Brand:</label>
-        <select id="processorBrand">
-            <option value="">Any</option>
+        <select id="processorBrand" class="multi-select" multiple>
             <option value="Intel">Intel</option>
             <option value="AMD">AMD</option>
             <option value="Apple">Apple</option>
         </select>
+
         <label>Model:</label>
-        <select id="processorModel">
-            <option value="">Any</option>
+        <select id="processorModel" class="multi-select" multiple>
             <option value="i3">Intel i3</option>
             <option value="i5">Intel i5</option>
             <option value="i7">Intel i7</option>
@@ -90,26 +115,20 @@
         </select>
     </div>
 
-    <!-- 🎮 GPU Type Filter -->
+
+    <!-- 🎮 GPU Type -->
     <button class="collapsible">🎮 GPU Type</button>
-    <div class="content gpu-filter-group" style="display: none; max-height: 0; overflow: hidden;">
-        <label for="gpuBrand">GPU Brand:</label>
-        <select id="gpuBrand">
-            <option value="">Any</option>
+    <div class="content">
+        <label>GPU Brand:</label>
+        <select id="gpuBrand" class="multi-select" multiple>
             <option value="Intel">Intel (Integrated)</option>
             <option value="AMD">AMD (Integrated)</option>
             <option value="NVIDIA">NVIDIA (Dedicated)</option>
             <option value="Other">Other (Dedicated)</option>
         </select>
 
-        <!-- 🎮 GPU Model with Autocomplete -->
-        <label for="gpuModel">GPU Model:</label>
-        <input type="text" id="gpuModel" placeholder="Start typing GPU model...">
-
-        <!-- 🎮 GPU VRAM Selection -->
-        <label for="gpuVram">Minimum VRAM (GB):</label>
-        <select id="gpuVram">
-            <option value="">Any</option>
+        <label>Minimum VRAM (GB):</label>
+        <select id="gpuVram" class="multi-select" multiple>
             <option value="4">4GB</option>
             <option value="6">6GB</option>
             <option value="8">8GB</option>

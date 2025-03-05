@@ -561,3 +561,77 @@ button.collapsible:hover {
     border-radius: 5px;
     margin-top: 5px;
 }
+
+
+/* ✅ General Multi-Select Styling for Consistency */
+.multi-select {
+    width: 100% !important; /* Ensure full width */
+    min-height: 40px;
+    padding: 5px;
+    border: 1px solid #ccc !important;
+    border-radius: 5px !important;
+    background-color: #fff !important;
+}
+
+/* ✅ Ensure Select2 dropdown styling is applied properly */
+.select2-container {
+    width: 100% !important; /* Fix width inside sidebar */
+}
+
+/* ✅ Fix multiple selection input field */
+.select2-container--default .select2-selection--multiple {
+    background-color: white !important;
+    border: 1px solid #ccc !important;
+    padding: 5px;
+    min-height: 38px;
+}
+
+/* ✅ Style selected options inside Select2 */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #007bff !important; /* Blue background for selections */
+    color: white !important;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 13px;
+    margin: 3px;
+}
+
+/* ✅ Ensure dropdowns inside sidebar are displayed properly */
+.sidebar .select2-container {
+    max-width: 100% !important;
+}
+
+/* ✅ Fix dropdown arrow alignment */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ✅ Improve spacing inside the filter panel */
+.sidebar .content {
+    margin-top: 10px;
+}
+
+/* ✅ Make collapsible buttons stand out */
+.collapsible {
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    margin-top: 5px;
+    width: 100%;
+    text-align: left;
+}
+
+/* ✅ Hover effect for collapsible buttons */
+.collapsible:hover {
+    background: #0056b3;
+}
+
+/* ✅ Fix dropdowns inside collapsible sections */
+.select2-dropdown {
+    z-index: 9999 !important; /* Prevents dropdown from being cut off */
+}

@@ -4,8 +4,13 @@ function applyFilters() {
     // ✅ Select all visible & hidden inputs and selects
     document.querySelectorAll(".content input, .content select").forEach(el => {
         let value = el.value.trim();
+
         if (el.type === "checkbox") {
             if (el.checked) filters[el.id.replace("Filter", "")] = "true";
+        } else if (el.multiple) {
+            // ✅ Convert multi-select values to a comma-separated string
+            let selectedValues = Array.from(el.selectedOptions).map(option => option.value).join(",");
+            if (selectedValues) filters[el.id.replace("Filter", "")] = selectedValues;
         } else if (value !== "") {
             let key = el.id.replace("Filter", "");
             filters[key] = value;
@@ -41,6 +46,7 @@ function applyFilters() {
 
     toggleSidebar();
 }
+
 
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".filter-section input, .filter-section select").forEach(el => {
@@ -252,3 +258,36 @@ function applyPreset(type) {
 
     applyFilters(); // Apply filters after setting the values
 }
+
+
+
+$(document).ready(function () {
+    // ✅ Fetch laptop models dynamically for auto-complete
+    async function fetchModels() {
+        try {
+            let response = await fetch("http://localhost:9090/api/models"); // ✅ Adjust API endpoint
+            let models = await response.json();
+            return models.map(model => ({ id: model, text: model })); // Convert to Select2 format
+        } catch (error) {
+            console.error("❌ Error fetching models:", error);
+            return [];
+        }
+    }
+
+    // ✅ Initialize Select2 for Models (Auto-Complete)
+    $("#model").select2({
+        placeholder: "Select or type model...",
+        allowClear: true,
+        multiple: true,
+        width: "100%",
+        tags: true, // ✅ Allows users to type new models
+        ajax: {
+            delay: 250, // Prevents too many requests
+            transport: async function (params, success, failure) {
+                let data = await fetchModels();
+                success({ results: data });
+            }
+        }
+    });
+});
+
