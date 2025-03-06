@@ -62,10 +62,11 @@ public class GPTService {
             List<Map<String, Object>> messages = new ArrayList<>();
             messages.add(Map.of(
                     "role", "system",
-                    "content", "Tu es un expert en enchères de laptops. Rends exclusivement un JSON structuré, " +
-                            "complet, conforme au schéma fourni. Analyse l'image en Base64 pour détecter " +
-                            "les défauts (rayures, touches manquantes, fond blanc). Ne renvoie que le JSON."
+                    "content", "Tu es un expert en enchères d'ordinateurs portables. " +
+                            "Si le produit de l'annonce n'est PAS un ordinateur portable, définis `is_laptop` à 0. " +
+                            "Analyse l'image et la description pour t'assurer qu'il s'agit bien d'un laptop avant de le marquer comme tel."
             ));
+
 
             // User message (Lot details)
             messages.add(Map.of(

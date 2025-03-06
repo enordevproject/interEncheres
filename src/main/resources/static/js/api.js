@@ -27,6 +27,7 @@ async function fetchLaptops(filters = {}) {
         let today = new Date();
         today.setDate(today.getDate() - 1); // Subtract 1 day to exclude expired listings
 
+
         laptops = laptops.filter(laptop => {
             let auctionDate = new Date(laptop.date);
             return auctionDate >= today;

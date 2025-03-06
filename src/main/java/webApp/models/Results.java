@@ -88,9 +88,20 @@ public class Results {
     }
     public static boolean isValidLaptop(Laptop laptop) {
         if (laptop == null) return false;
-        // Vérifie simplement que isLaptop est à true
-        return laptop.isLaptop();
+
+        // Ensure it's classified as a laptop
+        if (!laptop.isLaptop()) return false;
+
+        // Check essential fields to confirm it's a valid laptop
+        return laptop.getBrand() != null && !laptop.getBrand().trim().isEmpty() &&
+                laptop.getModel() != null && !laptop.getModel().trim().isEmpty() &&
+                laptop.getProcessorBrand() != null && !laptop.getProcessorBrand().trim().isEmpty() &&
+                laptop.getProcessorModel() != null && !laptop.getProcessorModel().trim().isEmpty() &&
+                laptop.getRamSize() > 0 &&
+                laptop.getStorageCapacity() > 0 &&
+                laptop.getScreenSize() > 10; // Ensures it's not a small device like a tablet
     }
+
 
     public static void insertLaptopIntoDatabase(Laptop laptop) {
         if (!isValidLaptop(laptop)) {
