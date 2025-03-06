@@ -1,6 +1,8 @@
 package webApp.services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import webApp.models.Laptop;
@@ -8,6 +10,8 @@ import webApp.repositories.LaptopRepository;
 import webApp.specifications.LaptopSpecifications;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +60,22 @@ public class LaptopService {
         log.warn("⚠️ Laptop ID={} not found!", id);
         return false;
     }
+    // ✅ Method to delete expired laptops
+    @Transactional
+    public void deleteExpiredLaptops() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        List<Laptop> expiredLaptops = laptopRepository.findByDateBefore(yesterday);
 
+        if (!expiredLaptops.isEmpty()) {
+            laptopRepository.deleteAll(expiredLaptops);
+            System.out.println("🗑 Deleted " + expiredLaptops.size() + " expired laptops.");
+        }
+    }
+    // ✅ Optional: Automatically run cleanup every day at midnight
+    @Scheduled(cron = "0 0 0 * * *")
+    public void scheduledLaptopCleanup() {
+        deleteExpiredLaptops();
+    }
 
     public int clearFavorites() {
         try {

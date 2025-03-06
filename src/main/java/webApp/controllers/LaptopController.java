@@ -41,6 +41,13 @@ public class LaptopController {
         List<Laptop> favorites = laptopService.getFavoriteLaptops();
         return ResponseEntity.ok(favorites);
     }
+    @GetMapping
+    public ResponseEntity<List<Laptop>> getActiveLaptops() {
+        laptopService.deleteExpiredLaptops(); // ✅ Remove expired laptops before fetching
+
+        List<Laptop> laptops = laptopService.getAllLaptops();
+        return ResponseEntity.ok(laptops);
+    }
 
     @PostMapping("/laptops/favorite/{id}")
     public ResponseEntity<String> toggleFavorite(@PathVariable Long id, @RequestBody Map<String, Boolean> requestBody) {

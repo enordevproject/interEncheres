@@ -9,10 +9,9 @@ async function fetchLaptops(filters = {}) {
     );
     console.log("🔍 Filters Before API Call:", filteredParams);
     let query = new URLSearchParams(filteredParams).toString();
-    let endpoint = query
-        ? `${BASE_URL}/api/laptops/filter?${query}`
-        : `${BASE_URL}/api/laptops`;
+    let endpoint = query ? `${BASE_URL}/api/laptops/filter?${query}` : `${BASE_URL}/api/laptops`;
     console.log("🌍 FULL FILTERED URL:", endpoint);
+
     try {
         let response = await fetch(endpoint);
         if (!response.ok) {
@@ -23,12 +22,27 @@ async function fetchLaptops(filters = {}) {
         }
         let laptops = await response.json();
         console.log("✅ Received laptops:", laptops.length, "items");
+
+        // ✅ Remove expired laptops (date older than yesterday)
+        let today = new Date();
+        today.setDate(today.getDate() - 1); // Subtract 1 day to exclude expired listings
+
+        laptops = laptops.filter(laptop => {
+            let auctionDate = new Date(laptop.date);
+            return auctionDate >= today;
+        });
+
+        // ✅ Sort by closest auction date (ascending order)
+        laptops.sort((a, b) => new Date(a.date) - new Date(b.date));
+
         document.getElementById("resultsCount").textContent = laptops.length;
         updateLaptopTable(laptops);
     } catch (error) {
         console.error("❌ Fetch error:", error);
     }
 }
+
+
 
 // EXISTING: Modified fetchLogs to use dynamic BASE_URL
 async function fetchLogs() {
@@ -121,24 +135,38 @@ function updateLaptopTable(laptops) {
                         </button>
                     </td>
                 </tr>
-                <tr class="details-row" id="details-${index}">
-                    <td colspan="11" class="details-content">
-                        <b>📋 Description:</b> ${laptop.description || "No description available"} <br>
-                        <b>🏠 Auction House:</b> ${laptop.maison_enchere || "Unknown"} <br>
-                        <b>📅 Auction Date:</b> ${laptop.date || "Unknown"} <br>
-                        <b>🔢 Lot Number:</b> ${laptop.lot_number} <br>
-                        <b>🔗 Lot URL:</b> <a href="${laptop.lot_url}" target="_blank">${laptop.lot_url}</a> <br>
-                        <b>💻 Full Specifications:</b> <br>
-                        ${laptop.brand ? `🏷️ Brand: ${laptop.brand} <br>` : ""}
-                        ${laptop.model ? `🆔 Model: ${laptop.model} <br>` : ""}
-                        ${laptop.processor_brand ? `🔎 Processor: ${laptop.processor_brand} ${laptop.processor_model} <br>` : ""}
-                        ${laptop.ram_size ? `💾 RAM: ${laptop.ram_size}GB <br>` : ""}
-                        ${laptop.storage_type ? `💽 Storage: ${laptop.storage_type} ${laptop.storage_capacity}GB <br>` : ""}
-                        <b>📍 Location:</b> ${laptop.ville || "Unknown"}, ${laptop.code_postal || "Unknown"} <br>
-                        <b>⭐ Score:</b> ${laptop.note_sur_10}/10 <br>
-                        <b>✅ Recommended to Buy:</b> ${laptop.recommended_to_buy ? "Yes ✅" : "No ❌"} <br>
-                    </td>
-                </tr>
+               <tr class="details-row" id="details-${index}">
+    <td colspan="11" class="details-content">
+        <b>📋 Description:</b> ${laptop.description || "❌ No description available"} <br>
+        <b>🏠 Auction House:</b> ${laptop.maison_enchere || "❌ Unknown"} <br>
+        <b>📅 Auction Date:</b> ${laptop.date || "❌ Unknown"} <br>
+        <b>🔢 Lot Number:</b> ${laptop.lot_number} <br>
+        <b>🔗 Lot URL:</b> <a href="${laptop.lot_url}" target="_blank" style="color: blue; text-decoration: underline;">🌍 View Auction</a> <br>
+
+
+        <b>💻 Full Specifications:</b> <br>
+        ${laptop.brand ? `🏷️ <b>Brand:</b> ${laptop.brand} <br>` : ""}
+        ${laptop.model ? `🆔 <b>Model:</b> ${laptop.model} <br>` : ""}
+        ${laptop.processor_brand ? `🔎 <b>Processor:</b> ${laptop.processor_brand} ${laptop.processor_model} <br>` : ""}
+        ${laptop.ram_size ? `💾 <b>RAM:</b> ${laptop.ram_size}GB (${laptop.ram_type}) <br>` : ""}
+        ${laptop.storage_type ? `💽 <b>Storage:</b> ${laptop.storage_type} ${laptop.storage_capacity}GB <br>` : ""}
+        ${laptop.gpu_type ? `🎮 <b>Graphics:</b> ${laptop.gpu_type} ${laptop.gpu_model} (${laptop.gpu_vram}GB VRAM) <br>` : ""}
+        ${laptop.screen_size ? `🖥️ <b>Screen:</b> ${laptop.screen_size}" (${laptop.screen_resolution}) <br>` : ""}
+        ${laptop.operating_system ? `🖥️ <b>OS:</b> ${laptop.operating_system} <br>` : ""}
+
+        <b>📍 Location:</b> ${laptop.ville || "❌ Unknown"}, ${laptop.code_postal || "❌ Unknown"} <br>
+        <b>⭐ Score:</b> <b>${laptop.note_sur_10}/10</b> 🏆 (${laptop.reason_for_score || "No reason provided"}) <br>
+        <b>🛠️ Condition:</b> <b>${laptop.product_condition}</b> 🏷️ (${laptop.reason_for_condition || "No details"}) <br>
+        <b>🛍️ Recommended to Buy:</b> ${laptop.recommended_to_buy ? "✅ Yes" : "❌ No"} <br>
+        <b>🖼️ IA Image Analysis:</b> ${laptop.etat_produit_image || "❌ No analysis"} <br>
+
+        <b>💰 Estimated Prices:</b> <br>
+        <b>📌 Le Bon Coin:</b> ${laptop.bon_coin_estimation ? laptop.bon_coin_estimation + "€" : "❌ No estimate"} <br>
+        <b>📌 Facebook Marketplace:</b> ${laptop.facebook_estimation ? laptop.facebook_estimation + "€" : "❌ No estimate"} <br>
+        <b>📌 Internet Estimate:</b> ${laptop.internet_estimation ? laptop.internet_estimation + "€" : "❌ No estimate"} <br>
+    </td>
+</tr>
+
             `;
         }).join("")
         : "<tr><td colspan='11' class='text-center text-danger'>⚠️ No laptops found.</td></tr>";

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.io.IOException;
 
 public class ConfigLoader {
-    private static final String CONFIG_PATH = "/config/chatgpt.properties";
+    private static final String CONFIG_PATH = "/config/chatgpt.json"; // ✅ Use JSON instead
     private static Map<String, Object> gptProperties;
 
     @SuppressWarnings("unchecked")
@@ -17,7 +17,7 @@ public class ConfigLoader {
                 throw new RuntimeException("❌ Fichier de config introuvable dans resources : " + CONFIG_PATH);
             }
             ObjectMapper mapper = new ObjectMapper();
-            gptProperties = mapper.readValue(is, Map.class);
+            gptProperties = mapper.readValue(is, Map.class); // ✅ Read JSON instead of properties
         } catch (IOException e) {
             System.err.println("❌ Erreur lors du chargement de " + CONFIG_PATH + " : " + e.getMessage());
             gptProperties = null;

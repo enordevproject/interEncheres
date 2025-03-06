@@ -173,8 +173,9 @@ function updateSearchStatus(message) {
 async function stopSearch() {
     if (!searchActive) return;
 
-    console.log("⏹️ Stopping search...");
-    searchActive = false;
+    console.log("⏹️ Attempting to stop search...");
+    updateSearchStatus("⏹️ Stopping search...");
+    searchActive = false; // Prevent new searches
 
     const stopEndpoint = `${BASE_URL}/api/search/stop`;
     let stopButton = document.getElementById("stopSearchButton");
@@ -185,18 +186,39 @@ async function stopSearch() {
             method: "POST",
             headers: { "Content-Type": "application/json" }
         });
+
         if (!response.ok) throw new Error("Failed to stop search.");
-        console.log("✅ Search stopped.");
-        updateSearchStatus("⏹️ Search Stopped");
-        processLots(); // ✅ Start processing lots automatically after stopping
-    } catch (error) {
-        console.error("❌ Error stopping search:", error);
-    } finally {
-        stopButton.style.display = "none";
+
+        console.log("✅ Search successfully stopped.");
+        updateSearchStatus("✅ Search Stopped Successfully");
+
+        // ✅ Keep logs visible for a longer time (10 seconds)
         setTimeout(() => {
             logSection.style.display = "none";
-        }, 3000);
+        }, 10000);
+
+        // ✅ Only process lots if search stopped successfully
+        processLots();
+    } catch (error) {
+        console.error("❌ Error stopping search:", error);
+        updateSearchStatus("❌ Error Stopping Search");
+        alert("❌ Unable to stop search: " + error.message);
+    } finally {
+        stopButton.style.display = "none";
     }
+}
+
+function updateSearchStatus(message) {
+    let logSection = document.getElementById("searchLogsContainer");
+    let logContainer = document.getElementById("searchLogs");
+
+    let logEntry = document.createElement("p");
+    logEntry.textContent = message;
+    logEntry.style.fontWeight = "bold";
+    logContainer.appendChild(logEntry);
+
+    logSection.style.display = "block";
+    logSection.scrollTop = logSection.scrollHeight; // ✅ Auto-scroll logs to latest entry
 }
 
 
@@ -204,23 +226,29 @@ async function stopSearch() {
  * ✅ Start processing lots after search ends
  */
 async function processLots() {
-    updateSearchStatus("⚙️ Processing with GPT...");
+    updateSearchStatus("⚙️ Processing lots with GPT...");
 
-    let response = await fetch("http://localhost:9090/api/lots/process", { method: "POST" });
-    let result = await response.json();
+    const processEndpoint = `${BASE_URL}/api/lots/process`;
 
-    console.log(result.message);
-    fetchLogs(); // ✅ Ensure logs are updated
+    try {
+        let response = await fetch(processEndpoint, { method: "POST" });
+
+        if (!response.ok) {
+            throw new Error("Failed to process lots. Server returned an error.");
+        }
+
+        let result = await response.json();
+        console.log("✅ GPT Processing Completed:", result.message);
+        updateSearchStatus("✅ GPT Processing Completed Successfully");
+    } catch (error) {
+        console.error("❌ Error processing lots:", error);
+        updateSearchStatus("❌ GPT Processing Failed: " + error.message);
+        alert("❌ Failed to process lots: " + error.message);
+    } finally {
+        fetchLogs(); // ✅ Ensure logs are updated no matter what
+    }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    let searchButton = document.getElementById("searchButton");
-    if (searchButton) {
-        searchButton.addEventListener("click", search);
-    } else {
-        console.error("❌ Search button not found in the DOM.");
-    }
-});
 
 
 /**

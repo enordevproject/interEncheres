@@ -8,11 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
 public interface LaptopRepository extends JpaRepository<Laptop, Long>, JpaSpecificationExecutor<Laptop> {
-
+    List<Laptop> findByDateBefore(LocalDate date);
     // ✅ Fetch all favorite laptops
     List<Laptop> findByFavorite(Boolean favorite);
     // ✅ Corrected Query for Finding Favorite Laptops
