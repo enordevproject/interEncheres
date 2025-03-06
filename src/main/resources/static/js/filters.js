@@ -4,7 +4,17 @@ function applyFilters() {
     // ✅ Select all visible & hidden inputs and selects
     document.querySelectorAll(".content input, .content select").forEach(el => {
         let value = el.value.trim();
+        // ✅ Get selected EXCLUDED auction houses
+        let excludedHouses = [...document.getElementById("excludeMaisonEnchere").selectedOptions].map(opt => opt.value);
+        if (excludedHouses.length > 0) {
+            filters.excludeMaisonEnchere = excludedHouses.join(",");
+        }
 
+        // ✅ Get included auction houses
+        let includedHouses = [...document.getElementById("maisonEnchere").selectedOptions].map(opt => opt.value);
+        if (includedHouses.length > 0) {
+            filters.maisonEnchere = includedHouses.join(",");
+        }
         if (el.type === "checkbox") {
             if (el.checked) filters[el.id.replace("Filter", "")] = "true";
         } else if (el.multiple) {
@@ -206,21 +216,25 @@ async function loadAutocompleteData() {
         let response = await fetch(`${BASE_URL}/api/laptops`);
         let laptops = await response.json();
 
-        // ✅ Extract unique values from the API response
+        // ✅ Extract unique sellers from the API response
         let sellers = [...new Set(laptops.map(l => l.maison_enchere || l.maisonEnchere).filter(s => s))].sort();
         let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
         let gpuVramOptions = [...new Set(laptops.map(l => l.gpu_vram).filter(v => v))].sort((a, b) => a - b);
         let laptopModels = [...new Set(laptops.map(l => l.model).filter(m => m))].sort(); // ✅ Extract Laptop Models
 
-        console.log("✅ Loaded Sellers:", sellers.length ? sellers : "⚠️ No sellers found!");
-        console.log("✅ Loaded GPU Models:", gpuModels.length ? gpuModels : "⚠️ No GPU models found!");
-        console.log("✅ Loaded Laptop Models:", laptopModels.length ? laptopModels : "⚠️ No laptop models found!");
-        console.log("✅ Loaded GPU VRAM Options:", gpuVramOptions.length ? gpuVramOptions : "⚠️ No GPU VRAM options found!");
-
-        // ✅ Enable jQuery UI Autocomplete for Sellers
+        // ✅ Populate "Trusted Sellers" (maisonEnchere)
         if (sellers.length > 0) {
             $("#maisonEnchere").empty().select2({
                 placeholder: "Select trusted sellers...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: sellers.map(seller => ({ id: seller, text: seller }))
+            });
+
+            // ✅ Populate "Excluded Sellers" (excludeMaisonEnchere)
+            $("#excludeMaisonEnchere").empty().select2({
+                placeholder: "Exclude sellers...",
                 allowClear: true,
                 multiple: true,
                 width: "100%",
@@ -243,7 +257,7 @@ async function loadAutocompleteData() {
             console.warn("⚠️ GPU model list is empty!");
         }
 
-        // ✅ Enable Select2 Multi-Select for Model
+        // ✅ Enable Select2 Multi-Select for Laptop Models
         if (laptopModels.length > 0) {
             $("#model").empty().select2({
                 placeholder: "Select or search models...",
@@ -318,21 +332,6 @@ document.querySelectorAll(".collapsible").forEach(button => {
 });
 
 
-function applyPreset(type) {
-    resetFilters(); // Clear all previous filters
-
-    if (type === "gaming") {
-        document.getElementById("processorBrand").value = "Intel";
-        document.getElementById("minNoteSur10").value = "8";
-    } else if (type === "budget") {
-        document.getElementById("maxBonCoinEstimation").value = "500";
-    } else if (type === "premium") {
-        document.getElementById("minNoteSur10").value = "9";
-        document.getElementById("processorBrand").value = "Apple";
-    }
-
-    applyFilters(); // Apply filters after setting the values
-}
 
 
 

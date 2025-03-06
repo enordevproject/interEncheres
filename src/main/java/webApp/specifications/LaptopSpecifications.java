@@ -130,6 +130,12 @@ public class LaptopSpecifications {
                     return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Combine all conditions using OR
                 });
             }
+            // ✅ Exclusion filtering (EXCLUDE specific auction houses)
+            if (filters.containsKey("excludeMaisonEnchere")) {
+                String[] excludedHouses = filters.get("excludeMaisonEnchere").split(",");
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.not(root.get("maisonEnchere").in((Object[]) excludedHouses)));
+            }
 
 
             if (filters.containsKey("gpuBrand")) {
