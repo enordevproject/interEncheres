@@ -635,3 +635,128 @@ button.collapsible:hover {
 .select2-dropdown {
     z-index: 9999 !important; /* Prevents dropdown from being cut off */
 }
+
+
+/* 🎯 Improved Preset Container */
+.preset-filters {
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 320px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* 🎯 Preset List */
+#presetContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+}
+
+/* 🎯 Each Preset Item */
+.preset-item {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    min-width: 140px;
+    max-width: 200px;
+    justify-content: space-between;
+    transition: 0.2s;
+}
+
+/* 🎯 Preset Button (Apply) */
+.preset-btn {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    padding: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.preset-btn:hover {
+    text-decoration: underline;
+}
+
+/* 🎯 Small ❌ Delete Button */
+.delete-preset-btn {
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: red;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+}
+
+.delete-preset-btn:hover {
+    color: darkred;
+}
+
+/* 🎯 No Presets Message */
+.no-presets {
+    color: gray;
+    font-style: italic;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* 🎯 Error Message */
+.error-message {
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.preset-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    width: 100%;
+    max-width: 250px;
+}
+
+.preset-btn {
+    flex-grow: 1;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    border-radius: 5px;
+}
+
+.preset-btn:hover {
+    background: #0056b3;
+}
+
+.delete-preset-btn {
+    background: none;
+    border: none;
+    color: red;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.delete-preset-btn:hover {
+    color: darkred;
+}

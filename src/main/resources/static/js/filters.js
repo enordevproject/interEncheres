@@ -92,42 +92,70 @@ document.addEventListener("DOMContentLoaded", function () {
 function resetFilters() {
     console.log("🔄 Resetting all filters...");
 
-    // ✅ Reset all input fields (text, date, number)
+    // ✅ Reset all standard input fields (text, number, date, checkboxes)
     document.querySelectorAll(".filter-section input").forEach(el => {
         if (el.type === "checkbox") {
             el.checked = false; // ❌ Uncheck all checkboxes
         } else {
-            el.value = ""; // Clear text inputs, including date fields
+            el.value = ""; // ✅ Clear text, number, and date inputs
         }
     });
 
-    // ✅ Reset all select dropdowns properly
-    document.querySelectorAll(".filter-section select").forEach(el => {
-        el.selectedIndex = 0; // Set to first option (usually "Any")
+    // ✅ Reset Select2 multi-select dropdowns
+    $(".multi-select").each(function () {
+        $(this).val(null).trigger("change"); // ✅ Reset Select2 dropdowns properly
     });
 
-    // ✅ Reset autocomplete fields safely (check if initialized first)
+    // ✅ Reset normal select dropdowns (non-multi)
+    document.querySelectorAll(".filter-section select").forEach(el => {
+        if (!el.multiple) {
+            el.selectedIndex = 0; // ✅ Reset single select dropdowns
+        }
+    });
+
+    // ✅ Reset autocomplete fields (if they are initialized)
     ["#brand", "#model", "#maisonEnchere", "#gpuModel"].forEach(selector => {
         let field = $(selector);
         if (field.hasClass("ui-autocomplete-input")) {
-            field.val("").autocomplete("close");
+            field.val("").autocomplete("close"); // ✅ Clear and close autocomplete
         }
     });
 
-    // ✅ Collapse all open filter sections
+    // ✅ Reset special filters
+    document.getElementById("filterToday").checked = false;
+    document.getElementById("filterThisWeek").checked = false;
+    document.getElementById("minBonCoinEstimation").value = "";
+    document.getElementById("maxBonCoinEstimation").value = "";
+
+    // ✅ Reset **Performance Score** dropdowns
+    document.getElementById("minNoteSur10").selectedIndex = 0;
+    document.getElementById("maxNoteSur10").selectedIndex = 0;
+
+    // ✅ Reset **Release Year** dropdowns
+    $("#minReleaseYear").val("").trigger("change");
+    $("#maxReleaseYear").val("").trigger("change");
+
+    // ✅ Reset **GPU and Processor** dropdowns
+    $("#gpuBrand").val(null).trigger("change");
+    $("#gpuVram").val(null).trigger("change");
+    $("#processorBrand").val(null).trigger("change");
+    $("#processorModel").val(null).trigger("change");
+
+    // ✅ Reset **Auction Date** inputs
+    document.getElementById("minDate").value = "";
+    document.getElementById("maxDate").value = "";
+
+    // ✅ Keep collapsible filter sections **open**
     document.querySelectorAll(".collapsible").forEach(button => {
         let content = button.nextElementSibling;
-        content.style.display = "none";
-        content.style.maxHeight = "0px";
-        button.classList.remove("active"); // Ensure button does not appear active
+        content.style.display = "block"; // Ensure content stays visible
+        content.style.maxHeight = content.scrollHeight + "px"; // Keep expanded
+        button.classList.add("active"); // Keep button visually active
     });
 
-    // ✅ Log reset action and re-fetch laptops without filters
+    // ✅ Ensure API gets **reset filters** and UI stays in sync
     console.log("✅ Filters reset. Reloading laptops...");
     fetchLaptops({}); // Fetch all laptops with no filters
-
-    // ✅ Close the filters panel
-  //  toggleSidebar();
 }
 
 
