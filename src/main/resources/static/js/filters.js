@@ -156,12 +156,6 @@ function resetFilters() {
     document.getElementById("maxDate").value = "";
 
     // ✅ Keep collapsible filter sections **open**
-    document.querySelectorAll(".collapsible").forEach(button => {
-        let content = button.nextElementSibling;
-        content.style.display = "block"; // Ensure content stays visible
-        content.style.maxHeight = content.scrollHeight + "px"; // Keep expanded
-        button.classList.add("active"); // Keep button visually active
-    });
 
     // ✅ Ensure API gets **reset filters** and UI stays in sync
     console.log("✅ Filters reset. Reloading laptops...");
@@ -210,18 +204,103 @@ function sortTable(columnIndex) {
 
 
 
-// EXISTING: Modified loadAutocompleteData function to use dynamic BASE_URL
 async function loadAutocompleteData() {
     try {
         let response = await fetch(`${BASE_URL}/api/laptops`);
         let laptops = await response.json();
 
-        // ✅ Extract unique sellers from the API response
         let sellers = [...new Set(laptops.map(l => l.maison_enchere || l.maisonEnchere).filter(s => s))].sort();
-        let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
+        let baseModels = new Set();
+        let fullModelsMap = new Map(); // Stores base models as keys, full models as values
+        let referencesMap = new Map(); // Stores base models as keys, reference numbers as values
         let gpuVramOptions = [...new Set(laptops.map(l => l.gpu_vram).filter(v => v))].sort((a, b) => a - b);
-        let laptopModels = [...new Set(laptops.map(l => l.model).filter(m => m))].sort(); // ✅ Extract Laptop Models
+      //  let laptopModels = [...new Set(laptops.map(l => l.model).filter(m => m))].sort(); // ✅ Extract Laptop Models
+        let gpuModels = [...new Set(laptops.map(l => l.gpu_model).filter(m => m))].sort();
 
+
+        laptops.forEach(laptop => {
+            let model = laptop.model;
+            if (model) {
+                let parts = model.split(" ");
+                if (parts.length > 1) {
+                    let baseModel = parts[0]; // First word as base model
+                    let reference = parts.slice(1).join(" "); // Everything after first word as reference
+
+                    baseModels.add(baseModel); // Store base model
+
+                    // Store full models grouped by base model
+                    if (!fullModelsMap.has(baseModel)) {
+                        fullModelsMap.set(baseModel, new Set());
+                    }
+                    fullModelsMap.get(baseModel).add(model);
+
+                    // Store references grouped by base model
+                    if (!referencesMap.has(baseModel)) {
+                        referencesMap.set(baseModel, new Set());
+                    }
+                    referencesMap.get(baseModel).add(reference);
+                }
+            }
+        });
+
+        let sortedBaseModels = [...baseModels].sort();
+        let sortedLaptopModels = [...fullModelsMap.values()].flatMap(set => [...set]).sort();
+        let sortedReferences = [...referencesMap.values()].flatMap(set => [...set]).sort();
+
+        // ✅ Populate Base Models
+        $("#baseModel").empty().select2({
+            placeholder: "Select base models...",
+            allowClear: true,
+            multiple: true,
+            width: "100%",
+            data: sortedBaseModels.map(model => ({ id: model, text: model }))
+        });
+
+        // ✅ Populate Full Models Initially (all models)
+        $("#model").empty().select2({
+            placeholder: "Select full models...",
+            allowClear: true,
+            multiple: true,
+            width: "100%",
+            data: sortedLaptopModels.map(model => ({ id: model, text: model }))
+        });
+
+        // ✅ Populate Reference Numbers Initially (all references)
+        $("#reference").empty().select2({
+            placeholder: "Select reference...",
+            allowClear: true,
+            multiple: true,
+            width: "100%",
+            data: sortedReferences.map(ref => ({ id: ref, text: ref }))
+        });
+
+        // ✅ Filter Full Models and References Based on Base Model Selection
+        $("#baseModel").on("change", function () {
+            let selectedBaseModels = $(this).val() || [];
+            let filteredModels = selectedBaseModels.length > 0
+                ? selectedBaseModels.flatMap(base => [...(fullModelsMap.get(base) || [])])
+                : sortedLaptopModels;
+
+            let filteredReferences = selectedBaseModels.length > 0
+                ? selectedBaseModels.flatMap(base => [...(referencesMap.get(base) || [])])
+                : sortedReferences;
+
+            $("#model").empty().select2({
+                placeholder: "Select full models...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: filteredModels.map(model => ({ id: model, text: model }))
+            });
+
+            $("#reference").empty().select2({
+                placeholder: "Select reference...",
+                allowClear: true,
+                multiple: true,
+                width: "100%",
+                data: filteredReferences.map(ref => ({ id: ref, text: ref }))
+            });
+        });
         // ✅ Populate "Trusted Sellers" (maisonEnchere)
         if (sellers.length > 0) {
             $("#maisonEnchere").empty().select2({
@@ -243,7 +322,12 @@ async function loadAutocompleteData() {
         } else {
             console.warn("⚠️ Seller list is empty! Check API response.");
         }
-
+        // ✅ Populate GPU VRAM Dropdown
+        let gpuVramSelect = document.getElementById("gpuVram");
+        if (gpuVramOptions.length > 0) {
+            gpuVramSelect.innerHTML = `<option value="">Any</option>` +
+                gpuVramOptions.map(v => `<option value="${v}">${v}GB</option>`).join("");
+        }
         // ✅ Enable Select2 Multi-Select for GPU Models
         if (gpuModels.length > 0) {
             $("#gpuModel").empty().select2({
@@ -257,31 +341,15 @@ async function loadAutocompleteData() {
             console.warn("⚠️ GPU model list is empty!");
         }
 
-        // ✅ Enable Select2 Multi-Select for Laptop Models
-        if (laptopModels.length > 0) {
-            $("#model").empty().select2({
-                placeholder: "Select or search models...",
-                allowClear: true,
-                multiple: true,
-                width: "100%",
-                tags: false, // ✅ Only allow selecting models from database
-                data: laptopModels.map(model => ({ id: model, text: model })) // ✅ Convert to Select2 format
-            });
-        } else {
-            console.warn("⚠️ Laptop model list is empty!");
-        }
-
-        // ✅ Populate GPU VRAM Dropdown
-        let gpuVramSelect = document.getElementById("gpuVram");
-        if (gpuVramOptions.length > 0) {
-            gpuVramSelect.innerHTML = `<option value="">Any</option>` +
-                gpuVramOptions.map(v => `<option value="${v}">${v}GB</option>`).join("");
-        }
 
     } catch (error) {
         console.error("❌ Error loading autocomplete data:", error);
     }
 }
+
+// ✅ Initialize Data on Page Load
+$(document).ready(loadAutocompleteData);
+
 
 
 // ✅ Run on page load

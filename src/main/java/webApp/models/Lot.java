@@ -104,53 +104,23 @@ public class Lot {
     }
 
 
+    public String getDate() {
+        return date;
+    }
 
-
-    public Date getDate() {
+    public Date getDateDate() {
         if (date == null || date.trim().isEmpty()) return null;
 
-        date = date.trim().toLowerCase();
-        Calendar calendar = Calendar.getInstance();
-
-        // Handle standard relative terms
-        if (date.contains("aujourd'hui")) {
-            return calendar.getTime();
-        } else if (date.contains("demain")) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-            return calendar.getTime();
-        } else if (date.contains("hier")) {
-            calendar.add(Calendar.DAY_OF_YEAR, -1);
-            return calendar.getTime();
+        try {
+            // Parse from "dd/MM/yyyy" format
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            return dateFormat.parse(date);
+        } catch (ParseException e) {
+            System.out.println("❌ Invalid date format: " + date);
+            return null;
         }
-
-        // Handle custom format '2j 20h'
-        Pattern pattern = Pattern.compile("(\\d+)j (\\d+)h");
-        Matcher matcher = pattern.matcher(date);
-        if (matcher.find()) {
-            int days = Integer.parseInt(matcher.group(1));
-            int hours = Integer.parseInt(matcher.group(2));
-            calendar.add(Calendar.DAY_OF_MONTH, days);
-            calendar.add(Calendar.HOUR_OF_DAY, hours);
-            return calendar.getTime();
-        }
-
-        // Handle standard date formats
-        SimpleDateFormat[] formats = {
-                new SimpleDateFormat("yyyy-MM-dd HH:mm"),
-                new SimpleDateFormat("dd/MM/yyyy HH:mm"),
-                new SimpleDateFormat("yyyy-MM-dd"),
-                new SimpleDateFormat("dd/MM/yyyy")
-        };
-
-        for (SimpleDateFormat format : formats) {
-            try {
-                return format.parse(date);
-            } catch (ParseException ignored) {}
-        }
-
-        System.out.println("❌ Format de date invalide : " + date);
-        return null;
     }
+
 
 
 

@@ -5,14 +5,16 @@ import webApp.models.Laptop;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+
 import jakarta.persistence.criteria.Predicate; // ✅ Import This!
 
 import org.springframework.data.jpa.domain.Specification;
-import java.util.List;  // ✅ Fix for List issue
+
 import java.util.ArrayList;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LaptopSpecifications {
 
@@ -56,7 +58,31 @@ public class LaptopSpecifications {
                                 return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Correct Predicate Usage
                             });
             }
+            // ✅ Allow Multi-Value Search for Base Model using OR conditions
+            if (filters.containsKey("baseModel")) {
+                String[] baseModels = filters.get("baseModel").toLowerCase().split(",");
 
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String base : baseModels) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), base.trim() + "%")); // ✅ Base Model Starts With
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Correct Predicate Usage
+                });
+            }
+            // ✅ Allow Multi-Value Search for Reference (Second Part of Model)
+            if (filters.containsKey("reference")) {
+                String[] references = filters.get("reference").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String reference : references) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), "% " + reference.trim() + "%"));
+                        // ✅ Matches second part (e.g., "Latitude 5480" -> finds "5480")
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Correct Predicate Usage
+                });
+            }
 
             // ✅ Fix: Allow filtering by Min and Max Release Year
             if (filters.containsKey("minReleaseYear")) {
@@ -114,11 +140,19 @@ public class LaptopSpecifications {
 
             // ✅ Filter by Processor Model
             if (filters.containsKey("processorModel")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("processorModel")), "%" + filters.get("processorModel").toLowerCase() + "%"));
+                String[] processorModels = filters.get("processorModel").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String processor : processorModels) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("processorModel")), "%" + processor.trim() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ OR condition for multiple processors
+                });
             }
 
-            // ✅ Filter by GPU Type
+
+            // ✅ Filter by trusted auction houses (maisonEnchere)
             if (filters.containsKey("maisonEnchere")) {
                 String[] sellers = filters.get("maisonEnchere").toLowerCase().split(",");
 
@@ -127,15 +161,19 @@ public class LaptopSpecifications {
                     for (String seller : sellers) {
                         predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("maisonEnchere")), "%" + seller.trim() + "%"));
                     }
-                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ Combine all conditions using OR
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ OR condition for multiple sellers
                 });
             }
-            // ✅ Exclusion filtering (EXCLUDE specific auction houses)
+
+            // ✅ Exclude specific auction houses (excludeMaisonEnchere)
             if (filters.containsKey("excludeMaisonEnchere")) {
-                String[] excludedHouses = filters.get("excludeMaisonEnchere").split(",");
+                String[] excludedHouses = filters.get("excludeMaisonEnchere").toLowerCase().split(",");
+
                 spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.not(root.get("maisonEnchere").in((Object[]) excludedHouses)));
+                        criteriaBuilder.not(root.get("maisonEnchere").in((Object[]) excludedHouses))
+                );
             }
+
 
 
             if (filters.containsKey("gpuBrand")) {
@@ -217,11 +255,19 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("weight"), weight));
             }
 
-            // ✅ Filter by Operating System
+            // ✅ Filter by Operating System (Allow multiple values using OR)
             if (filters.containsKey("operatingSystem")) {
-                spec = spec.and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("operatingSystem")), "%" + filters.get("operatingSystem").toLowerCase() + "%"));
+                String[] operatingSystems = filters.get("operatingSystem").toLowerCase().split(",");
+
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> predicates = new ArrayList<>();
+                    for (String os : operatingSystems) {
+                        predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("operatingSystem")), "%" + os.trim() + "%"));
+                    }
+                    return criteriaBuilder.or(predicates.toArray(new Predicate[0])); // ✅ OR condition for multiple OS values
+                });
             }
+
 
             // ✅ Filter by Release Year
             if (filters.containsKey("releaseYear")) {
@@ -320,29 +366,84 @@ public class LaptopSpecifications {
                         criteriaBuilder.equal(root.get("recommendedToBuy"), recommended));
             }
 
-            // ✅ Filter by Auction Date
+            // ✅ Filter by Exact Auction Date (as String)
             if (filters.containsKey("date")) {
-                Date auctionDate = parseDate(filters.get("date"));
-                if (auctionDate != null) {
-                    spec = spec.and((root, query, criteriaBuilder) ->
-                            criteriaBuilder.equal(root.get("date"), auctionDate));
-                }
-            }
-            if (filters.containsKey("minDate")) {
-                Date minAuctionDate = parseDate(filters.get("minDate"));
-                if (minAuctionDate != null) {
-                    spec = spec.and((root, query, criteriaBuilder) ->
-                            criteriaBuilder.greaterThanOrEqualTo(root.get("date"), minAuctionDate));
-                }
+                String auctionDate = filters.get("date").trim();
+
+                spec = spec.and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("date"), auctionDate) // ✅ Compare as String
+                );
             }
 
-            if (filters.containsKey("maxDate")) {
-                Date maxAuctionDate = parseDate(filters.get("maxDate"));
-                if (maxAuctionDate != null) {
-                    spec = spec.and((root, query, criteriaBuilder) ->
-                            criteriaBuilder.lessThanOrEqualTo(root.get("date"), maxAuctionDate));
-                }
+
+
+            // ✅ DATE FILTERING (Fixes minDate/maxDate issues)
+            if (filters.containsKey("minDate") || filters.containsKey("maxDate")) {
+                spec = spec.and((root, query, criteriaBuilder) -> {
+                    List<Predicate> datePredicates = new ArrayList<>();
+                    SimpleDateFormat dbFormat = new SimpleDateFormat("dd/MM/yyyy"); // ✅ Match Database Format
+                    SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd"); // API Uses YYYY-MM-DD
+
+                    // ✅ Function to Convert API Date (YYYY-MM-DD) to Database Format (DD/MM/YYYY)
+                    Function<String, String> convertToDatabaseDate = dateStr -> {
+                        dateStr = dateStr.trim();
+
+                        // ✅ If format is already `DD/MM/YYYY`, return as is
+                        if (dateStr.matches("\\d{2}/\\d{2}/\\d{4}")) {
+                            return dateStr;
+                        }
+
+                        // ✅ Convert `YYYY-MM-DD` to `DD/MM/YYYY`
+                        if (dateStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                            try {
+                                Date parsedDate = apiFormat.parse(dateStr);
+                                return dbFormat.format(parsedDate);
+                            } catch (Exception e) {
+                                System.err.println("❌ Invalid date format: " + dateStr);
+                            }
+                        }
+
+                        // ✅ Handle relative time (e.g., "2j 10h")
+                        Pattern pattern = Pattern.compile("(\\d+)j (\\d+)h");
+                        Matcher matcher = pattern.matcher(dateStr);
+                        if (matcher.find()) {
+                            int days = Integer.parseInt(matcher.group(1));
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.add(Calendar.DAY_OF_YEAR, days);
+                            return dbFormat.format(calendar.getTime()); // Convert to `DD/MM/YYYY`
+                        }
+
+                        return null; // Return null if format is not recognized
+                    };
+
+                    if (filters.containsKey("minDate")) {
+                        String minDate = convertToDatabaseDate.apply(filters.get("minDate"));
+                        if (minDate != null) {
+                            System.out.println("✅ Applying minDate filter: " + minDate);
+                            datePredicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), minDate));
+                        }
+                    }
+
+                    if (filters.containsKey("maxDate")) {
+                        String maxDate = convertToDatabaseDate.apply(filters.get("maxDate"));
+                        if (maxDate != null) {
+                            System.out.println("✅ Applying maxDate filter: " + maxDate);
+                            datePredicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), maxDate));
+                        }
+                    }
+
+                    if (datePredicates.isEmpty()) {
+                        System.out.println("⚠️ No valid date filters applied!");
+                        return null; // No date filter applied
+                    } else {
+                        return criteriaBuilder.and(datePredicates.toArray(new Predicate[0]));
+                    }
+                });
             }
+
+
+
+
 
 
             // ✅ Filter by Product Condition Image

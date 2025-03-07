@@ -3,6 +3,7 @@ package webApp.repositories;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import webApp.models.Laptop;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -13,7 +14,8 @@ import java.util.List;
 
 @Repository
 public interface LaptopRepository extends JpaRepository<Laptop, Long>, JpaSpecificationExecutor<Laptop> {
-    List<Laptop> findByDateBefore(LocalDate date);
+    @Query("SELECT l FROM Laptop l WHERE STR_TO_DATE(l.date, '%d/%m/%Y') < STR_TO_DATE(:date, '%Y-%m-%d')")
+    List<Laptop> findByDateBefore(@Param("date") String date);
     // ✅ Fetch all favorite laptops
     List<Laptop> findByFavorite(Boolean favorite);
     // ✅ Corrected Query for Finding Favorite Laptops

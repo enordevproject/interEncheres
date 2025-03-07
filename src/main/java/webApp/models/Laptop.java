@@ -47,11 +47,11 @@ public class Laptop {
         this.imgUrl = imgUrl;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
@@ -67,9 +67,9 @@ public class Laptop {
     @Column(name = "img_url", length = 255)
     private String imgUrl;
 
-    @Temporal(TemporalType.DATE)
+
     @Column(name = "date")
-    private Date date;
+    private String date;
 
     @Column(name = "maison_enchere", length = 100)
     private String maisonEnchere;
@@ -265,11 +265,9 @@ public class Laptop {
         this.lotUrl = lotUrl;
         this.imgUrl = imgUrl;
 
-        try {
-            this.date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(date);
-        } catch (Exception e) {
-            this.date = null;
-        }
+
+            this.date = date;
+
 
         this.maisonEnchere = maisonEnchere;
         this.quantity = quantity;

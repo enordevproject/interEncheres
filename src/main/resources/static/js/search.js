@@ -17,7 +17,7 @@ async function search() {
     try {
         updateSearchStatus("🔄 Searching...");
         stopButton.style.display = "inline-block";
-        logSection.style.display = "block"; // ✅ Show logs when search starts
+        logSection.style.display = "block"; // ✅ Keep logs visible when searching again
 
         let response = await fetch(searchEndpoint, {
             method: "POST",
@@ -28,13 +28,14 @@ async function search() {
         if (!response.ok) throw new Error(await response.text());
 
         console.log("✅ Search started.");
-        startFetchingLogs(); // ✅ Start fetching backend logs
+        startFetchingLogs(); // ✅ Keep fetching logs instead of resetting
     } catch (error) {
         console.error("❌ Search execution failed:", error);
         updateSearchStatus(`<span style="color: red;">❌ Search Failed: ${error.message}</span>`);
         alert("Error starting search: " + error.message);
     }
 }
+
 
 /**
  * ✅ Show/Hide logs with smooth transition
@@ -98,8 +99,13 @@ function addLogEntry(message) {
  */
 function clearLogs() {
     let logContainer = document.getElementById("searchLogs");
-    logContainer.innerHTML = ""; // ✅ Clear UI logs
+    if (logContainer.children.length > 0) {
+        console.log("🔍 Keeping previous logs for reference.");
+        return;
+    }
+    logContainer.innerHTML = ""; // ✅ Only clear if no previous logs exist
 }
+
 
 /**
  * ✅ Fetch logs from backend every 2 seconds
@@ -146,10 +152,13 @@ function updateLogs(logs) {
  * ✅ Start fetching logs on search
  */
 function startFetchingLogs() {
-    clearLogs();
+    if (!document.getElementById("searchLogs").hasChildNodes()) {
+        clearLogs(); // ✅ Only clear if no previous logs exist
+    }
     fetchLogs(); // ✅ Initial fetch
     setInterval(fetchLogs, 2000); // ✅ Fetch logs every 2 seconds
 }
+
 
 /**
  * ✅ Start search process

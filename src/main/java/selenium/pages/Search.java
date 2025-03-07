@@ -4,8 +4,6 @@ import selenium.base.BasePage;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import webApp.models.Lot;
 
@@ -33,7 +31,7 @@ public class Search extends BasePage {
 
 
     // XPath pour les éléments de la page
-    private final By LOT_DATE_XPATH = By.xpath("//div[@class='bottom d-flex flex-wrap full-width align-self-end align-center justify-space-between px-2']//div[@class='text-caption font-weight-medium']//span");
+    private final By LOT_DATE_XPATH = By.xpath(".//div[contains(@class, 'bottom')]/div[contains(@class, 'text-caption')]/div/span");
     private final By LOT_ITEMS_XPATH = By.xpath("//div[contains(@class, 'pa-1') and contains(@class, 'col-md-4')]\n"); // Remplacez par le bon XPath pour les lots
     private final By NEXT_PAGE_BUTTON_XPATH = By.xpath("//button[@aria-label='Page suivante']");
     private final By PAGINATION_DISABLED_CLASS = By.xpath("//button[@aria-label='Page suivante' and contains(@class, 'v-pagination__navigation--disabled')]");
@@ -45,7 +43,7 @@ public class Search extends BasePage {
     private final By LOT_NUMBER_XPATH = By.xpath(".//span[@class='font-weight-bold']");
     private final By LOT_DESCRIPTION_XPATH = By.xpath(".//div[contains(@class, 'description')]");
     private final By LOT_ESTIMATION_XPATH = By.xpath("//div[@class='estimates d-flex flex-wrap justify-center']//span[@class='text-pre-wrap flex-shrink-0 mx-1 text-center']");
-    private final By LOT_AUCTION_HOUSE_XPATH = By.xpath("//div[@class='pa-1 col-md-4 col-lg-3 col-6 pa-0']//div[@class='organization-name text-caption font-weight-medium text_primary--text pt-2 px-2']//span[2]");
+    private final By LOT_AUCTION_HOUSE_XPATH = By.xpath(".//div[contains(@class, 'organization-name')]//span[2]");
     private final By IMG_URL_XPATH = By.xpath("//div[@class='v-responsive__content d-flex align-center justify-center']/img");
     private final By AUCTION_URL_XPATH = By.xpath(".//a[@class='d-flex fill-height']");
 
@@ -71,37 +69,51 @@ public class Search extends BasePage {
         List<WebElement> lotElements = driver.findElements(LOT_ITEMS_XPATH);
         List<Lot> lots = new ArrayList<>();
 
-      //  log.info("🔍 Extracting lots on the current page. Found {} lot elements.", lotElements.size());
+        System.out.println("🔍 Extracting lots on the current page. Found " + lotElements.size() + " lot elements.");
 
         for (WebElement lotElement : lotElements) {
             try {
                 String url = extractUrl(lotElement);
-                if (url == null) continue; // Skip if no URL
+                if (url == null) {
+                    System.out.println("⚠️ Skipping lot due to missing URL.");
+                    continue; // Skip if no URL
+                }
 
                 Lot lot = new Lot();
                 lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
                 lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
                 lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
-                lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No date available"));
+                lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No estimation available"));// ✅ Extract date separately
                 lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
 
                 // ✅ Extract the correct image for this lot inside the loop
                 lot.setImgUrl(extractImgData(lotElement));
-
                 lot.setUrl(url);
                 lot.setInsertionDate(LocalDateTime.now());
 
                 lots.add(lot);
 
-              //  log.info("✅ Lot extracted: {} | Image URL: {}", url, lot.getImgUrl()); // Debugging logs
+                // ✅ Debugging Prints for Each Lot
+                System.out.println("✅ Extracted Lot Details:");
+                System.out.println("   - Number: " + lot.getNumber());
+                System.out.println("   - Description: " + lot.getDescription());
+                System.out.println("   - Estimation Price: " + lot.getEstimationPrice());
+                System.out.println("   - Date: " + lot.getDate());
+                System.out.println("   - Auction House: " + lot.getMaisonEnchere());
+                System.out.println("   - Image URL: " + lot.getImgUrl());
+                System.out.println("   - Lot URL: " + lot.getUrl());
+                System.out.println("--------------------------------------");
+
             } catch (Exception e) {
-                log.error("❌ Error processing lot: ", e);
+                System.out.println("❌ Error processing lot: " + e.getMessage());
+                e.printStackTrace(); // ✅ Print stack trace for debugging
             }
         }
 
-       // log.info("✅ Finished extracting lots. Total lots extracted: {}", lots.size());
+        System.out.println("✅ Finished extracting lots. Total lots extracted: " + lots.size());
         return lots;
     }
+
 
 
 

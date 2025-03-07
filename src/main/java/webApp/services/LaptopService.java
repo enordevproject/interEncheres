@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,12 +64,19 @@ public class LaptopService {
     // ✅ Method to delete expired laptops
     @Transactional
     public void deleteExpiredLaptops() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        List<Laptop> expiredLaptops = laptopRepository.findByDateBefore(yesterday);
+        // Convert LocalDate (yesterday) to String format "dd/MM/yyyy"
+        LocalDate yesterdayDate = LocalDate.now().minusDays(1);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String formattedYesterday = yesterdayDate.format(formatter);
+
+        // Fetch expired laptops using the formatted String date
+        List<Laptop> expiredLaptops = laptopRepository.findByDateBefore(formattedYesterday);
 
         if (!expiredLaptops.isEmpty()) {
             laptopRepository.deleteAll(expiredLaptops);
             System.out.println("🗑 Deleted " + expiredLaptops.size() + " expired laptops.");
+        } else {
+            System.out.println("✅ No expired laptops found.");
         }
     }
     // ✅ Optional: Automatically run cleanup every day at midnight
