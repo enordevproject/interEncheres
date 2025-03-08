@@ -48,10 +48,16 @@ public class SeleniumConfigService {
 
         // 🌍 VPS-Specific Configurations (Headless mode, Unique user-data-dir)
         if (isVPS) {
-            options.addArguments("--headless=new"); // Use new headless mode
-            options.addArguments("--remote-allow-origins=*"); // Allow remote access
-            options.addArguments("--user-data-dir=/tmp/selenium-profile-" + System.currentTimeMillis()); // Unique user-data-dir
-        } else {
+            options.addArguments("--headless=new"); // ✅ Keep headless but add more real-user settings
+            options.addArguments("--disable-gpu");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--remote-allow-origins=*");
+            options.addArguments("--window-size=1920,1080");
+            options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36");
+            options.addArguments("--user-data-dir=/tmp/selenium-profile-" + System.currentTimeMillis());
+        }
+        else {
             // 💻 Local PC Configurations (Normal mode with GUI)
             options.addArguments("--start-maximized"); // Open in maximized window
         }
