@@ -7,6 +7,7 @@ import org.hibernate.Transaction;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
 
@@ -102,7 +103,24 @@ public class Results {
                 laptop.getScreenSize() > 10; // Ensures it's not a small device like a tablet
     }
 
+    public static void removeExpiredLaptops() {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
+            LocalDate today = LocalDate.now(); // Get today's date
+            String hql = "DELETE FROM Laptop WHERE date < :today";
+            int deletedCount = session.createQuery(hql)
+                    .setParameter("today", today)
+                    .executeUpdate();
+
+            transaction.commit();
+            System.out.println("🗑️ Removed " + deletedCount + " expired laptops from the database.");
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            System.err.println("❌ Error removing expired laptops: " + e.getMessage());
+        }
+    }
     public static void insertLaptopIntoDatabase(Laptop laptop) {
         if (!isValidLaptop(laptop)) {
             System.out.println("❌ Laptop validation failed. Skipping insertion.");

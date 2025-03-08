@@ -13,6 +13,7 @@ async function fetchLaptops(filters = {}) {
     console.log("🌍 FULL FILTERED URL:", endpoint);
 
     try {
+      await deleteExpiredLaptops();
         let response = await fetch(endpoint);
         if (!response.ok) {
             console.error("❌ API Error:", response.statusText);
@@ -43,6 +44,17 @@ async function fetchLaptops(filters = {}) {
     }
 }
 
+async function deleteExpiredLaptops() {
+    try {
+        let response = await fetch(`${BASE_URL}/api/laptops/deleteExpired`, { method: "DELETE" });
+        if (!response.ok) {
+            throw new Error(`❌ Failed to delete expired laptops: ${response.statusText}`);
+        }
+        console.log("✅ Expired laptops deleted successfully.");
+    } catch (error) {
+        console.error("❌ Error deleting expired laptops:", error);
+    }
+}
 
 
 // EXISTING: Modified fetchLogs to use dynamic BASE_URL

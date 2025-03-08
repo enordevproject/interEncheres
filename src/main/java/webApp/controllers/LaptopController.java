@@ -1,6 +1,8 @@
 package webApp.controllers;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import webApp.models.Laptop;
@@ -10,7 +12,7 @@ import webApp.services.LaptopService;
 import org.slf4j.Logger;
 import java.util.List;
 import java.util.Map;
-
+import webApp.services.ExcelReportService;
 
 @RestController // ✅ API Controller (returns JSON)
 @RequestMapping("/api")
@@ -21,6 +23,8 @@ public class LaptopController {
 
     @Autowired
     private LaptopService laptopService;
+    @Autowired
+    private  ExcelReportService excelReportService;
 
     // ✅ Fetch all laptops (no filters)
     @GetMapping("/laptops")
@@ -83,6 +87,41 @@ public class LaptopController {
         } catch (Exception e) {
             log.error("❌ Error deleting favorites:", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting favorites.");
+        }
+    }
+    /**
+     * ✅ Deletes expired laptops (laptops with past auction dates).
+     * @return Success message.
+     */
+    // ✅ Fix: Ensure this method is properly mapped
+    @DeleteMapping("/laptops/deleteExpired") // ✅ Now matches frontend request
+    public ResponseEntity<String> deleteExpiredLaptops() {
+        laptopService.deleteExpiredLaptops();
+        return ResponseEntity.ok("✅ Expired laptops deleted successfully.");
+    }
+
+    /**
+     * ✅ Generate Excel report for favorite laptops
+     */
+    @GetMapping("/laptops/favorites/excel") // ✅ Fix path to match other routes
+    public ResponseEntity<ByteArrayResource> downloadFavoritesExcel() {
+        try {
+            List<Laptop> favoriteLaptops = laptopService.getFavoriteLaptops();
+
+            if (favoriteLaptops.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+
+            byte[] excelFile = excelReportService.generateExcelReport(favoriteLaptops);
+            ByteArrayResource resource = new ByteArrayResource(excelFile);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=favorite_laptops.xlsx")
+                    .contentLength(excelFile.length)
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("❌ Error generating Excel file: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

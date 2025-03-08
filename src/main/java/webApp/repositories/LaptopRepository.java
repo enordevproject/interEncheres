@@ -15,7 +15,8 @@ import java.util.List;
 @Repository
 public interface LaptopRepository extends JpaRepository<Laptop, Long>, JpaSpecificationExecutor<Laptop> {
     @Query("SELECT l FROM Laptop l WHERE STR_TO_DATE(l.date, '%d/%m/%Y') < STR_TO_DATE(:date, '%Y-%m-%d')")
-    List<Laptop> findByDateBefore(@Param("date") String date);
+    List<Laptop> findByDateBefore(LocalDate date); // ✅ Uses LocalDate for queries
+
     // ✅ Fetch all favorite laptops
     List<Laptop> findByFavorite(Boolean favorite);
     // ✅ Corrected Query for Finding Favorite Laptops

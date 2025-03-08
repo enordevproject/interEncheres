@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import webApp.models.Laptop;
+import webApp.models.Results;
 import webApp.repositories.LaptopRepository;
 import webApp.specifications.LaptopSpecifications;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LaptopService {
@@ -61,17 +63,31 @@ public class LaptopService {
         log.warn("⚠️ Laptop ID={} not found!", id);
         return false;
     }
-    // ✅ Method to delete expired laptops
+    /**
+     * ✅ Deletes expired laptops (date older than yesterday)
+     */
     @Transactional
     public void deleteExpiredLaptops() {
-        // Convert LocalDate (yesterday) to String format "dd/MM/yyyy"
-        LocalDate yesterdayDate = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String formattedYesterday = yesterdayDate.format(formatter);
 
-        // Fetch expired laptops using the formatted String date
-        List<Laptop> expiredLaptops = laptopRepository.findByDateBefore(formattedYesterday);
+        // Fetch all laptops because dates are stored as strings
+        List<Laptop> allLaptops = laptopRepository.findAll();
 
+        // Filter expired laptops by converting their String date into LocalDate
+        List<Laptop> expiredLaptops = allLaptops.stream()
+                .filter(laptop -> {
+                    try {
+                        LocalDate laptopDate = LocalDate.parse(laptop.getDate(), formatter);
+                        return laptopDate.isBefore(yesterday); // Remove if older than yesterday
+                    } catch (Exception e) {
+                        System.out.println("⚠️ Skipping invalid date: " + laptop.getDate());
+                        return false; // Skip if parsing fails
+                    }
+                })
+                .collect(Collectors.toList());
+
+        // Delete expired laptops
         if (!expiredLaptops.isEmpty()) {
             laptopRepository.deleteAll(expiredLaptops);
             System.out.println("🗑 Deleted " + expiredLaptops.size() + " expired laptops.");
@@ -79,11 +95,8 @@ public class LaptopService {
             System.out.println("✅ No expired laptops found.");
         }
     }
-    // ✅ Optional: Automatically run cleanup every day at midnight
-    @Scheduled(cron = "0 0 0 * * *")
-    public void scheduledLaptopCleanup() {
-        deleteExpiredLaptops();
-    }
+
+
 
     public int clearFavorites() {
         try {
