@@ -14,7 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class LotService {
@@ -34,15 +33,15 @@ public class LotService {
     }
 
     /**
-     * ✅ Logs messages with category & exposes them to the UI
+     * ✅ Logs messages & exposes them to the UI
      */
-    private void logMessage(String type, String message) {
-        String formattedMessage = "[" + getFormattedTimestamp() + "] [" + type + "] " + message;
+    private void logMessage(String message) {
+        String formattedMessage = "[" + getFormattedTimestamp() + "] " + message;
         log.info(formattedMessage);
         logMessages.add(formattedMessage);
 
-        // ✅ Keep only last 200 logs to prevent memory overflow
-        if (logMessages.size() > 200) {
+        // ✅ Keep only last 100 logs to prevent memory overflow
+        if (logMessages.size() > 100) {
             logMessages.remove(0);
         }
     }
@@ -67,91 +66,53 @@ public class LotService {
      */
     public String processLotsWithGPT() throws IOException {
         clearLogs();
-        long startTime = System.currentTimeMillis();
-        logMessage("INFO", "🔄 [Start] Processing lots with GPT-4...");
+        logMessage("🔄 [Start] Processing lots with GPT-4...");
 
-        // ✅ Fetch lots from the database
         List<Lot> lotsFromDatabase = Results.getAllLotsFromDatabase();
         int totalLots = lotsFromDatabase.size();
-        logMessage("DEBUG", "📊 Lots retrieved: " + totalLots);
 
         if (totalLots == 0) {
-            logMessage("WARN", "⚠️ No lots found in the database. Shutting down.");
-
-            // ✅ Ensure proper shutdown before exiting
+            logMessage("⚠️ No lots found in the database.");
             return "⚠️ No lots found in the database.";
         }
 
-        logMessage("INFO", "✅ Retrieved " + totalLots + " lots.");
-        int threadPoolSize = Math.min(10, totalLots);
-        logMessage("INFO", "⚙️ Using " + threadPoolSize + " worker threads for processing.");
+        logMessage("✅ Retrieved " + totalLots + " lots.");
 
-        // ✅ Initialize Thread Pool
+        int threadPoolSize = Math.min(10, totalLots);
+        logMessage("⚙️ Using " + threadPoolSize + " worker threads for processing.");
+
         ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
         List<Future<Void>> futures = new ArrayList<>();
 
-        long lotStartTime = System.currentTimeMillis();
-
-        try {
-            for (int i = 0; i < totalLots; i++) {
-                Lot lot = lotsFromDatabase.get(i);
-                int currentIndex = i + 1;
-
-                futures.add(executorService.submit(() -> {
+        for (Lot lot : lotsFromDatabase) {
+            futures.add(executorService.submit(() -> {
+                synchronized (lot) { // ✅ Ensures thread safety for each lot
                     try {
-                        long singleStartTime = System.currentTimeMillis();
                         Results.processLot(lot);
-                        long singleEndTime = System.currentTimeMillis();
-                        long processingTime = singleEndTime - singleStartTime;
-
-                        double progress = ((double) currentIndex / totalLots) * 100;
-                        long elapsedTime = System.currentTimeMillis() - lotStartTime;
-                        long estimatedRemainingTime = (long) ((elapsedTime / (double) currentIndex) * (totalLots - currentIndex));
-
-                        logMessage("INFO", String.format(
-                                "📊 [%d/%d] Processed lot %s | Date: %s | Maison Enchere: %s | ⏳ %dms | Progress: %.2f%% | ETA: %ds",
-                                currentIndex, totalLots, lot.getNumber(), lot.getDate(), lot.getMaisonEnchere(),
-                                processingTime, progress, estimatedRemainingTime / 1000
-                        ));
+                        logMessage("📊 Processed lot " + lot.getNumber() + " | Date: " + lot.getDate() + " | Maison Enchere: " + lot.getMaisonEnchere());
                     } catch (Exception e) {
-                        logMessage("ERROR", "❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
+                        logMessage("❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
                     }
-                    return null;
-                }));
-            }
+                }
+                return null;
+            }));
+        }
 
-            // ✅ Wait for all threads to finish
-            for (Future<Void> future : futures) {
-                try {
-                    future.get(30, TimeUnit.SECONDS); // ⏳ Timeout to prevent blocking indefinitely
-                } catch (Exception e) {
-                    logMessage("ERROR", "❌ Error waiting for task completion: " + e.getMessage());
-                }
-            }
-        } finally {
-            // ✅ Ensure proper shutdown of ExecutorService
-            executorService.shutdown();
+        for (Future<Void> future : futures) {
             try {
-                if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                    logMessage("WARN", "⚠️ Forced executor shutdown due to timeout.");
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                logMessage("ERROR", "❌ Thread interrupted, forcing shutdown.");
-                executorService.shutdownNow();
-                Thread.currentThread().interrupt();
+                future.get(); // ✅ Ensure all tasks finish
+            } catch (Exception e) {
+                logMessage("❌ Error waiting for task completion: " + e.getMessage());
             }
         }
 
-        long endTime = System.currentTimeMillis();
-        long totalProcessingTime = endTime - startTime;
-        logMessage("INFO", "✅ [Finish] GPT Processing complete in " + (totalProcessingTime / 1000) + "s. Deleting all lots...");
+        executorService.shutdown();
+        logMessage("✅ [Finish] GPT Processing complete. Deleting all lots...");
 
         deleteAllLots();
 
         return "✅ Processing complete and lots deleted.";
     }
-
 
 
     /**
@@ -160,9 +121,9 @@ public class LotService {
     public void deleteAllLots() {
         try {
             lotRepository.deleteAll();
-            logMessage("INFO", "🗑️ All lots deleted successfully from the database.");
+            logMessage("🗑️ All lots deleted successfully from the database.");
         } catch (Exception e) {
-            logMessage("ERROR", "❌ Error deleting lots: " + e.getMessage());
+            logMessage("❌ Error deleting lots: " + e.getMessage());
         }
     }
 }
