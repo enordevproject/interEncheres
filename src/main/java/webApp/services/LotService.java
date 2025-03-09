@@ -70,11 +70,13 @@ public class LotService {
         long startTime = System.currentTimeMillis();
         logMessage("INFO", "🔄 [Start] Processing lots with GPT-4...");
 
+        // ✅ Fetch lots from the database
         List<Lot> lotsFromDatabase = Results.getAllLotsFromDatabase();
         int totalLots = lotsFromDatabase.size();
+        logMessage("DEBUG", "📊 Lots retrieved: " + totalLots);
 
         if (totalLots == 0) {
-            logMessage("WARN", "⚠️ No lots found in the database.");
+            logMessage("WARN", "⚠️ No lots found in the database. Exiting.");
             return "⚠️ No lots found in the database.";
         }
 
@@ -82,6 +84,7 @@ public class LotService {
         int threadPoolSize = Math.min(10, totalLots);
         logMessage("INFO", "⚙️ Using " + threadPoolSize + " worker threads for processing.");
 
+        // ✅ Initialize Thread Pool
         ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
         List<Future<Void>> futures = new ArrayList<>();
 
@@ -92,31 +95,29 @@ public class LotService {
             int currentIndex = i + 1;
 
             futures.add(executorService.submit(() -> {
-                synchronized (lot) {
-                    try {
-                        long singleStartTime = System.currentTimeMillis();
-                        Results.processLot(lot);
-                        long singleEndTime = System.currentTimeMillis();
-                        long processingTime = singleEndTime - singleStartTime;
+                try {
+                    long singleStartTime = System.currentTimeMillis();
+                    Results.processLot(lot);
+                    long singleEndTime = System.currentTimeMillis();
+                    long processingTime = singleEndTime - singleStartTime;
 
-                        double progress = ((double) currentIndex / totalLots) * 100;
-                        long elapsedTime = System.currentTimeMillis() - lotStartTime;
-                        long estimatedRemainingTime = (long) ((elapsedTime / (double) currentIndex) * (totalLots - currentIndex));
+                    double progress = ((double) currentIndex / totalLots) * 100;
+                    long elapsedTime = System.currentTimeMillis() - lotStartTime;
+                    long estimatedRemainingTime = (long) ((elapsedTime / (double) currentIndex) * (totalLots - currentIndex));
 
-                        logMessage("INFO", String.format(
-                                "📊 [%d/%d] Processed lot %s | Date: %s | Maison Enchere: %s | ⏳ %dms | Progress: %.2f%% | ETA: %ds",
-                                currentIndex, totalLots, lot.getNumber(), lot.getDate(), lot.getMaisonEnchere(),
-                                processingTime, progress, estimatedRemainingTime / 1000
-                        ));
-                    } catch (Exception e) {
-                        logMessage("ERROR", "❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
-                    }
+                    logMessage("INFO", String.format(
+                            "📊 [%d/%d] Processed lot %s | Date: %s | Maison Enchere: %s | ⏳ %dms | Progress: %.2f%% | ETA: %ds",
+                            currentIndex, totalLots, lot.getNumber(), lot.getDate(), lot.getMaisonEnchere(),
+                            processingTime, progress, estimatedRemainingTime / 1000
+                    ));
+                } catch (Exception e) {
+                    logMessage("ERROR", "❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
                 }
                 return null;
             }));
         }
 
-        // Wait for all threads to finish
+        // ✅ Wait for all threads to finish
         for (Future<Void> future : futures) {
             try {
                 future.get();
@@ -125,13 +126,17 @@ public class LotService {
             }
         }
 
+        // ✅ Properly shutdown ExecutorService
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                logMessage("WARN", "⚠️ Forced executor shutdown due to timeout.");
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
+            logMessage("ERROR", "❌ Thread interrupted, forcing shutdown.");
             executorService.shutdownNow();
+            Thread.currentThread().interrupt();
         }
 
         long endTime = System.currentTimeMillis();
@@ -142,6 +147,7 @@ public class LotService {
 
         return "✅ Processing complete and lots deleted.";
     }
+
 
     /**
      * ✅ Deletes all lots from the database after processing
