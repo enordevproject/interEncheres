@@ -8,9 +8,13 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import webApp.models.Lot;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Search extends BasePage {
 
@@ -62,6 +66,8 @@ public class Search extends BasePage {
 
 
 
+
+
     public List<Lot> getLotsOnCurrentPage() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(LOT_ITEMS_XPATH));
@@ -83,7 +89,12 @@ public class Search extends BasePage {
                 lot.setNumber(extractData(lotElement, LOT_NUMBER_XPATH, "No lot available"));
                 lot.setDescription(extractData(lotElement, LOT_DESCRIPTION_XPATH, "No description available"));
                 lot.setEstimationPrice(extractData(lotElement, LOT_ESTIMATION_XPATH, "No estimation available"));
-                lot.setDate(extractData(lotElement, LOT_DATE_XPATH, "No estimation available"));// ✅ Extract date separately
+
+                // ✅ Extract, format, and set the date
+                String rawDate = extractData(lotElement, LOT_DATE_XPATH, "No date available");
+                String formattedDate = formatDateString(rawDate);
+                lot.setDate(formattedDate);
+
                 lot.setMaisonEnchere(extractData(lotElement, LOT_AUCTION_HOUSE_XPATH, "No auction house available"));
 
                 // ✅ Extract the correct image for this lot inside the loop
@@ -98,7 +109,7 @@ public class Search extends BasePage {
                 System.out.println("   - Number: " + lot.getNumber());
                 System.out.println("   - Description: " + lot.getDescription());
                 System.out.println("   - Estimation Price: " + lot.getEstimationPrice());
-                System.out.println("   - Date: " + lot.getDate());
+                System.out.println("   - Date (Formatted): " + lot.getDate());
                 System.out.println("   - Auction House: " + lot.getMaisonEnchere());
                 System.out.println("   - Image URL: " + lot.getImgUrl());
                 System.out.println("   - Lot URL: " + lot.getUrl());
@@ -113,6 +124,65 @@ public class Search extends BasePage {
         System.out.println("✅ Finished extracting lots. Total lots extracted: " + lots.size());
         return lots;
     }
+
+    /**
+     * ✅ Converts various date formats into a standard "yyyy-MM-dd HH:mm" format.
+     */
+    private String formatDateString(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return "Unknown"; // ✅ Return "Unknown" instead of null
+        }
+
+        dateStr = dateStr.trim().toLowerCase();
+        LocalDate now = LocalDate.now();
+        DateTimeFormatter standardFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // ✅ Handle standard dates (e.g., "2025-03-12")
+        if (dateStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return dateStr + " 00:00"; // Append midnight time
+        }
+
+        // ✅ Handle simple relative dates
+        if (dateStr.contains("aujourd'hui")) {
+            return now.format(standardFormat);
+        } else if (dateStr.contains("demain")) {
+            return now.plusDays(1).format(standardFormat);
+        } else if (dateStr.contains("hier")) {
+            return now.minusDays(1).format(standardFormat);
+        }
+
+        // ✅ Handle "2j 19h" format
+        Pattern pattern = Pattern.compile("(\\d+)j (\\d+)h");
+        Matcher matcher = pattern.matcher(dateStr);
+        if (matcher.find()) {
+            int days = Integer.parseInt(matcher.group(1));
+            int hours = Integer.parseInt(matcher.group(2));
+
+            LocalDateTime adjustedDate = LocalDateTime.now().plusDays(days).plusHours(hours);
+            return adjustedDate.format(standardFormat);
+        }
+
+        // ✅ Handle "Demain 14h00" format
+        pattern = Pattern.compile("demain (\\d{1,2})h(\\d{2})?");
+        matcher = pattern.matcher(dateStr);
+        if (matcher.find()) {
+            int hours = Integer.parseInt(matcher.group(1));
+            int minutes = matcher.group(2) != null ? Integer.parseInt(matcher.group(2)) : 0;
+
+            LocalDateTime adjustedDate = now.plusDays(1).atTime(hours, minutes);
+            return adjustedDate.format(standardFormat);
+        }
+
+        // ✅ Handle "? 10h00" (Unknown date)
+        if (dateStr.startsWith("?")) {
+            System.out.println("⚠️ Skipping unknown date format: " + dateStr);
+            return "Unknown";
+        }
+
+        // ✅ If nothing matches, return original date
+        return dateStr;
+    }
+
 
 
 
