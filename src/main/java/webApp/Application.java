@@ -2,27 +2,40 @@ package webApp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.context.WebServerApplicationContext;
+import org.springframework.context.ApplicationContext;
 
 import java.awt.*;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 
 @SpringBootApplication
 public class Application {
 
-    // Spring Boot va servir les fichiers du dossier src/main/resources/static
-    // Sur le port défini dans application.properties (ex: 9090)
-    // Pour un fichier laptop_inventory.html dans /static, l’URL sera :
-    // http://localhost:9090/laptop_inventory.html
-
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        ApplicationContext context = SpringApplication.run(Application.class, args);
         System.out.println("🚀 Spring Boot Application Started Successfully! ✅");
 
-        // On ouvre l’URL sur le port Spring (ex: 9090)
-        // On suppose que laptop_inventory.html se trouve dans src/main/resources/static
-        String localUrl = "http://localhost:9090/laptop_inventory.html";
-        openChrome(localUrl);
+        // Retrieve dynamic base URL
+        String baseUrl = getBaseUrl(context);
+        String appUrl = baseUrl + "/laptop_inventory.html";
+
+        openChrome(appUrl);
+    }
+
+    private static String getBaseUrl(ApplicationContext context) {
+        try {
+            WebServerApplicationContext serverContext = (WebServerApplicationContext) context;
+            int port = serverContext.getWebServer().getPort();
+            String host = InetAddress.getLocalHost().getHostAddress(); // Get local IP instead of hardcoded localhost
+
+            return "http://" + host + ":" + port; // Dynamic URL
+        } catch (UnknownHostException e) {
+            System.err.println("❌ Error retrieving host address: " + e.getMessage());
+            return "http://localhost:9090"; // Fallback
+        }
     }
 
     private static void openChrome(String url) {
@@ -41,9 +54,6 @@ public class Application {
             System.out.println("🌍 Attempting to open Chrome with URL: " + url);
         } catch (IOException e) {
             System.err.println("❌ Failed to open Chrome: " + e.getMessage());
-            fallbackToDefaultBrowser(url);
-        } catch (Exception e) {
-            System.err.println("❌ Unexpected error opening Chrome: " + e.getMessage());
             fallbackToDefaultBrowser(url);
         }
     }
