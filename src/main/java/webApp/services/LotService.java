@@ -76,7 +76,9 @@ public class LotService {
         logMessage("DEBUG", "📊 Lots retrieved: " + totalLots);
 
         if (totalLots == 0) {
-            logMessage("WARN", "⚠️ No lots found in the database. Exiting.");
+            logMessage("WARN", "⚠️ No lots found in the database. Shutting down.");
+
+            // ✅ Ensure proper shutdown before exiting
             return "⚠️ No lots found in the database.";
         }
 
@@ -90,53 +92,55 @@ public class LotService {
 
         long lotStartTime = System.currentTimeMillis();
 
-        for (int i = 0; i < totalLots; i++) {
-            Lot lot = lotsFromDatabase.get(i);
-            int currentIndex = i + 1;
-
-            futures.add(executorService.submit(() -> {
-                try {
-                    long singleStartTime = System.currentTimeMillis();
-                    Results.processLot(lot);
-                    long singleEndTime = System.currentTimeMillis();
-                    long processingTime = singleEndTime - singleStartTime;
-
-                    double progress = ((double) currentIndex / totalLots) * 100;
-                    long elapsedTime = System.currentTimeMillis() - lotStartTime;
-                    long estimatedRemainingTime = (long) ((elapsedTime / (double) currentIndex) * (totalLots - currentIndex));
-
-                    logMessage("INFO", String.format(
-                            "📊 [%d/%d] Processed lot %s | Date: %s | Maison Enchere: %s | ⏳ %dms | Progress: %.2f%% | ETA: %ds",
-                            currentIndex, totalLots, lot.getNumber(), lot.getDate(), lot.getMaisonEnchere(),
-                            processingTime, progress, estimatedRemainingTime / 1000
-                    ));
-                } catch (Exception e) {
-                    logMessage("ERROR", "❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
-                }
-                return null;
-            }));
-        }
-
-        // ✅ Wait for all threads to finish
-        for (Future<Void> future : futures) {
-            try {
-                future.get();
-            } catch (Exception e) {
-                logMessage("ERROR", "❌ Error waiting for task completion: " + e.getMessage());
-            }
-        }
-
-        // ✅ Properly shutdown ExecutorService
-        executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                logMessage("WARN", "⚠️ Forced executor shutdown due to timeout.");
-                executorService.shutdownNow();
+            for (int i = 0; i < totalLots; i++) {
+                Lot lot = lotsFromDatabase.get(i);
+                int currentIndex = i + 1;
+
+                futures.add(executorService.submit(() -> {
+                    try {
+                        long singleStartTime = System.currentTimeMillis();
+                        Results.processLot(lot);
+                        long singleEndTime = System.currentTimeMillis();
+                        long processingTime = singleEndTime - singleStartTime;
+
+                        double progress = ((double) currentIndex / totalLots) * 100;
+                        long elapsedTime = System.currentTimeMillis() - lotStartTime;
+                        long estimatedRemainingTime = (long) ((elapsedTime / (double) currentIndex) * (totalLots - currentIndex));
+
+                        logMessage("INFO", String.format(
+                                "📊 [%d/%d] Processed lot %s | Date: %s | Maison Enchere: %s | ⏳ %dms | Progress: %.2f%% | ETA: %ds",
+                                currentIndex, totalLots, lot.getNumber(), lot.getDate(), lot.getMaisonEnchere(),
+                                processingTime, progress, estimatedRemainingTime / 1000
+                        ));
+                    } catch (Exception e) {
+                        logMessage("ERROR", "❌ Error processing lot " + lot.getNumber() + ": " + e.getMessage());
+                    }
+                    return null;
+                }));
             }
-        } catch (InterruptedException e) {
-            logMessage("ERROR", "❌ Thread interrupted, forcing shutdown.");
-            executorService.shutdownNow();
-            Thread.currentThread().interrupt();
+
+            // ✅ Wait for all threads to finish
+            for (Future<Void> future : futures) {
+                try {
+                    future.get(30, TimeUnit.SECONDS); // ⏳ Timeout to prevent blocking indefinitely
+                } catch (Exception e) {
+                    logMessage("ERROR", "❌ Error waiting for task completion: " + e.getMessage());
+                }
+            }
+        } finally {
+            // ✅ Ensure proper shutdown of ExecutorService
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                    logMessage("WARN", "⚠️ Forced executor shutdown due to timeout.");
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                logMessage("ERROR", "❌ Thread interrupted, forcing shutdown.");
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
 
         long endTime = System.currentTimeMillis();
@@ -147,6 +151,7 @@ public class LotService {
 
         return "✅ Processing complete and lots deleted.";
     }
+
 
 
     /**

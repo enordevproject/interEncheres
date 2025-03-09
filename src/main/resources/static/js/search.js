@@ -136,7 +136,7 @@ function updateLogs(logs) {
     }
 
     // ✅ Hide logs when processing is done & refresh page
-    if (logs.some(log => log.includes("✅ [Finish] GPT Processing complete"))) {
+    /*if (logs.some(log => log.includes("✅ [Finish] GPT Processing complete"))) {
         updateSearchStatus("✅ Process Complete");
 
         setTimeout(() => {
@@ -144,7 +144,7 @@ function updateLogs(logs) {
             logContainer.innerHTML = ""; // ✅ Clear logs
             location.reload(); // ✅ Refresh the page after completion
         }, 3000);
-    }
+    }*/
 }
 
 
