@@ -6,10 +6,13 @@ import webApp.models.Laptop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
 public class ExcelReportService {
+
+
 
     public byte[] generateExcelReport(List<Laptop> favoriteLaptops) throws IOException {
         Workbook workbook = new XSSFWorkbook();
@@ -17,7 +20,7 @@ public class ExcelReportService {
 
         // ✅ Create Header Row
         Row headerRow = sheet.createRow(0);
-        String[] columns = {"Lot Number (URL)", "Laptop Model", "Description", "Boncoin Price", "Postal Code", "City", "Date"};
+        String[] columns = {"Lot Number", "Laptop Model", "Description", "Boncoin Price"};
 
         for (int i = 0; i < columns.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -25,18 +28,18 @@ public class ExcelReportService {
             cell.setCellStyle(getHeaderStyle(workbook)); // Apply header styling
         }
 
+        // ✅ Sort laptops by Lot Number before writing to Excel
+        favoriteLaptops.sort(Comparator.comparingInt(Laptop::getLotNumber));
+
         // ✅ Fill Data
         int rowNum = 1;
         for (Laptop laptop : favoriteLaptops) {
             Row row = sheet.createRow(rowNum++);
 
-            row.createCell(0).setCellValue(laptop.getLotNumber() + " - " + laptop.getLotUrl()); // Lot Number + URL
+            row.createCell(0).setCellValue(laptop.getLotNumber()); // Lot Number
             row.createCell(1).setCellValue(laptop.getModel()); // Model
-            row.createCell(2).setCellValue(laptop.getSpecs()); // Only specs description
+            row.createCell(2).setCellValue(laptop.getSimpleSpecs()); // Only specs description
             row.createCell(3).setCellValue(laptop.getBonCoinEstimation()); // Boncoin Price
-            row.createCell(4).setCellValue(laptop.getCodePostal()); // Postal Code
-            row.createCell(5).setCellValue(laptop.getVille()); // City
-            row.createCell(6).setCellValue(laptop.getDate().toString()); // Auction Date
         }
 
         // ✅ Auto-size columns for better readability

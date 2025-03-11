@@ -673,7 +673,7 @@ public class Laptop {
     public void setImage(String image) {
         this.image = image;
     }
-    public String getSpecs() {
+       public String getSpecs() {
         return "<b>🖥 Processor:</b> " + getProcessorBrand() + " " + getProcessorModel() + " (" + getProcessorCores() + " Cores, " + getProcessorClockSpeed() + "GHz)" +
                 "<br><b>💾 RAM:</b> " + getRamSize() + "GB " + getRamType() +
                 "<br><b>💽 Storage:</b> " + getStorageType() + " " + getStorageCapacity() + "GB, Speed: " + getStorageSpeed() + "MB/s" +
@@ -692,5 +692,13 @@ public class Laptop {
                 "<br><b>🛡️ Warranty:</b> " + (getWarranty() != null ? getWarranty() : "N/A");
     }
 
+    public String getSimpleSpecs() {
+        return "Processor: " + getProcessorBrand() + " " + getProcessorModel() + " (" + getProcessorCores() + " Cores, " + getProcessorClockSpeed() + "GHz), " +
+                "RAM: " + getRamSize() + "GB " + getRamType() + ", " +
+                "Storage: " + getStorageType() + " " + getStorageCapacity() + "GB, " +
+                "GPU: " + getGpuType() + " " + getGpuModel() + " (" + getGpuVram() + "GB VRAM), " +
+                "Screen: " + getScreenSize() + " inches" + (isTouchScreen() ? " (Touchscreen)" : "") ;
+
+    }
 
 }

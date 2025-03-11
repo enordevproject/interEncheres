@@ -68,7 +68,7 @@ public class LaptopService {
      */
     @Transactional
     public void deleteExpiredLaptops() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         // Fetch all laptops because dates are stored as strings
@@ -79,7 +79,7 @@ public class LaptopService {
                 .filter(laptop -> {
                     try {
                         LocalDate laptopDate = LocalDate.parse(laptop.getDate(), formatter);
-                        return laptopDate.isBefore(yesterday); // Remove if older than yesterday
+                        return laptopDate.isBefore(today); // Remove if before today
                     } catch (Exception e) {
                         System.out.println("⚠️ Skipping invalid date: " + laptop.getDate());
                         return false; // Skip if parsing fails
@@ -95,6 +95,7 @@ public class LaptopService {
             System.out.println("✅ No expired laptops found.");
         }
     }
+
 
 
 
