@@ -13,7 +13,7 @@ async function fetchLaptops(filters = {}) {
     console.log("🌍 FULL FILTERED URL:", endpoint);
 
     try {
-      await deleteExpiredLaptops();
+    //  await deleteExpiredLaptops();
         let response = await fetch(endpoint);
         if (!response.ok) {
             console.error("❌ API Error:", response.statusText);
@@ -24,15 +24,7 @@ async function fetchLaptops(filters = {}) {
         let laptops = await response.json();
         console.log("✅ Received laptops:", laptops.length, "items");
 
-        // ✅ Remove expired laptops (date older than yesterday)
-        let today = new Date();
-        today.setDate(today.getDate() - 1); // Subtract 1 day to exclude expired listings
 
-
-        laptops = laptops.filter(laptop => {
-            let auctionDate = new Date(laptop.date);
-            return auctionDate >= today;
-        });
 
         // ✅ Sort by closest auction date (ascending order)
         laptops.sort((a, b) => new Date(a.date) - new Date(b.date));

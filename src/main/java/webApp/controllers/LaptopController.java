@@ -29,8 +29,11 @@ public class LaptopController {
     // ✅ Fetch all laptops (no filters)
     @GetMapping("/laptops")
     public List<Laptop> getAllLaptops() {
-        return laptopService.getAllLaptops(); // Return JSON
+        log.info("🔍 Fetching all  laptops...");
+        return laptopService.getAllLaptops();
+        // Return JSON
     }
+
 
     // ✅ Fetch laptops with filters
     @GetMapping("/laptops/filter")

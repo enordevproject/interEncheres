@@ -135,42 +135,35 @@ public class Search extends BasePage {
 
         dateStr = dateStr.trim().toLowerCase();
         LocalDate now = LocalDate.now();
-        DateTimeFormatter standardFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        DateTimeFormatter outputFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        // ✅ Handle standard dates (e.g., "2025-03-12")
+        // ✅ Handle "YYYY-MM-DD" format → Convert to "DD/MM/YYYY"
         if (dateStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
-            return dateStr + " 00:00"; // Append midnight time
+            LocalDate parsedDate = LocalDate.parse(dateStr);
+            return parsedDate.format(outputFormat);
         }
 
-        // ✅ Handle simple relative dates
-        if (dateStr.contains("aujourd'hui")) {
-            return now.format(standardFormat);
-        } else if (dateStr.contains("demain")) {
-            return now.plusDays(1).format(standardFormat);
-        } else if (dateStr.contains("hier")) {
-            return now.minusDays(1).format(standardFormat);
+        // ✅ Handle "DD/MM/YYYY" format (Already correct, just return)
+        if (dateStr.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            return dateStr;
         }
+
+        // ✅ Handle relative dates
+        if (dateStr.contains("aujourd'hui")) return now.format(outputFormat);
+        if (dateStr.contains("demain")) return now.plusDays(1).format(outputFormat);
+        if (dateStr.contains("hier")) return now.minusDays(1).format(outputFormat);
 
         // ✅ Handle "2j 19h" format
-        Pattern pattern = Pattern.compile("(\\d+)j (\\d+)h");
-        Matcher matcher = pattern.matcher(dateStr);
+        Matcher matcher = Pattern.compile("(\\d+)j (\\d+)h").matcher(dateStr);
         if (matcher.find()) {
             int days = Integer.parseInt(matcher.group(1));
-            int hours = Integer.parseInt(matcher.group(2));
-
-            LocalDateTime adjustedDate = LocalDateTime.now().plusDays(days).plusHours(hours);
-            return adjustedDate.format(standardFormat);
+            return now.plusDays(days).format(outputFormat);
         }
 
-        // ✅ Handle "Demain 14h00" format
-        pattern = Pattern.compile("demain (\\d{1,2})h(\\d{2})?");
-        matcher = pattern.matcher(dateStr);
+        // ✅ Handle "Demain 09h30" format
+        matcher = Pattern.compile("demain (\\d{1,2})h(\\d{2})?").matcher(dateStr);
         if (matcher.find()) {
-            int hours = Integer.parseInt(matcher.group(1));
-            int minutes = matcher.group(2) != null ? Integer.parseInt(matcher.group(2)) : 0;
-
-            LocalDateTime adjustedDate = now.plusDays(1).atTime(hours, minutes);
-            return adjustedDate.format(standardFormat);
+            return now.plusDays(1).format(outputFormat);
         }
 
         // ✅ Handle "? 10h00" (Unknown date)
@@ -179,10 +172,15 @@ public class Search extends BasePage {
             return "Unknown";
         }
 
-        // ✅ If nothing matches, return original date
-        return dateStr;
-    }
+        // ✅ Handle "6h" or "5h 59m" formats (Assume today)
+        matcher = Pattern.compile("(\\d{1,2})h(?: (\\d{1,2})m)?").matcher(dateStr);
+        if (matcher.matches()) {
+            return now.format(outputFormat);
+        }
 
+        // ✅ If no known format matches, return "Unknown"
+        return "Unknown";
+    }
 
 
 

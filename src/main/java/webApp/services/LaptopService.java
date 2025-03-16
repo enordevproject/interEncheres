@@ -68,26 +68,30 @@ public class LaptopService {
      */
     @Transactional
     public void deleteExpiredLaptops() {
-        LocalDate today = LocalDate.now();
+       LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         // Fetch all laptops because dates are stored as strings
         List<Laptop> allLaptops = laptopRepository.findAll();
 
-        // Filter expired laptops by converting their String date into LocalDate
+        // Filter only laptops with past dates (skip invalid dates, do not delete them)
         List<Laptop> expiredLaptops = allLaptops.stream()
                 .filter(laptop -> {
+                    String dateStr = laptop.getDate();
+                    if (dateStr == null || dateStr.trim().isEmpty()) return false; // Ignore empty dates
+
                     try {
-                        LocalDate laptopDate = LocalDate.parse(laptop.getDate(), formatter);
-                        return laptopDate.isBefore(today); // Remove if before today
+                        LocalDate laptopDate = LocalDate.parse(dateStr, formatter);
+                        return laptopDate.isBefore(today); // ✅ Remove only past dates
                     } catch (Exception e) {
-                        System.out.println("⚠️ Skipping invalid date: " + laptop.getDate());
-                        return false; // Skip if parsing fails
+                        // ✅ If date format is invalid, keep the laptop (don't delete)
+                        System.out.println("⚠️ Keeping laptop due to unrecognized date format: " + dateStr);
+                        return false;
                     }
                 })
                 .collect(Collectors.toList());
 
-        // Delete expired laptops
+        // Delete expired laptops (past dates only)
         if (!expiredLaptops.isEmpty()) {
             laptopRepository.deleteAll(expiredLaptops);
             System.out.println("🗑 Deleted " + expiredLaptops.size() + " expired laptops.");
@@ -95,6 +99,8 @@ public class LaptopService {
             System.out.println("✅ No expired laptops found.");
         }
     }
+
+
 
 
 
